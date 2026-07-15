@@ -354,8 +354,11 @@
     }
     .coll-card .cc-th{font-family:var(--font-display);font-weight:600;font-size:13.5px;line-height:1.12;}
     .coll-card .cc-p{font-size:11px;color:var(--ink-soft);margin-top:6px;}
+    .coll-card{cursor:pointer;transition:transform var(--t1) var(--e);}
+    .coll-card:active{transform:scale(.96);}
     .coll-card.new{opacity:.78;}
     .coll-card.new .cc-th{color:var(--ink-soft);}
+    .coll-hint{font-size:13px;color:var(--ink-faint);margin:2px 0 6px;}
     .coll-card.mastered{border-color:color-mix(in srgb,var(--gold-2) 55%,transparent);}
     .seal{
       position:absolute;right:8px;top:8px;width:26px;height:26px;border-radius:50%;
@@ -646,7 +649,7 @@
             ${player?`<div class="pill" style="--accent:${player.color}"><span class="sb-dot" style="background:${player.color}"></span>${esc(player.name)} · <span class="num">${player.score}</span></div>`
               :`<div class="pill">${svg('star','sm')}<span class="num" id="scorePill">${G.score}</span> pts</div>`}
             <div class="grow"></div>
-            <div class="pill">${G.mode==='daily'?'Carte du jour':('Carte '+(G.cardsPlayed+1)+(isFinite(G.len)?('/'+G.len):''))}</div>
+            <div class="pill">${G.mode==='daily'?'Carte du jour':G.mode==='free'?'Carte libre':('Carte '+(G.cardsPlayed+1)+(isFinite(G.len)?('/'+G.len):''))}</div>
             <button class="iconbtn" id="gameMenu" aria-label="Menu">${svg('gear')}</button>
           </div>
           <div class="flipwrap">
@@ -838,9 +841,9 @@
       if(remaining.length){
         bar.innerHTML=`
           <button class="btn accent" id="again">${G.seq?('Question suivante · niveau '+nextSeqLevel()):('Tenter un autre niveau · '+remaining.length+' restant'+(remaining.length>1?'s':''))}</button>
-          <button class="btn ghost sm" id="nextC">${G.mode==='multi'?'Terminer mon tour':(G.cardsPlayed+1>=G.len&&isFinite(G.len)?'Voir le résultat':'Carte suivante')} ${svg('chevR','sm')}</button>`;
+          <button class="btn ghost sm" id="nextC">${G.mode==='multi'?'Terminer mon tour':G.mode==='free'?'Terminer':(G.cardsPlayed+1>=G.len&&isFinite(G.len)?'Voir le résultat':'Carte suivante')} ${svg('chevR','sm')}</button>`;
       }else{
-        bar.innerHTML=`<button class="btn primary" id="nextC">${G.mode==='multi'?'Terminer mon tour':'Continuer'} ${svg('chevR','sm')}</button>`;
+        bar.innerHTML=`<button class="btn primary" id="nextC">${G.mode==='multi'?'Terminer mon tour':G.mode==='free'?'Terminer':'Continuer'} ${svg('chevR','sm')}</button>`;
       }
       front.appendChild(bar);
       const ag=bar.querySelector('#again');if(ag)ag.onclick=()=>{bar.remove();G.seq?revealQuestion(nextSeqLevel()):(cta&&(cta.style.display=''),openBet());};
@@ -851,6 +854,7 @@
       G.cardsPlayed++;G.i++;
       if(G.mode==='daily')return finishDaily();
       if(G.mode==='multi')return multiEndTurn();
+      if(G.mode==='free'){G=null;return collection();} // retour à l'album, progression visible
       nextCard();
     }
 
@@ -889,10 +893,11 @@
 
     /* ---------- Confirm quit ---------- */
     function confirmQuit(){
-      if(G&&(G.score>0||G.cardsPlayed>0||(G.mode==='multi'))){
+      const free=G&&G.mode==='free';
+      if(G&&!free&&(G.score>0||G.cardsPlayed>0||(G.mode==='multi'))){
         if(!confirm('Quitter la partie en cours ?'))return;
       }
-      G=null;resetAccent();home();
+      G=null;resetAccent();free?collection():home();
     }
 
     /* ===================================================
@@ -1110,6 +1115,7 @@
           <div class="topbar"><button class="iconbtn" data-go="home">${svg('back')}</button>
             <div class="title">Collection</div><div class="grow"></div>
             <div class="pill" style="font-size:13px">${mastered?svg('star','sm'):''}<span class="num">${mastered}</span> maîtrisée${mastered>1?'s':''} · <span class="num">${started}</span> en cours</div></div>
+          <div class="coll-hint">Touche une carte pour jouer son thème en one-shot.</div>
           ${CATS.map(cat=>{
             const cs=cardsOf(cat.id);const pr=catProgress(cat.id);const r=rankOf(cat.id);
             const C=46,Rr=20,circ=2*Math.PI*Rr;
@@ -1130,7 +1136,7 @@
               </div>
               <div class="coll-grid">
                 ${cs.map(card=>{const st=cardState(card.id);const n=(S.acquired[card.id]||[]).length;
-                  return `<div class="coll-card ${st}" style="--accent:${cat.light}">
+                  return `<div class="coll-card ${st}" style="--accent:${cat.light}" data-play="${card.id}">
                     ${st==='mastered'?`<div class="seal">${svg('check')}</div>`:''}
                     <div class="cc-th">${esc(card.theme)}</div>
                     <div class="cc-p">${st==='new'?'Nouvelle':st==='mastered'?'Maîtrisée':n+'/10'}</div>
@@ -1138,6 +1144,15 @@
               </div>
             </div>`;}).join('')}
         </div>`);
+      app.querySelectorAll('[data-play]').forEach(el=>el.onclick=()=>startFree(el.dataset.play));
+    }
+
+    // carte libre : jouer n'importe quel thème en one-shot depuis la collection
+    function startFree(cardId){
+      const card=CARDS.find(c=>String(c.id)===String(cardId));if(!card)return;
+      G={mode:'free',seq:false,deck:[card],i:0,len:1,
+         score:0,streak:0,bestStreak:0,cardsPlayed:0,correct:0,attempts:0};
+      openCard(card);
     }
 
     /* ===================================================
