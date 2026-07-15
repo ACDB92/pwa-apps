@@ -259,7 +259,7 @@
     .q-level{display:flex;align-items:baseline;gap:10px;margin-bottom:14px;}
     .q-level .n{font-family:var(--font-display);font-weight:900;font-size:44px;line-height:1;}
     .q-text{font-family:var(--font-display);font-weight:600;font-size:clamp(21px,5.8vw,27px);line-height:1.24;}
-    .q-text .ln{display:block;opacity:0;transform:translateY(8px);animation:ln var(--t3) var(--e) forwards;}
+    .q-text .ln{display:inline-block;opacity:0;transform:translateY(8px);animation:ln var(--t3) var(--e) forwards;}
     @keyframes ln{to{opacity:1;transform:none;}}
     .answer{
       margin-top:18px;padding:16px 18px;border-radius:16px;background:var(--surface-3);
@@ -488,11 +488,7 @@
     function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
     function vibrate(ms){try{navigator.vibrate&&navigator.vibrate(ms);}catch(e){}}
     function esc(s){return (s||'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));}
-    function splitLines(t){ // découpe une question en segments pour le stagger
-      const words=(t||'').split(' ');const chunks=[];const per=Math.ceil(words.length/Math.min(3,Math.max(1,Math.ceil(words.length/6))));
-      for(let i=0;i<words.length;i+=per)chunks.push(words.slice(i,i+per).join(' '));
-      return chunks;
-    }
+    function splitWords(t){return (t||'').split(' ').filter(Boolean);} // stagger mot à mot, le texte coule naturellement
     function riskLabel(l){return l<=3?'Prudent':l<=6?'Ça se tente':l<=8?'Audacieux':'Vertige';}
 
     /* ---------- Router ---------- */
@@ -765,11 +761,11 @@
     function revealQuestion(level){
       const q=G.card.questions.find(x=>x.level===level);
       const back=app.querySelector('#backFace');
-      const lines=splitLines(q.q);
+      const words=splitWords(q.q);
       back.innerHTML=`
         <div class="q-level"><span class="n display" style="color:var(--accent)">${level}</span><span class="label">niveau · ${riskLabel(level).toLowerCase()}</span></div>
         <div class="q-wrap" style="margin:auto 0">
-          <div class="q-text">${lines.map((l,i)=>`<span class="ln" style="animation-delay:${i*70}ms">${esc(l)}</span>`).join(' ')}</div>
+          <div class="q-text">${words.map((w,i)=>`<span class="ln" style="animation-delay:${Math.min(i*26,420)}ms">${esc(w)}</span>`).join(' ')}</div>
           <div id="ansSlot"></div>
         </div>
         <button class="btn accent" id="revealAns" style="margin-top:18px">Révéler la réponse</button>`;
