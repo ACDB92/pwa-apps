@@ -95,7 +95,7 @@ window.TTMC_DATA = {
         },
         {
           "level": 9,
-          "q": "Quel classement officiel des vins de Bordeaux date de 1855 ?",
+          "q": "À l'occasion de quel événement le classement officiel des vins de Bordeaux a-t-il été établi en 1855 ?",
           "a": "Le classement de 1855 (établi pour l'Exposition universelle de Paris)."
         },
         {
@@ -398,7 +398,7 @@ window.TTMC_DATA = {
         {
           "level": 1,
           "q": "Le raisin blanc donne-t-il forcément du vin blanc ?",
-          "a": "Souvent oui, mais le jus de raisin noir peut aussi faire du blanc."
+          "a": "Oui en pratique — et à l'inverse, un raisin noir peut aussi donner du blanc (son jus est incolore)."
         },
         {
           "level": 2,
@@ -878,7 +878,7 @@ window.TTMC_DATA = {
         },
         {
           "level": 6,
-          "q": "De quelle puissance coloniale la Tunisie est-elle devenue indépendante en 1956 ?",
+          "q": "De quelle puissance coloniale la Tunisie est-elle devenue indépendante ?",
           "a": "La France."
         },
         {
@@ -1040,7 +1040,7 @@ window.TTMC_DATA = {
         {
           "level": 4,
           "q": "Comment appelle-t-on la barre que le véliplanchiste tient pour manœuvrer la voile ?",
-          "a": "Le wishbone (le woosh / la bôme)."
+          "a": "Le wishbone (la bôme)."
         },
         {
           "level": 5,
@@ -1572,7 +1572,7 @@ window.TTMC_DATA = {
         },
         {
           "level": 8,
-          "q": "Quel riff célèbre ouvre la chanson « Whole Lotta Love » ?",
+          "q": "Qui joue le riff d'ouverture de « Whole Lotta Love » ?",
           "a": "Le riff de guitare de Jimmy Page (en mi)."
         },
         {
@@ -1796,7 +1796,7 @@ window.TTMC_DATA = {
         {
           "level": 7,
           "q": "Quel instrument à vent en bois possède une anche double, comme le hautbois ?",
-          "a": "Le basson (ou le hautbois)."
+          "a": "Le basson."
         },
         {
           "level": 8,
@@ -2200,7 +2200,7 @@ window.TTMC_DATA = {
         {
           "level": 8,
           "q": "Quelle créature mystérieuse et géante intrigue les colons ?",
-          "a": "La « Mant » (créature liée à l'énergie de la planète)."
+          "a": "La Mantrise (créature liée à l'énergie de la planète)."
         },
         {
           "level": 9,
@@ -2241,8 +2241,8 @@ window.TTMC_DATA = {
         },
         {
           "level": 5,
-          "q": "Quel type d'animal est le tyran, le président César qui règne en maître ?",
-          "a": "Un taureau (le minotaure/taureau César)."
+          "q": "Quel type d'animal est le tyran, le président Silvio qui règne en maître ?",
+          "a": "Un taureau (le président Silvio)."
         },
         {
           "level": 6,
@@ -2293,8 +2293,8 @@ window.TTMC_DATA = {
         },
         {
           "level": 4,
-          "q": "Que signifie le sigle « IA » ?",
-          "a": "Intelligence Artificielle."
+          "q": "Que signifie le sigle « GPS » ?",
+          "a": "Global Positioning System (système de positionnement par satellites)."
         },
         {
           "level": 5,
@@ -2308,7 +2308,7 @@ window.TTMC_DATA = {
         },
         {
           "level": 7,
-          "q": "Quelle chaîne de blocs est à la base des cryptomonnaies comme le Bitcoin ?",
+          "q": "Quelle technologie de « registre distribué » est à la base des cryptomonnaies comme le Bitcoin ?",
           "a": "La blockchain."
         },
         {
@@ -2749,7 +2749,7 @@ window.TTMC_DATA = {
         },
         {
           "level": 4,
-          "q": "Quelle chanteuse/idole du rock'n'roll explose au milieu des années 1950 aux USA ?",
+          "q": "Quel chanteur/idole du rock'n'roll explose au milieu des années 1950 aux USA ?",
           "a": "Elvis Presley."
         },
         {
@@ -2764,8 +2764,8 @@ window.TTMC_DATA = {
         },
         {
           "level": 7,
-          "q": "Quel dessin animé/personnage ou quel jouet a marqué les années 1950 en France ?",
-          "a": "Ex. la naissance de nombreux classiques (réponse ouverte : Zorro, etc.)."
+          "q": "Quel grand concours européen de la chanson voit le jour en 1956 ?",
+          "a": "L'Eurovision (première édition à Lugano, en Suisse)."
         },
         {
           "level": 8,
@@ -2774,7 +2774,7 @@ window.TTMC_DATA = {
         },
         {
           "level": 9,
-          "q": "Quel physicien découvre officiellement le neutrino en 1956 ?",
+          "q": "Quels physiciens découvrent officiellement le neutrino en 1956 ?",
           "a": "Clyde Cowan et Frederick Reines (expérience de 1956)."
         },
         {
@@ -2863,7 +2863,7 @@ window.TTMC_DATA = {
         },
         {
           "level": 4,
-          "q": "Combien de fois par course les pilotes changent-ils obligatoirement quelque chose aux stands ?",
+          "q": "Que changent obligatoirement les pilotes lors d'un arrêt aux stands ?",
           "a": "Ils changent les pneus (arrêt aux stands obligatoire)."
         },
         {

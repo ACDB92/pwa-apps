@@ -252,15 +252,6 @@
     .card-kicker{color:var(--gold-text);font-family:var(--font-display);font-weight:600;font-style:italic;font-size:16px;}
     .hairline{height:1px;max-width:180px;margin:18px 0 10px;background:linear-gradient(90deg,var(--accent),transparent);opacity:.4;}
     .card-meta2{font-size:13.5px;color:var(--ink-soft);}
-    .levels-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;}
-    .lvchip{
-      aspect-ratio:1;border-radius:12px;background:var(--surface-3);border:1px solid var(--line);
-      display:flex;align-items:center;justify-content:center;
-      font-family:var(--font-display);font-weight:900;font-size:20px;color:var(--ink-soft);
-      transition:opacity var(--t2),color var(--t2);
-    }
-    .lvchip.done{opacity:.28;color:var(--ink-faint);text-decoration:line-through;text-decoration-thickness:1px;}
-    .lvchip.acq{border-color:color-mix(in srgb,var(--ok) 50%,transparent);color:var(--ok);}
     .card-cta{margin-top:18px;}
 
     /* dos de carte : question / réponse */
@@ -439,7 +430,8 @@
       grid:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
       trophy:'M7 4h10v4a5 5 0 01-10 0zM7 6H4v2a3 3 0 003 3M17 6h3v2a3 3 0 01-3 3M9 17h6M8 21h8M12 13v4',
       star:'M12 3l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8L3.5 9.2l5.9-.9z',
-      dice:'M4 4h16v16H4zM9 9h.01M15 15h.01M12 12h.01'
+      dice:'M4 4h16v16H4zM9 9h.01M15 15h.01M12 12h.01',
+      gear:'M12 15a3 3 0 100-6 3 3 0 000 6zm7.4-3a7.4 7.4 0 00-.1-1.2l2-1.5-2-3.4-2.3 1a7.4 7.4 0 00-2-1.2L14.6 3h-4l-.4 2.7a7.4 7.4 0 00-2 1.2l-2.3-1-2 3.4 2 1.5a7.4 7.4 0 000 2.4l-2 1.5 2 3.4 2.3-1a7.4 7.4 0 002 1.2l.4 2.7h4l.4-2.7a7.4 7.4 0 002-1.2l2.3 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z'
     };
     function svg(id,cls){return `<svg class="i ${cls||''}" viewBox="0 0 24 24"><path d="${P[id]||''}"/></svg>`;}
 
@@ -541,7 +533,7 @@
             <div class="menu-grid">
               <button class="menu-card" data-go="daily">
                 <div class="mc-ic">${svg('cal','lg')}</div>
-                <div><div class="mc-t">Carte du jour</div><div class="mc-s">${S.daily.streak>0?('Série · '+S.daily.streak+' j'):'3 questions'}</div></div>
+                <div><div class="mc-t">Carte du jour</div><div class="mc-s">${S.daily.streak>0?('Série · '+S.daily.streak+' j'):'Une carte, 10 niveaux'}</div></div>
               </button>
               <button class="menu-card" data-go="multiSetup">
                 <div class="mc-ic">${svg('multi','lg')}</div>
@@ -619,7 +611,7 @@
     function startDaily(){
       const dayNum=Math.floor(Date.now()/86400000);
       const idx=(dayNum*7919)%CARDS.length;
-      G={mode:'daily',deck:[CARDS[idx]],i:0,len:1,dailyQuota:3,
+      G={mode:'daily',deck:[CARDS[idx]],i:0,len:1,
          score:0,streak:0,bestStreak:0,cardsPlayed:0,correct:0,attempts:0};
       openCard(CARDS[idx]);
     }
@@ -633,7 +625,6 @@
       G.card=card;G.visitLevels=new Set();G.visitCorrect=0;G.visitAttempts=0;G.chosen=null;
       const cat=catById(card.categoryId);setAccent(cat.id);setTheme(cat.ink);
       const num=CARDS.indexOf(card)+1;
-      const acq=G.mode==='multi'?new Set():acquiredSet(card.id); // en multi, pas de progression perso affichée
       const player=G.mode==='multi'?G.multi.players[G.multi.cur]:null;
       const meta2=G.mode==='multi'?'10 questions · niveaux 1→10':('10 questions · niveaux 1→10 · '+rankOf(cat.id).title);
       render(`
@@ -644,7 +635,8 @@
             ${player?`<div class="pill" style="--accent:${player.color}"><span class="sb-dot" style="background:${player.color}"></span>${esc(player.name)} · <span class="num">${player.score}</span></div>`
               :`<div class="pill">${svg('star','sm')}<span class="num" id="scorePill">${G.score}</span> pts</div>`}
             <div class="grow"></div>
-            <div class="pill">${G.mode==='daily'?('Q '+G.visitAttempts+'/'+G.dailyQuota):('Carte '+(G.cardsPlayed+1)+(isFinite(G.len)?('/'+G.len):''))}</div>
+            <div class="pill">${G.mode==='daily'?'Carte du jour':('Carte '+(G.cardsPlayed+1)+(isFinite(G.len)?('/'+G.len):''))}</div>
+            <button class="iconbtn" id="gameMenu" aria-label="Menu">${svg('gear')}</button>
           </div>
           <div class="flipwrap">
             <div class="flip" id="flip">
@@ -658,10 +650,7 @@
                   <div class="card-kicker">Thème</div>
                   <div class="card-theme">${esc(card.theme)}</div>
                   <div class="hairline"></div>
-                  <div class="card-meta2">${esc(meta2)}</div>
-                </div>
-                <div class="levels-strip">
-                  ${card.questions.map(q=>`<div class="lvchip ${acq.has(q.level)?'acq':''}" data-lv="${q.level}">${q.level}</div>`).join('')}
+                  <div class="card-meta2" id="cardMeta2">${esc(meta2)}</div>
                 </div>
                 <button class="btn gold card-cta" id="betOpen">Tu te mets combien ?</button>
               </div>
@@ -670,17 +659,34 @@
           </div>
         </div>`);
       app.querySelector('[data-quit]').onclick=()=>confirmQuit();
+      app.querySelector('#gameMenu').onclick=()=>gameMenu();
       app.querySelector('#betOpen').onclick=()=>openBet();
+    }
+
+    /* ---------- Menu de partie (réglages) ---------- */
+    function gameMenu(){
+      const ov=document.createElement('div');
+      ov.className='overlay';ov.style.justifyContent='center';
+      ov.innerHTML=`
+        <div class="stack" style="padding:0 4px">
+          <div class="title serif" style="text-align:center;margin-bottom:18px">Réglages</div>
+          <button class="btn primary" id="gmResume">Reprendre la partie</button>
+          <button class="btn ghost" id="gmHome">Retour au menu</button>
+        </div>`;
+      fx.appendChild(ov);
+      ov.querySelector('#gmResume').onclick=()=>ov.remove();
+      ov.querySelector('#gmHome').onclick=()=>{ov.remove();confirmQuit();};
+      ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
     }
 
     /* ---------- Bet overlay (moment signature) ---------- */
     function openBet(){
       const cat=catById(G.card.categoryId);
-      const acq=acquiredSet(G.card.id);
-      let level=5;
-      // premier niveau non encore acquis lors de cette visite, sinon 5
-      const avail=G.card.questions.map(q=>q.level).filter(l=>!G.visitLevels.has(l));
-      if(avail.length)level=avail.includes(5)?5:avail[Math.floor(avail.length/2)];
+      // seuls les niveaux non joués sur cette carte sont proposés
+      const avail=G.card.questions.map(q=>q.level).filter(l=>!G.visitLevels.has(l)).sort((a,b)=>a-b);
+      if(!avail.length)return;
+      let idx=avail.includes(5)?avail.indexOf(5):Math.floor((avail.length-1)/2);
+      let level=avail[idx];
       const ov=document.createElement('div');
       ov.className='overlay';ov.id='betOverlay';
       ov.innerHTML=`
@@ -719,22 +725,22 @@
         risk.textContent=riskLabel(level);
         risk.style.color=level>=8?'var(--gold-text)':cat.light;
       }
-      function set(l,haptic){
-        const nl=Math.max(1,Math.min(10,l));
-        if(nl!==level){level=nl;paint();vibrate(level===1||level===10?18:8);
-          if(level===1||level===10){betNum.classList.remove('shake');void betNum.offsetWidth;betNum.classList.add('shake');}}
+      function setIdx(i){
+        const ni=Math.max(0,Math.min(avail.length-1,i));
+        if(ni!==idx){idx=ni;level=avail[idx];paint();vibrate(idx===0||idx===avail.length-1?18:8);
+          if(idx===0||idx===avail.length-1){betNum.classList.remove('shake');void betNum.offsetWidth;betNum.classList.add('shake');}}
       }
       paint();
-      ov.querySelector('#betUp').onclick=()=>set(level+1);
-      ov.querySelector('#betDown').onclick=()=>set(level-1);
+      ov.querySelector('#betUp').onclick=()=>setIdx(idx+1);
+      ov.querySelector('#betDown').onclick=()=>setIdx(idx-1);
       ov.querySelector('#betCancel').onclick=()=>ov.remove();
       // drag vertical
-      const stage=ov.querySelector('#betStage');let sy=null,sl=level;
+      const stage=ov.querySelector('#betStage');let sy=null,si=idx;
       stage.addEventListener('pointerdown',e=>{
         if(e.target.closest('.chev')||e.target.closest('button'))return; // laisser les boutons cliquables
-        sy=e.clientY;sl=level;stage.setPointerCapture(e.pointerId);
+        sy=e.clientY;si=idx;stage.setPointerCapture(e.pointerId);
       });
-      stage.addEventListener('pointermove',e=>{if(sy===null)return;const d=Math.round((sy-e.clientY)/26);set(sl+d);});
+      stage.addEventListener('pointermove',e=>{if(sy===null)return;const d=Math.round((sy-e.clientY)/26);setIdx(si+d);});
       stage.addEventListener('pointerup',()=>{sy=null;});
       stage.addEventListener('pointercancel',()=>{sy=null;});
       ov.querySelector('#betValidate').onclick=()=>{G.chosen=level;ov.remove();revealQuestion(level);};
@@ -800,16 +806,13 @@
     }
 
     function afterGrade(nowMastered){
-      // mettre à jour les pastilles + pill compteur question (daily)
-      const acq=G.mode==='multi'?new Set():acquiredSet(G.card.id);
-      app.querySelectorAll('.lvchip').forEach(ch=>{
-        const lv=+ch.dataset.lv;
-        ch.classList.toggle('done',G.visitLevels.has(lv));
-        ch.classList.toggle('acq',acq.has(lv)&&!G.visitLevels.has(lv));
-      });
+      // la ligne méta reflète les niveaux restants de la carte
+      const m2=app.querySelector('#cardMeta2');
+      if(m2){
+        const rem=G.card.questions.filter(q=>!G.visitLevels.has(q.level)).length;
+        m2.textContent=rem?`${rem} niveau${rem>1?'x':''} restant${rem>1?'s':''} sur 10`:'Carte épuisée — bravo !';
+      }
       if(nowMastered)stampSeal();
-      // daily : quota de 3 questions
-      if(G.mode==='daily'&&G.visitAttempts>=G.dailyQuota){return setTimeout(finishDaily,nowMastered?900:200);}
       // afficher les CTA d'enchaînement
       showChain();
     }
@@ -820,7 +823,7 @@
       const remaining=G.card.questions.map(q=>q.level).filter(l=>!G.visitLevels.has(l));
       const cta=document.querySelector('#betOpen');if(cta)cta.style.display='none';
       bar=document.createElement('div');bar.id='chainBar';bar.className='stack';bar.style.marginTop='18px';
-      if(remaining.length&&(G.mode!=='daily'||G.visitAttempts<G.dailyQuota)){
+      if(remaining.length){
         bar.innerHTML=`
           <button class="btn accent" id="again">Tenter un autre niveau · ${remaining.length} restant${remaining.length>1?'s':''}</button>
           <button class="btn ghost sm" id="nextC">${G.mode==='multi'?'Terminer mon tour':(G.cardsPlayed+1>=G.len&&isFinite(G.len)?'Voir le résultat':'Carte suivante')} ${svg('chevR','sm')}</button>`;
@@ -834,6 +837,7 @@
 
     function advanceCard(){
       G.cardsPlayed++;G.i++;
+      if(G.mode==='daily')return finishDaily();
       if(G.mode==='multi')return multiEndTurn();
       nextCard();
     }
@@ -960,7 +964,7 @@
             <div class="sc-unit">points du jour</div>
             <div class="sc-stats">
               <div class="sc-stat"><div class="v num">${streak}</div><div class="l">Jours de suite</div></div>
-              <div class="sc-stat"><div class="v num">${G.correct}/${G.dailyQuota}</div><div class="l">Bonnes réponses</div></div>
+              <div class="sc-stat"><div class="v num">${G.correct}/${G.attempts}</div><div class="l">Bonnes réponses</div></div>
             </div>
             ${streak>=3?`<div class="record-badge">${svg('flame','sm')}Série de ${streak} jours</div>`:''}
           </div>

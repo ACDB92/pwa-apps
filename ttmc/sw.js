@@ -1,4 +1,4 @@
-const CACHE = 'ttmc-v1';
+const CACHE = 'ttmc-v2';
 const ASSETS = [
   './',
   './index.html',
