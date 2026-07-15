@@ -207,6 +207,7 @@
       font-family:var(--font-body);font-size:16px;font-weight:600;
     }
     .pinput::placeholder{color:var(--ink-faint);font-style:italic;font-weight:500;}
+    .seg-hint{font-size:13px;color:var(--ink-faint);margin-top:8px;padding:0 4px;}
     .pinput:focus{outline:none;border-color:var(--line-strong);background:var(--surface-2);}
 
     /* ===================== CARTE / JEU ===================== */
@@ -557,6 +558,7 @@
        =================================================== */
     let setupSel=new Set(CATS.map(c=>c.id));
     let setupLen=10;
+    let setupSeq=false; // false = pari de niveau, true = toutes les questions (1→10)
     function setup(){
       resetAccent();
       render(`
@@ -574,6 +576,12 @@
                 <div class="cr-check">${svg('check','sm')}</div>
               </div>`;}).join('')}
           </div>
+          <div class="section-t">Façon de jouer</div>
+          <div class="seg" id="modeSeg">
+            <button data-seq="0" class="${!setupSeq?'on':''}">Pari de niveau</button>
+            <button data-seq="1" class="${setupSeq?'on':''}">Toutes les questions</button>
+          </div>
+          <div class="seg-hint">${setupSeq?'Chaque carte se déroule du niveau 1 au niveau 10.':'Tu choisis ton niveau à chaque carte — audace récompensée.'}</div>
           <div class="section-t">Longueur</div>
           <div class="seg" id="lenSeg">
             <button data-len="5" class="${setupLen===5?'on':''}">5 cartes</button>
@@ -591,6 +599,7 @@
       app.querySelectorAll('#lenSeg button').forEach(b=>b.onclick=()=>{
         setupLen=+b.dataset.len;app.querySelectorAll('#lenSeg button').forEach(x=>x.classList.toggle('on',x===b));
       });
+      app.querySelectorAll('#modeSeg button').forEach(b=>b.onclick=()=>{setupSeq=b.dataset.seq==='1';setup();});
       app.querySelector('#startBtn').onclick=()=>startSolo();
     }
 
@@ -604,7 +613,7 @@
     }
     function startSolo(){
       const cats=[...setupSel];
-      G={mode:'solo',deck:buildDeck(cats),i:0,len:setupLen||Infinity,
+      G={mode:'solo',seq:setupSeq,deck:buildDeck(cats),i:0,len:setupLen||Infinity,
          score:0,streak:0,bestStreak:0,cardsPlayed:0,correct:0,attempts:0};
       nextCard();
     }
@@ -619,6 +628,12 @@
     function nextCard(){
       if(G.cardsPlayed>=G.len || G.i>=G.deck.length){return recap();}
       openCard(G.deck[G.i]);
+    }
+
+    // mode « toutes les questions » : prochain niveau non joué, en partant du 1
+    function nextSeqLevel(){
+      const r=G.card.questions.map(q=>q.level).filter(l=>!G.visitLevels.has(l)).sort((a,b)=>a-b);
+      return r[0];
     }
 
     function openCard(card){
@@ -652,7 +667,7 @@
                   <div class="hairline"></div>
                   <div class="card-meta2" id="cardMeta2">${esc(meta2)}</div>
                 </div>
-                <button class="btn gold card-cta" id="betOpen">Tu te mets combien ?</button>
+                <button class="btn gold card-cta" id="betOpen">${G.seq?'C’est parti · niveau 1':'Tu te mets combien ?'}</button>
               </div>
               <div class="face back" id="backFace"></div>
             </div>
@@ -660,7 +675,7 @@
         </div>`);
       app.querySelector('[data-quit]').onclick=()=>confirmQuit();
       app.querySelector('#gameMenu').onclick=()=>gameMenu();
-      app.querySelector('#betOpen').onclick=()=>openBet();
+      app.querySelector('#betOpen').onclick=()=>G.seq?revealQuestion(nextSeqLevel()):openBet();
     }
 
     /* ---------- Menu de partie (réglages) ---------- */
@@ -785,7 +800,8 @@
         if(G.streak>=3)delta+=2; // bonus série
         if(solo)markAcquired(G.card.id,level);G.visitCorrect++;
       }else{
-        delta=-Math.ceil(level/3);G.streak=0;
+        // le malus punit le pari raté ; en mode « toutes les questions », pas de pari donc pas de malus
+        delta=G.seq?0:-Math.ceil(level/3);G.streak=0;
       }
       G.attempts++;if(solo)bumpStat(G.card.categoryId,ok);
       addScore(delta);
@@ -825,13 +841,13 @@
       bar=document.createElement('div');bar.id='chainBar';bar.className='stack';bar.style.marginTop='18px';
       if(remaining.length){
         bar.innerHTML=`
-          <button class="btn accent" id="again">Tenter un autre niveau · ${remaining.length} restant${remaining.length>1?'s':''}</button>
+          <button class="btn accent" id="again">${G.seq?('Question suivante · niveau '+nextSeqLevel()):('Tenter un autre niveau · '+remaining.length+' restant'+(remaining.length>1?'s':''))}</button>
           <button class="btn ghost sm" id="nextC">${G.mode==='multi'?'Terminer mon tour':(G.cardsPlayed+1>=G.len&&isFinite(G.len)?'Voir le résultat':'Carte suivante')} ${svg('chevR','sm')}</button>`;
       }else{
         bar.innerHTML=`<button class="btn primary" id="nextC">${G.mode==='multi'?'Terminer mon tour':'Continuer'} ${svg('chevR','sm')}</button>`;
       }
       front.appendChild(bar);
-      const ag=bar.querySelector('#again');if(ag)ag.onclick=()=>{bar.remove();if(cta)cta.style.display='';openBet();};
+      const ag=bar.querySelector('#again');if(ag)ag.onclick=()=>{bar.remove();G.seq?revealQuestion(nextSeqLevel()):(cta&&(cta.style.display=''),openBet());};
       bar.querySelector('#nextC').onclick=()=>advanceCard();
     }
 
@@ -846,7 +862,7 @@
     function toast(ok,delta,streak){
       const t=document.createElement('div');t.className='toast';
       const sign=delta>=0?'+':'';
-      t.innerHTML=`<span class="pts" style="color:${ok?'var(--ok)':'var(--ko)'}">${sign}${delta}</span>`+
+      t.innerHTML=(delta!==0?`<span class="pts" style="color:${ok?'var(--ok)':'var(--ko)'}">${sign}${delta}</span>`:'')+
         (ok&&streak>=3?`<span class="streak-flame">${svg('flame','sm')}${streak}</span>`:`<span style="color:var(--ink-soft);font-size:14px">${ok?'Bravo !':'Raté'}</span>`);
       fx.appendChild(t);requestAnimationFrame(()=>t.classList.add('show'));
       setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),260);},1600);
@@ -982,6 +998,7 @@
     const PCOL=['#E0707E','#7FAECF','#A98FE0','#5FC2A4','#EBB05A','#57C9C2'];
     let mPlayers=[{name:'Joueur 1'},{name:'Joueur 2'}];
     let mRounds=3;
+    let mSeq=false;
     function multiSetup(){
       resetAccent();setTheme('#0E0F13');
       render(`
@@ -990,6 +1007,12 @@
           <div class="section-t">Joueurs (2 à 6)</div>
           <div class="stack" id="pList"></div>
           <button class="btn ghost sm" id="addP" style="margin-top:12px">+ Ajouter un joueur</button>
+          <div class="section-t">Façon de jouer</div>
+          <div class="seg" id="mModeSeg">
+            <button data-seq="0" class="${!mSeq?'on':''}">Pari de niveau</button>
+            <button data-seq="1" class="${mSeq?'on':''}">Toutes les questions</button>
+          </div>
+          <div class="seg-hint">${mSeq?'À ton tour : la carte se déroule du niveau 1 au niveau 10.':'À ton tour : tu paries ton niveau, puis tu peux enchaîner.'}</div>
           <div class="section-t">Cartes par joueur</div>
           <div class="seg" id="rSeg">
             ${[3,5,7].map(r=>`<button data-r="${r}" class="${mRounds===r?'on':''}">${r}</button>`).join('')}
@@ -1012,9 +1035,10 @@
       draw();
       app.querySelector('#addP').onclick=()=>{if(mPlayers.length<6){mPlayers.push({name:'Joueur '+(mPlayers.length+1)});draw();}};
       app.querySelectorAll('#rSeg button').forEach(b=>b.onclick=()=>{mRounds=+b.dataset.r;app.querySelectorAll('#rSeg button').forEach(x=>x.classList.toggle('on',x===b));});
+      app.querySelectorAll('#mModeSeg button').forEach(b=>b.onclick=()=>{mSeq=b.dataset.seq==='1';multiSetup();});
       app.querySelector('#startM').onclick=()=>{
         const players=mPlayers.map((p,i)=>({name:(p.name||('Joueur '+(i+1))).trim()||('Joueur '+(i+1)),color:PCOL[i],score:0}));
-        G={mode:'multi',deck:buildDeck(CATS.map(c=>c.id)),i:0,len:Infinity,
+        G={mode:'multi',seq:mSeq,deck:buildDeck(CATS.map(c=>c.id)),i:0,len:Infinity,
            score:0,streak:0,bestStreak:0,cardsPlayed:0,correct:0,attempts:0,
            multi:{players,rounds:mRounds,cur:0,turn:0,total:players.length*mRounds}};
         multiPass();
