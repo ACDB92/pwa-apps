@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E0F13">
+<title>Nos apps</title>
+<link rel="icon" href="./ttmc/icon.svg">
+<style>
+  :root{
+    --bg:#0E0F13;--surface:#171A21;--line:rgba(237,231,219,.09);
+    --ink:#EDE7DB;--ink-soft:rgba(237,231,219,.62);--gold:#D9B878;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:var(--bg);color:var(--ink);min-height:100vh;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  main{width:100%;max-width:430px;}
+  .kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700;}
+  h1{font-family:"Iowan Old Style","Palatino",Georgia,serif;font-weight:900;font-size:34px;margin:10px 0 26px;}
+  a.app{
+    display:flex;align-items:center;gap:16px;text-decoration:none;color:var(--ink);
+    background:var(--surface);border:1px solid var(--line);border-radius:18px;
+    padding:18px 20px;margin-bottom:14px;transition:transform .18s cubic-bezier(.22,1,.36,1);
+  }
+  a.app:active{transform:scale(.98);}
+  a.app img{width:52px;height:52px;border-radius:13px;}
+  .t{font-family:"Iowan Old Style","Palatino",Georgia,serif;font-weight:700;font-size:19px;}
+  .s{font-size:14px;color:var(--ink-soft);margin-top:3px;}
+  .arrow{margin-left:auto;color:var(--ink-soft);font-size:20px;}
+  footer{margin-top:22px;font-size:12.5px;color:var(--ink-soft);}
+</style>
+</head>
+<body>
+<main>
+  <div class="kicker">Alix &amp; Côme</div>
+  <h1>Nos apps</h1>
+  <a class="app" href="./ttmc/">
+    <img src="./ttmc/icon.svg" alt="">
+    <span><span class="t">Tu Te Mets Combien&nbsp;?</span><br><span class="s">Le grand jeu de culture — édition 70 ans de Papa</span></span>
+    <span class="arrow">›</span>
+  </a>
+  <a class="app" href="./calcul-mental/">
+    <img src="./calcul-mental/icon.svg" alt="">
+    <span><span class="t">Calcul Mental</span><br><span class="s">Entraînement quotidien</span></span>
+    <span class="arrow">›</span>
+  </a>
+  <footer>PWAs — ajoutez-les à l'écran d'accueil pour jouer hors-ligne.</footer>
+</main>
+</body>
+</html>

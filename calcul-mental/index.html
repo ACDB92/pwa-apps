@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#ffffff" id="theme-meta">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg">
+  <title>Calcul Mental</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green: #22c55e;
+      --green-dark: #16a34a;
+      --red: #ef4444;
+      --bg: #ffffff;
+      --numpad-key: #f3f4f6;
+      --numpad-del: #e5e7eb;
+      --numpad-ok: #16a34a;
+      --text: #111111;
+      --muted: #666666;
+      --tab-active: #16a34a;
+      --tab-inactive: #9ca3af;
+    }
+
+    /* ── Dark mode ── */
+    .dark {
+      --bg: #0f172a; --text: #f1f5f9;
+      --numpad-key: #1e293b; --numpad-del: #334155;
+      --muted: #94a3b8; --tab-inactive: #64748b;
+    }
+    .dark #screen-stats { background: var(--bg); }
+    .dark .stats-title, .dark .section-title { color: var(--text); }
+    .dark .summary-card, .dark .pstat-card { background: #1e293b; }
+    .dark .summary-lbl, .dark .pstat-lbl { color: #94a3b8; }
+    .dark .heat-date { color: #64748b; }
+    .dark #tabs { background: var(--bg); border-top-color: #334155; }
+    .dark #profile-panel, .dark #settings-panel { background: var(--bg); }
+    .dark #profile-header, .dark #settings-header { border-bottom-color: #334155; }
+    .dark #back-btn, .dark #settings-back-btn { background: #1e293b; color: var(--text); }
+    .dark #profile-title, .dark #settings-title { color: var(--text); }
+    .dark #ptabs { border-bottom-color: #334155; }
+    .dark .ptab { color: #64748b; }
+    .dark .ptab.active { color: var(--green); }
+    .dark .badge-card { background: #1e293b; }
+    .dark .badge-card.unlocked { background: #14532d; }
+    .dark .badge-name { color: var(--text); }
+    .dark .badge-desc { color: #64748b; }
+    .dark .cal-nav-btn { background: #1e293b; color: var(--text); }
+    .dark .cal-month-label, .dark .cal-head { color: #94a3b8; }
+    .dark .badge-bar { background: #334155; }
+    .dark .badge-prog-text { color: #64748b; }
+    .dark #badge-toast { background: #1e293b; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+    .dark #toast-msg { color: #94a3b8; }
+    .dark #profile-name { color: var(--text); }
+    .dark .member-since { color: #64748b; }
+    .dark .key:active { background: #334155; }
+    .dark .key-del:active, .dark .key-neg:active { background: #475569; }
+    .dark .set-section-title { color: #64748b; }
+    .dark .set-row span, .dark .set-row-col > span { color: var(--text); }
+    .dark .toggle-track { background: #334155; }
+    .dark .chip { border-color: #334155; color: #94a3b8; }
+    .dark .chip.active { background: #14532d; border-color: var(--green); color: var(--green); }
+
+    html, body {
+      height: 100%; overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-text-size-adjust: 100%;
+      user-select: none;
+    }
+
+    #app {
+      display: flex; flex-direction: column;
+      height: 100dvh; height: 100vh;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .screen { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+    .screen.active { display: flex; }
+
+    /* ── Game screen ── */
+    #screen-game { transition: background-color 0.15s ease; background: var(--bg); }
+
+    #score-row {
+      display: flex; align-items: center;
+      padding: 10px 14px 6px; gap: 8px;
+    }
+    #profile-btn, #settings-btn {
+      background: none; border: none; font-size: 24px;
+      padding: 2px; cursor: pointer; line-height: 1;
+      flex-shrink: 0;
+    }
+    #badge-prog-row {
+      flex: 1; display: flex; align-items: center; gap: 6px;
+    }
+    #bp-cur { font-size: 20px; flex-shrink: 0; }
+    #bp-bar {
+      flex: 1; height: 6px; background: #e5e7eb;
+      border-radius: 3px; overflow: hidden;
+    }
+    #bp-fill {
+      height: 100%; background: var(--green-dark);
+      border-radius: 3px; transition: width 0.3s ease;
+      width: 0%;
+    }
+    #bp-nxt { font-size: 20px; flex-shrink: 0; }
+    #bp-score {
+      font-size: 18px; font-weight: 700; color: var(--text);
+      min-width: 28px; text-align: right; flex-shrink: 0;
+    }
+
+    #equation-area {
+      flex: 1; display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      gap: 20px; padding: 0 20px;
+    }
+    #equation { font-size: clamp(40px,12vw,60px); font-weight: 300; color: var(--text); letter-spacing: 3px; text-align: center; }
+    #input-display { font-size: clamp(56px,18vw,80px); font-weight: 700; color: var(--text); min-width: 120px; text-align: center; min-height: 1.2em; }
+
+    #numpad { padding: 8px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .numpad-row { display: flex; gap: 8px; }
+    .key {
+      flex: 1; height: clamp(56px,14vw,72px);
+      background: var(--numpad-key); border: none; border-radius: 14px;
+      font-size: clamp(22px,6vw,30px); font-weight: 600; color: var(--text);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+      transition: transform 0.08s ease, background 0.08s ease;
+    }
+    .key:active { transform: scale(0.93); background: #e5e7eb; }
+    .key-del { background: var(--numpad-del); }
+    .key-del:active { background: #d1d5db; }
+    .key-neg { background: var(--numpad-del); }
+    .key-neg:active { background: #d1d5db; }
+    .key-ok { background: var(--numpad-ok); color: #fff; }
+    .key-ok:active { background: #15803d; }
+
+    /* ── Tab bar ── */
+    #tabs { display: flex; background: #fff; border-top: 1px solid #e5e7eb; }
+    .tab {
+      flex: 1; padding: 10px 4px 12px; border: none; background: none; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      color: var(--tab-inactive); font-size: 11px; font-weight: 600;
+    }
+    .tab .tab-icon { font-size: 22px; }
+    .tab.active { color: var(--tab-active); }
+
+    /* ── Stats screen ── */
+    #screen-stats { background: #fff; overflow-y: auto; }
+    #stats-content { padding: 20px; padding-bottom: 24px; }
+    .stats-title { font-size: 26px; font-weight: 700; color: var(--text); margin-bottom: 20px; }
+    .summary-row { display: flex; gap: 10px; margin-bottom: 28px; }
+    .summary-card { flex: 1; background: #f3f4f6; border-radius: 14px; padding: 14px 8px; text-align: center; }
+    .summary-val { font-size: 30px; font-weight: 700; color: var(--green-dark); }
+    .summary-lbl { font-size: 11px; color: var(--muted); margin-top: 3px; }
+    .section-title { font-size: 14px; font-weight: 600; color: #444; margin-bottom: 12px; }
+    .heat-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+    .heat-cell { aspect-ratio: 1; border-radius: 7px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
+    .heat-date { font-size: 9px; color: #999; }
+    .heat-badge { font-size: 14px; line-height: 1; }
+
+    /* ── Shared panel styles ── */
+    #profile-panel, #settings-panel {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: #fff; z-index: 100;
+      transform: translateX(100%);
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex; flex-direction: column;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    #profile-panel.open, #settings-panel.open { transform: translateX(0); }
+
+    #profile-header, #settings-header {
+      display: flex; align-items: center;
+      padding: 12px 16px; gap: 12px;
+      border-bottom: 1px solid #f0f0f0; flex-shrink: 0;
+    }
+    #back-btn, #settings-back-btn {
+      background: #f3f4f6; border: none; border-radius: 20px;
+      width: 36px; height: 36px; font-size: 18px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #profile-title { font-size: 17px; font-weight: 700; color: #111; }
+    #settings-title { font-size: 17px; font-weight: 700; color: #111; }
+
+    /* ── Profile panel ── */
+    #ptabs { display: flex; flex-shrink: 0; border-bottom: 1px solid #f0f0f0; }
+    .ptab {
+      flex: 1; padding: 12px 4px; border: none; background: none;
+      font-size: 13px; font-weight: 600; color: #bbb; cursor: pointer;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+    }
+    .ptab.active { color: var(--green-dark); border-bottom-color: var(--green-dark); }
+
+    #profile-content { flex: 1; overflow-y: auto; }
+    .ptab-pane { display: none; padding: 20px; padding-bottom: 32px; }
+    .ptab-pane.active { display: block; }
+
+    /* Profil tab */
+    .profile-avatar { text-align: center; margin-bottom: 20px; }
+    .avatar-emoji { font-size: 64px; line-height: 1.1; display: block; }
+    .profile-name-row { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 10px; }
+    #profile-name {
+      font-size: 22px; font-weight: 700; color: #111;
+      border: none; border-bottom: 2px solid transparent;
+      text-align: center; background: transparent; outline: none;
+      max-width: 180px; transition: border-color 0.2s;
+    }
+    #profile-name:focus { border-bottom-color: var(--green-dark); }
+    .edit-icon { font-size: 13px; color: #ccc; }
+    .pstats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+    .pstat-card { background: #f3f4f6; border-radius: 14px; padding: 14px 12px; text-align: center; }
+    .pstat-val { font-size: 28px; font-weight: 700; color: var(--green-dark); }
+    .pstat-lbl { font-size: 11px; color: #666; margin-top: 3px; line-height: 1.3; }
+    .member-since { text-align: center; margin-top: 16px; font-size: 12px; color: #bbb; }
+
+    /* Calendrier tab */
+    .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .cal-nav-btn {
+      background: #f3f4f6; border: none; border-radius: 10px;
+      width: 38px; height: 38px; font-size: 18px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .cal-nav-btn:disabled { opacity: 0.25; pointer-events: none; }
+    .cal-month-label { font-size: 16px; font-weight: 700; color: #111; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+    .cal-head { text-align: center; font-size: 10px; color: #bbb; font-weight: 600; padding: 4px 0 6px; }
+    .cal-day {
+      aspect-ratio: 1; border-radius: 8px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 1px;
+    }
+    .cal-day.today { outline: 2px solid var(--green-dark); outline-offset: -1px; }
+    .cal-day-num { font-size: 10px; }
+    .cal-day-badge { font-size: 13px; line-height: 1; }
+
+    /* Badges tab */
+    .badge-group-title {
+      font-size: 11px; font-weight: 700; color: #aaa;
+      text-transform: uppercase; letter-spacing: 0.8px;
+      margin: 20px 0 10px;
+    }
+    .badge-group-title:first-child { margin-top: 0; }
+    .badges-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .badge-card {
+      background: #f9fafb; border-radius: 14px;
+      padding: 12px 6px 10px; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+    }
+    .badge-card.unlocked { background: #f0fdf4; }
+    .badge-card.locked { opacity: 0.35; }
+    .badge-em { font-size: 30px; line-height: 1.15; }
+    .badge-name { font-size: 10px; font-weight: 700; color: #222; line-height: 1.2; }
+    .badge-desc { font-size: 9px; color: #999; line-height: 1.3; }
+    .badge-prog { width: 100%; margin-top: 5px; }
+    .badge-prog-text { font-size: 9px; color: #aaa; margin-bottom: 3px; }
+    .badge-bar { width: 100%; height: 4px; background: #e5e7eb; border-radius: 2px; overflow: hidden; }
+    .badge-bar-fill { height: 100%; background: var(--green-dark); border-radius: 2px; }
+
+    /* ── Settings panel ── */
+    #settings-content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 32px; }
+    .set-section-title {
+      font-size: 11px; font-weight: 700; color: #aaa;
+      text-transform: uppercase; letter-spacing: 0.8px;
+      margin: 24px 0 14px;
+    }
+    .set-section-title:first-child { margin-top: 0; }
+    .set-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .set-row span { font-size: 15px; font-weight: 500; color: var(--text); }
+    .set-row-col { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    .set-row-col > span { font-size: 15px; font-weight: 500; color: var(--text); }
+
+    /* Toggle switch */
+    .toggle { position: relative; width: 46px; height: 28px; flex-shrink: 0; cursor: pointer; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute; inset: 0;
+      background: #d1d5db; border-radius: 14px;
+      transition: background 0.2s;
+    }
+    .toggle-track::after {
+      content: ''; position: absolute;
+      width: 22px; height: 22px; background: #fff;
+      border-radius: 50%; top: 3px; left: 3px;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle input:checked + .toggle-track { background: var(--green-dark); }
+    .toggle input:checked + .toggle-track::after { transform: translateX(18px); }
+
+    /* Chips */
+    .chip-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .chip {
+      padding: 8px 16px; border: 2px solid #e5e7eb; border-radius: 20px;
+      background: none; font-size: 15px; font-weight: 600; color: var(--muted);
+      cursor: pointer; transition: all 0.15s ease;
+    }
+    .chip.active { border-color: var(--green-dark); color: var(--green-dark); background: #f0fdf4; }
+
+    /* ── Diff label ── */
+    #diff-row { text-align: center; padding: 0 14px 6px; }
+    #diff-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; }
+
+    /* ── Hint ── */
+    #hint-btn {
+      background: none; border: none; font-size: 20px;
+      padding: 2px; cursor: pointer; line-height: 1; flex-shrink: 0;
+      opacity: 0.7;
+    }
+    #hint-btn:disabled { opacity: 0.25; }
+    #hint-text {
+      display: none;
+      background: #f0fdf4; border: 1px solid #86efac; border-radius: 12px;
+      padding: 10px 16px; font-size: 14px; color: #166534;
+      font-style: italic; text-align: center; line-height: 1.6;
+      max-width: 320px;
+    }
+    .dark #hint-text { background: #14532d; border-color: #16a34a; color: #bbf7d0; }
+
+    /* ── Badge unlock toast ── */
+    #badge-toast {
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0.85);
+      background: #fff; border-radius: 20px;
+      padding: 24px 28px; text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      z-index: 200; pointer-events: none;
+      opacity: 0; transition: opacity 0.2s ease, transform 0.2s ease;
+      min-width: 220px;
+    }
+    #badge-toast.show {
+      opacity: 1; transform: translate(-50%, -50%) scale(1);
+    }
+    #toast-emoji { font-size: 52px; line-height: 1.1; display: block; margin-bottom: 8px; }
+    #toast-name { font-size: 14px; font-weight: 700; color: var(--green-dark); margin-bottom: 6px; }
+    #toast-msg { font-size: 13px; color: #555; line-height: 1.4; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ── Game screen ── -->
+  <div id="screen-game" class="screen active">
+    <div id="score-row">
+      <button id="profile-btn" onclick="openProfile()" aria-label="Mon espace">👸</button>
+      <div id="badge-prog-row">
+        <span id="bp-cur">—</span>
+        <div id="bp-bar"><div id="bp-fill"></div></div>
+        <span id="bp-nxt">🌱</span>
+      </div>
+      <span id="bp-score">0</span>
+      <button id="hint-btn" onclick="showHint()" aria-label="Indice">💡</button>
+      <button id="settings-btn" onclick="openSettings()" aria-label="Réglages">⚙️</button>
+    </div>
+    <div id="diff-row"><span id="diff-label"></span></div>
+    <div id="equation-area">
+      <div id="equation">—</div>
+      <div id="input-display">?</div>
+      <div id="hint-text"></div>
+    </div>
+    <div id="numpad">
+      <div class="numpad-row">
+        <button class="key" data-key="7">7</button>
+        <button class="key" data-key="8">8</button>
+        <button class="key" data-key="9">9</button>
+      </div>
+      <div class="numpad-row">
+        <button class="key" data-key="4">4</button>
+        <button class="key" data-key="5">5</button>
+        <button class="key" data-key="6">6</button>
+      </div>
+      <div class="numpad-row">
+        <button class="key" data-key="1">1</button>
+        <button class="key" data-key="2">2</button>
+        <button class="key" data-key="3">3</button>
+      </div>
+      <div class="numpad-row">
+        <button class="key key-neg" data-key="−">−</button>
+        <button class="key key-del" data-key="⌫">⌫</button>
+        <button class="key" data-key="0">0</button>
+        <button class="key key-ok" data-key="✓">✓</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Stats screen ── -->
+  <div id="screen-stats" class="screen">
+    <div id="stats-content">
+      <p class="stats-title">Statistiques</p>
+      <div class="summary-row">
+        <div class="summary-card"><div class="summary-val" id="stat-today">—</div><div class="summary-lbl">Aujourd'hui</div></div>
+        <div class="summary-card"><div class="summary-val" id="stat-streak">0 🔥</div><div class="summary-lbl">Jours consécutifs</div></div>
+        <div class="summary-card"><div class="summary-val" id="stat-days">0</div><div class="summary-lbl">Jours actifs</div></div>
+      </div>
+      <p class="section-title">30 derniers jours</p>
+      <div class="heat-grid" id="heat-grid"></div>
+    </div>
+  </div>
+
+  <!-- ── Tab bar ── -->
+  <nav id="tabs">
+    <button class="tab active" id="tab-game" onclick="switchTab('game')">
+      <span class="tab-icon">🧮</span>Jeu
+    </button>
+    <button class="tab" id="tab-stats" onclick="switchTab('stats')">
+      <span class="tab-icon">📊</span>Stats
+    </button>
+  </nav>
+
+  <!-- ── Profile panel ── -->
+  <div id="profile-panel">
+    <div id="profile-header">
+      <button id="back-btn" onclick="closeProfile()">←</button>
+      <span id="profile-title">Mon espace</span>
+    </div>
+    <div id="ptabs">
+      <button class="ptab active" data-ptab="profil"     onclick="switchPTab('profil')">Profil</button>
+      <button class="ptab"        data-ptab="calendrier" onclick="switchPTab('calendrier')">Calendrier</button>
+      <button class="ptab"        data-ptab="badges"     onclick="switchPTab('badges')">Badges</button>
+    </div>
+    <div id="profile-content">
+      <!-- Profil -->
+      <div id="ptab-profil" class="ptab-pane active">
+        <div class="profile-avatar">
+          <span class="avatar-emoji">👸</span>
+          <div class="profile-name-row">
+            <input type="text" id="profile-name" value="Princesse" maxlength="20"
+                   onchange="saveName(this.value)" />
+            <span class="edit-icon">✏️</span>
+          </div>
+        </div>
+        <div class="pstats-grid" id="pstats-grid"></div>
+        <div class="member-since" id="member-since"></div>
+      </div>
+      <!-- Calendrier -->
+      <div id="ptab-calendrier" class="ptab-pane">
+        <div class="cal-nav">
+          <button class="cal-nav-btn" id="cal-prev" onclick="changeMonth(-1)">‹</button>
+          <span class="cal-month-label" id="cal-label"></span>
+          <button class="cal-nav-btn" id="cal-next" onclick="changeMonth(1)">›</button>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+      <!-- Badges -->
+      <div id="ptab-badges" class="ptab-pane">
+        <div id="badges-wrap"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Settings panel ── -->
+  <div id="settings-panel">
+    <div id="settings-header">
+      <button id="settings-back-btn" onclick="closeSettings()">←</button>
+      <span id="settings-title">Réglages</span>
+    </div>
+    <div id="settings-content">
+      <div class="set-section-title">Jeu</div>
+
+      <div class="set-row">
+        <span>Vibration</span>
+        <label class="toggle">
+          <input type="checkbox" id="set-vib" onchange="toggleVibration(this.checked)">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+
+      <div class="set-row-col">
+        <span>Opérateurs</span>
+        <div class="chip-group" id="set-ops-group">
+          <button class="chip" data-op="+" onclick="toggleOp('+')">+</button>
+          <button class="chip" data-op="−" onclick="toggleOp('−')">−</button>
+          <button class="chip" data-op="×" onclick="toggleOp('×')">×</button>
+          <button class="chip" data-op="÷" onclick="toggleOp('÷')">÷</button>
+        </div>
+      </div>
+
+      <div class="set-row-col">
+        <span>Difficulté</span>
+        <div class="chip-group" id="set-diff-group">
+          <button class="chip" data-diff="easy"   onclick="setDifficulty('easy')">Facile</button>
+          <button class="chip" data-diff="normal" onclick="setDifficulty('normal')">Normal</button>
+          <button class="chip" data-diff="hard"   onclick="setDifficulty('hard')">Difficile</button>
+        </div>
+      </div>
+
+      <div class="set-section-title">Affichage</div>
+
+      <div class="set-row">
+        <span>Mode nuit</span>
+        <label class="toggle">
+          <input type="checkbox" id="set-dark" onchange="toggleDark(this.checked)">
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Badge unlock toast ── -->
+  <div id="badge-toast">
+    <span id="toast-emoji">👑</span>
+    <div id="toast-name">Princesse</div>
+    <div id="toast-msg">Bravo !</div>
+  </div>
+
+</div>
+<script>
+// ── Badge definitions ─────────────────────────────────────────────────────────
+const DAILY_BADGES = [
+  { emoji: '🌱', name: 'Graine de Princesse', threshold: 1,   congrats: "C'est parti, belle Princesse !" },
+  { emoji: '🌸', name: 'Fleur du Palais',     threshold: 5,   congrats: "Tu t'épanouis comme une fleur !" },
+  { emoji: '🎀', name: 'Damoiselle',          threshold: 10,  congrats: "Magnifique, ma Damoiselle !" },
+  { emoji: '👑', name: 'Princesse',           threshold: 20,  congrats: "Bravo, quelle Princesse tu fais !" },
+  { emoji: '💎', name: 'Duchesse',            threshold: 35,  congrats: "Impressionnante, grande Duchesse !" },
+  { emoji: '🏰', name: 'Dame du Château',    threshold: 50,  congrats: "Le château s'incline devant toi !" },
+  { emoji: '🦋', name: 'Fée des Maths',      threshold: 75,  congrats: "La fée des maths est parmi nous !" },
+  { emoji: '👸', name: 'Reine des Maths',    threshold: 100, congrats: "Tu es la Reine des Maths !" },
+];
+
+const STREAK_BADGES = [
+  { emoji: '🌷', name: 'Fidèle',       threshold: 3  },
+  { emoji: '🌺', name: 'Assidue',      threshold: 7  },
+  { emoji: '🌹', name: 'Inébranlable', threshold: 14 },
+  { emoji: '✨', name: 'Légende',      threshold: 30 },
+];
+
+function badgeForScore(n) {
+  let b = null;
+  for (const d of DAILY_BADGES) { if (n >= d.threshold) b = d; else break; }
+  return b;
+}
+
+function nextBadgeFor(n) {
+  return DAILY_BADGES.find(d => n < d.threshold) || null;
+}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+const settings = {
+  vibration: true,
+  ops: { '+': true, '−': true, '×': true, '÷': true },
+  difficulty: 'hard',
+  darkMode: false,
+};
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem('settings');
+    if (raw) Object.assign(settings, JSON.parse(raw));
+  } catch(e) {}
+}
+
+function saveSettings() {
+  localStorage.setItem('settings', JSON.stringify(settings));
+}
+
+function applyDarkMode() {
+  document.documentElement.classList.toggle('dark', settings.darkMode);
+  const neutral = settings.darkMode ? '#0f172a' : '#ffffff';
+  document.getElementById('theme-meta').setAttribute('content', neutral);
+  if (elGame) elGame.style.backgroundColor = neutral;
+}
+
+// ── Difficulty presets ────────────────────────────────────────────────────────
+const DIFFICULTY = {
+  easy:   { rng: [1,  20],  mul: [1,  10], divD: [2, 10], divQ: [1, 10], negSub: false },
+  normal: { rng: [1,  99],  mul: [1,  20], divD: [2, 15], divQ: [1, 20], negSub: false },
+  hard:   { rng: [10, 999], mul: [2, 100], divD: [2, 25], divQ: [1, 40], negSub: true  },
+};
+
+// ── Storage ───────────────────────────────────────────────────────────────────
+function todayKey() { return 'score:' + new Date().toISOString().slice(0, 10); }
+function dateKey(d) { return 'score:' + d.toISOString().slice(0, 10); }
+
+function incrementToday() {
+  const key = todayKey();
+  const n = (parseInt(localStorage.getItem(key) || '0', 10)) + 1;
+  localStorage.setItem(key, n);
+  return n;
+}
+
+function getScores(days) {
+  const out = [], today = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    const ds = d.toISOString().slice(0, 10);
+    out.push({ date: ds, count: parseInt(localStorage.getItem('score:' + ds) || '0', 10) });
+  }
+  return out;
+}
+
+function getAllScoresMap() {
+  const out = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('score:'))
+      out[key.slice(6)] = parseInt(localStorage.getItem(key), 10) || 0;
+  }
+  return out;
+}
+
+function calcStats() {
+  const all = getAllScoresMap();
+  const vals = Object.values(all);
+  const total   = vals.reduce((s, v) => s + v, 0);
+  const bestDay = vals.length ? Math.max(...vals) : 0;
+  let streak = 0;
+  const today = new Date();
+  for (let i = 0; ; i++) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    if ((all[d.toISOString().slice(0, 10)] || 0) > 0) streak++;
+    else break;
+  }
+  const memberSince = Object.keys(all).filter(k => all[k] > 0).sort()[0] || null;
+  return { total, bestDay, streak, memberSince, all };
+}
+
+// ── Math ──────────────────────────────────────────────────────────────────────
+const OPS = ['+', '−', '×', '÷'];
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+function nextEq() {
+  const activeOps = OPS.filter(op => settings.ops[op]);
+  if (!activeOps.length) activeOps.push('+');
+  const op = activeOps[Math.floor(Math.random() * activeOps.length)];
+  const d = DIFFICULTY[settings.difficulty];
+  let a, b, answer;
+  if (op === '+') {
+    a = rand(d.rng[0], d.rng[1]); b = rand(d.rng[0], d.rng[1]); answer = a + b;
+  } else if (op === '−') {
+    a = rand(d.rng[0], d.rng[1]); b = rand(d.rng[0], d.rng[1]);
+    if (!d.negSub && b > a) { const t = a; a = b; b = t; }
+    answer = a - b;
+  } else if (op === '×') {
+    a = rand(d.mul[0], d.mul[1]); b = rand(d.mul[0], d.mul[1]); answer = a * b;
+  } else {
+    b = rand(d.divD[0], d.divD[1]); const q = rand(d.divQ[0], d.divQ[1]); a = b * q; answer = q;
+  }
+  return { display: a + ' ' + op + ' ' + b, answer, a, b, operator: op };
+}
+
+// ── Hint generation ──────────────────────────────────────────────────────────
+function generateHint({ a, b, operator: op }) {
+  if (op === '+') {
+    const br = Math.round(b / 10) * 10;
+    if (br === 0 || br === b) return a + ' + ' + b + ' = ' + (a + b);
+    const partial = a + br;
+    const rem = b - br;
+    return rem > 0
+      ? a + ' + ' + br + ' = ' + partial + ', + ' + rem + ' = ?'
+      : a + ' + ' + br + ' = ' + partial + ', − ' + (-rem) + ' = ?';
+  }
+  if (op === '−') {
+    if (a < b) return '−(' + b + ' − ' + a + ') = ?';
+    const br = Math.round(b / 10) * 10;
+    if (br === 0 || br === b) return a + ' − ' + b + ' = ' + (a - b);
+    const partial = a - br;
+    const rem = b - br;
+    return rem > 0
+      ? a + ' − ' + br + ' = ' + partial + ', − ' + rem + ' = ?'
+      : a + ' − ' + br + ' = ' + partial + ', + ' + (-rem) + ' = ?';
+  }
+  if (op === '×') {
+    const small = Math.min(a, b), big = Math.max(a, b);
+    if (small < 10) {
+      const bigR = Math.floor(big / 10) * 10, bigRem = big - bigR;
+      if (bigRem === 0) return small + ' × ' + big + ' = ' + (small * big);
+      return small + ' × ' + bigR + ' = ' + (small * bigR) + ', + ' + small + ' × ' + bigRem + ' = ?';
+    }
+    const rounded = Math.round(small / 10) * 10;
+    const diff = rounded - small;
+    if (diff === 0) return small + ' × ' + big + ' = ' + (small * big);
+    const partial = rounded * big;
+    return diff > 0
+      ? rounded + ' × ' + big + ' = ' + partial + ', − ' + diff + ' × ' + big + ' = ?'
+      : rounded + ' × ' + big + ' = ' + partial + ', + ' + (-diff) + ' × ' + big + ' = ?';
+  }
+  if (op === '÷') {
+    const q = a / b;
+    if (q >= 10) {
+      const q10 = Math.floor(q / 10) * 10;
+      const partial = b * q10;
+      const reste = a - partial;
+      return b + ' × ' + q10 + ' = ' + partial + (reste > 0 ? ', reste ' + reste + ' ÷ ' + b + ' = ?' : ', exact !');
+    }
+    return b + ' × ? = ' + a;
+  }
+}
+
+function showHint() {
+  const btn = document.getElementById('hint-btn');
+  btn.disabled = true;
+  const el = document.getElementById('hint-text');
+  el.textContent = generateHint(eq);
+  el.style.display = 'block';
+}
+
+function resetHint() {
+  const btn = document.getElementById('hint-btn');
+  btn.disabled = false;
+  const el = document.getElementById('hint-text');
+  el.style.display = 'none';
+  el.textContent = '';
+}
+
+function updateDiffLabel() {
+  const cfg = {
+    easy:   { label: 'Facile',    color: '#16a34a' },
+    normal: { label: 'Normal',    color: '#f59e0b' },
+    hard:   { label: 'Difficile', color: '#ef4444' },
+  };
+  const el = document.getElementById('diff-label');
+  const c = cfg[settings.difficulty];
+  el.textContent = c.label;
+  el.style.color = c.color;
+}
+
+// ── Game ──────────────────────────────────────────────────────────────────────
+let eq, input = '', locked = false;
+let sessionScore = parseInt(localStorage.getItem(todayKey()) || '0', 10);
+
+const elEq      = document.getElementById('equation');
+const elInput   = document.getElementById('input-display');
+const elGame    = document.getElementById('screen-game');
+const elTheme   = document.getElementById('theme-meta');
+const elBpCur   = document.getElementById('bp-cur');
+const elBpFill  = document.getElementById('bp-fill');
+const elBpNxt   = document.getElementById('bp-nxt');
+const elBpScore = document.getElementById('bp-score');
+
+let toastTimer = null;
+function showBadgeToast(badge) {
+  const el = document.getElementById('badge-toast');
+  document.getElementById('toast-emoji').textContent = badge.emoji;
+  document.getElementById('toast-name').textContent  = badge.name;
+  document.getElementById('toast-msg').textContent   = badge.congrats;
+  if (toastTimer) clearTimeout(toastTimer);
+  el.classList.add('show');
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+function renderBadgeProgress(n) {
+  const cur = badgeForScore(n);
+  const nxt = nextBadgeFor(n);
+  elBpCur.textContent   = cur ? cur.emoji : '—';
+  elBpScore.textContent = n;
+  if (nxt) {
+    const prevT = cur ? cur.threshold : 0;
+    const pct = Math.round((n - prevT) / (nxt.threshold - prevT) * 100);
+    elBpFill.style.width = Math.min(pct, 100) + '%';
+    elBpNxt.textContent  = nxt.emoji;
+  } else {
+    elBpFill.style.width = '100%';
+    elBpNxt.textContent  = '✨';
+  }
+}
+
+function render() {
+  elEq.textContent    = eq.display + ' =';
+  elInput.textContent = input || '?';
+  renderBadgeProgress(sessionScore);
+}
+
+function setBg(state) {
+  const neutral = settings.darkMode ? '#0f172a' : '#ffffff';
+  const c = { neutral, correct: '#22c55e', wrong: '#ef4444' }[state];
+  elGame.style.backgroundColor = c;
+  elTheme.setAttribute('content', c);
+}
+
+function handleKey(key) {
+  if (locked) return;
+  if (key === '⌫') { input = input.slice(0, -1); }
+  else if (key === '−') { if (input === '') input = '-'; }
+  else if (key === '✓') {
+    if (!input) return;
+    locked = true;
+    if (parseInt(input, 10) === eq.answer) {
+      setBg('correct');
+      if (settings.vibration && navigator.vibrate) navigator.vibrate(80);
+      const prevBadge = badgeForScore(sessionScore);
+      sessionScore = incrementToday(); render();
+      const newBadge = badgeForScore(sessionScore);
+      if (newBadge && newBadge !== prevBadge) showBadgeToast(newBadge);
+      setTimeout(() => { eq = nextEq(); input = ''; setBg('neutral'); render(); resetHint(); locked = false; }, 400);
+    } else {
+      setBg('wrong');
+      if (settings.vibration && navigator.vibrate) navigator.vibrate([80, 60, 80]);
+      setTimeout(() => { input = ''; setBg('neutral'); render(); locked = false; }, 800);
+    }
+    return;
+  } else {
+    if (input.length >= 5) return;
+    input += key;
+  }
+  render();
+}
+
+document.querySelectorAll('.key').forEach(btn => {
+  btn.addEventListener('touchstart', e => { e.preventDefault(); handleKey(btn.dataset.key); }, { passive: false });
+  btn.addEventListener('click', () => handleKey(btn.dataset.key));
+});
+
+// ── Main tabs ─────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('screen-' + tab).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'stats') renderStats();
+}
+
+// ── Stats screen ──────────────────────────────────────────────────────────────
+function heatColor(count) {
+  if (count === 0) return '#f3f4f6';
+  const b = badgeForScore(count);
+  if (!b) return '#f3f4f6';
+  const i = DAILY_BADGES.indexOf(b);
+  const colors = ['#dcfce7','#bbf7d0','#86efac','#4ade80','#22c55e','#16a34a','#15803d','#166534'];
+  return colors[Math.min(i, colors.length - 1)];
+}
+
+function renderStats() {
+  const scores = getScores(30);
+  const active = scores.filter(d => d.count > 0).length;
+  const todayCount = scores[scores.length - 1]?.count ?? 0;
+  const todayBadge = badgeForScore(todayCount);
+
+  const stats = calcStats();
+  document.getElementById('stat-today').textContent  = todayBadge ? todayBadge.emoji : (todayCount > 0 ? todayCount : '—');
+  document.getElementById('stat-streak').textContent = stats.streak + ' 🔥';
+  document.getElementById('stat-days').textContent   = active;
+
+  document.getElementById('heat-grid').innerHTML = scores.map(({ date, count }) => {
+    const d = new Date(date + 'T00:00:00');
+    const lbl = d.getDate() + '/' + (d.getMonth() + 1);
+    const badge = badgeForScore(count);
+    return '<div class="heat-cell" style="background:' + heatColor(count) + '">'
+      + '<span class="heat-date">' + lbl + '</span>'
+      + (badge ? '<span class="heat-badge">' + badge.emoji + '</span>' : '')
+      + '</div>';
+  }).join('');
+}
+
+// ── Profile panel ─────────────────────────────────────────────────────────────
+let calYear, calMonth, activePTab = 'profil';
+
+function openProfile() {
+  const now = new Date();
+  calYear = now.getFullYear(); calMonth = now.getMonth();
+  document.getElementById('profile-panel').classList.add('open');
+  history.pushState({ panel: 'profile' }, '');
+  renderPTab(activePTab);
+}
+function closeProfile() {
+  document.getElementById('profile-panel').classList.remove('open');
+}
+
+function switchPTab(tab) {
+  activePTab = tab;
+  document.querySelectorAll('.ptab').forEach(t => t.classList.toggle('active', t.dataset.ptab === tab));
+  document.querySelectorAll('.ptab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('ptab-' + tab).classList.add('active');
+  renderPTab(tab);
+}
+
+function renderPTab(tab) {
+  const stats = calcStats();
+  if (tab === 'profil')          renderProfilTab(stats);
+  else if (tab === 'calendrier') renderCalTab(stats);
+  else                           renderBadgesTab(stats);
+}
+
+// ── Profil tab ────────────────────────────────────────────────────────────────
+function saveName(v) { localStorage.setItem('profile:name', v.trim() || 'Princesse'); }
+
+function renderProfilTab(stats) {
+  document.getElementById('profile-name').value = localStorage.getItem('profile:name') || 'Princesse';
+  const todayScore = parseInt(localStorage.getItem(todayKey()) || '0', 10);
+  const todayBadge = badgeForScore(todayScore);
+  const streakBadge = STREAK_BADGES.slice().reverse().find(b => stats.streak >= b.threshold);
+
+  document.getElementById('pstats-grid').innerHTML = [
+    { val: todayBadge ? todayBadge.emoji + ' ' + todayScore : todayScore || '—', lbl: 'Badge du jour' },
+    { val: stats.bestDay,          lbl: 'Meilleur score / jour' },
+    { val: stats.streak + ' 🔥',  lbl: 'Jours consécutifs' },
+    { val: streakBadge ? streakBadge.emoji + ' ' + streakBadge.name : '—', lbl: 'Badge fidélité' },
+  ].map(({ val, lbl }) =>
+    '<div class="pstat-card"><div class="pstat-val">' + val + '</div><div class="pstat-lbl">' + lbl + '</div></div>'
+  ).join('');
+
+  const ms = document.getElementById('member-since');
+  ms.textContent = stats.memberSince
+    ? 'Membre depuis le ' + new Date(stats.memberSince + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    : '';
+}
+
+// ── Calendrier tab ────────────────────────────────────────────────────────────
+const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+function changeMonth(dir) {
+  calMonth += dir;
+  if (calMonth < 0)  { calMonth = 11; calYear--; }
+  if (calMonth > 11) { calMonth = 0;  calYear++; }
+  renderCalTab(calcStats());
+}
+
+function renderCalTab(stats) {
+  const all      = stats.all;
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const now      = new Date();
+
+  document.getElementById('cal-label').textContent = MONTHS[calMonth] + ' ' + calYear;
+  document.getElementById('cal-next').disabled =
+    calYear === now.getFullYear() && calMonth === now.getMonth();
+
+  const firstDow = ((new Date(calYear, calMonth, 1).getDay() + 6) % 7);
+  const lastDay  = new Date(calYear, calMonth + 1, 0).getDate();
+
+  let html = ['L','M','M','J','V','S','D'].map(d => '<div class="cal-head">' + d + '</div>').join('');
+  for (let i = 0; i < firstDow; i++) html += '<div></div>';
+
+  for (let d = 1; d <= lastDay; d++) {
+    const ds    = calYear + '-' + String(calMonth + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    const cnt   = all[ds] || 0;
+    const badge = badgeForScore(cnt);
+    const bg    = heatColor(cnt);
+    const txtColor = cnt > 0 ? '#555' : '#bbb';
+    html += '<div class="cal-day' + (ds === todayStr ? ' today' : '') + '" style="background:' + bg + '">'
+      + '<span class="cal-day-num" style="color:' + txtColor + '">' + d + '</span>'
+      + (badge ? '<span class="cal-day-badge">' + badge.emoji + '</span>' : '')
+      + '</div>';
+  }
+  document.getElementById('cal-grid').innerHTML = html;
+}
+
+// ── Badges tab ────────────────────────────────────────────────────────────────
+function renderBadgesTab(stats) {
+  const todayScore = parseInt(localStorage.getItem(todayKey()) || '0', 10);
+
+  let dailyCards = DAILY_BADGES.map(b => {
+    const earned = todayScore >= b.threshold;
+    let progHtml = '';
+    if (!earned) {
+      const prevIdx = DAILY_BADGES.indexOf(b) - 1;
+      const prevT   = prevIdx >= 0 ? DAILY_BADGES[prevIdx].threshold : 0;
+      const pct     = Math.min(Math.round((todayScore - prevT) / (b.threshold - prevT) * 100), 100);
+      progHtml = '<div class="badge-prog">'
+        + '<div class="badge-prog-text">' + Math.min(todayScore, b.threshold) + ' / ' + b.threshold + '</div>'
+        + '<div class="badge-bar"><div class="badge-bar-fill" style="width:' + Math.max(pct, 0) + '%"></div></div>'
+        + '</div>';
+    }
+    return '<div class="badge-card ' + (earned ? 'unlocked' : 'locked') + '">'
+      + '<div class="badge-em">' + (earned ? b.emoji : '🔒') + '</div>'
+      + '<div class="badge-name">' + b.name + '</div>'
+      + '<div class="badge-desc">' + (earned ? '✓ atteint aujourd\'hui' : b.threshold + ' réponses/jour') + '</div>'
+      + progHtml + '</div>';
+  }).join('');
+
+  let streakCards = STREAK_BADGES.map(b => {
+    const earned = stats.streak >= b.threshold;
+    let progHtml = '';
+    if (!earned) {
+      const pct = Math.round(stats.streak / b.threshold * 100);
+      progHtml = '<div class="badge-prog">'
+        + '<div class="badge-prog-text">' + stats.streak + ' / ' + b.threshold + ' jours</div>'
+        + '<div class="badge-bar"><div class="badge-bar-fill" style="width:' + pct + '%"></div></div>'
+        + '</div>';
+    }
+    return '<div class="badge-card ' + (earned ? 'unlocked' : 'locked') + '">'
+      + '<div class="badge-em">' + (earned ? b.emoji : '🔒') + '</div>'
+      + '<div class="badge-name">' + b.name + '</div>'
+      + '<div class="badge-desc">' + b.threshold + ' jours de suite</div>'
+      + progHtml + '</div>';
+  }).join('');
+
+  document.getElementById('badges-wrap').innerHTML =
+    '<div class="badge-group-title">✨ Médailles du jour</div>'
+    + '<div class="badges-grid">' + dailyCards + '</div>'
+    + '<div class="badge-group-title">🔥 Fidélité</div>'
+    + '<div class="badges-grid">' + streakCards + '</div>';
+}
+
+// ── Settings panel ────────────────────────────────────────────────────────────
+function openSettings() {
+  document.getElementById('settings-panel').classList.add('open');
+  history.pushState({ panel: 'settings' }, '');
+  renderSettingsPanel();
+}
+function closeSettings() {
+  document.getElementById('settings-panel').classList.remove('open');
+}
+
+function renderSettingsPanel() {
+  document.getElementById('set-vib').checked  = settings.vibration;
+  document.getElementById('set-dark').checked = settings.darkMode;
+
+  document.querySelectorAll('#set-ops-group .chip').forEach(btn => {
+    btn.classList.toggle('active', !!settings.ops[btn.dataset.op]);
+  });
+  document.querySelectorAll('#set-diff-group .chip').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.diff === settings.difficulty);
+  });
+}
+
+function toggleVibration(v) {
+  settings.vibration = v;
+  saveSettings();
+}
+
+function toggleOp(op) {
+  const activeCount = OPS.filter(o => settings.ops[o]).length;
+  if (settings.ops[op] && activeCount === 1) return; // keep at least one
+  settings.ops[op] = !settings.ops[op];
+  saveSettings();
+  document.querySelectorAll('#set-ops-group .chip').forEach(btn => {
+    btn.classList.toggle('active', !!settings.ops[btn.dataset.op]);
+  });
+  eq = nextEq(); render();
+}
+
+function setDifficulty(d) {
+  settings.difficulty = d;
+  saveSettings();
+  document.querySelectorAll('#set-diff-group .chip').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.diff === d);
+  });
+  eq = nextEq(); render(); updateDiffLabel();
+}
+
+function toggleDark(v) {
+  settings.darkMode = v;
+  applyDarkMode();
+  saveSettings();
+}
+
+// ── Popstate (back button) ────────────────────────────────────────────────────
+window.addEventListener('popstate', () => {
+  closeProfile();
+  closeSettings();
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadSettings();
+applyDarkMode();
+updateDiffLabel();
+eq = nextEq();
+render();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>

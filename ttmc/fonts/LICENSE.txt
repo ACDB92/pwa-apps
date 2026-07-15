@@ -1,0 +1,8 @@
+Police : Fraunces (fraunces-600.woff2, fraunces-900.woff2)
+Sous-ensemble « latin » servi par Google Fonts.
+
+Fraunces © The Fraunces Project Authors (https://github.com/undercasetype/Fraunces)
+Distribuée sous SIL Open Font License, Version 1.1 — https://openfontlicense.org
+
+L'OFL autorise l'usage, la modification et la redistribution (y compris l'embarquement
+dans une application) tant que cette notice accompagne les fichiers de police.

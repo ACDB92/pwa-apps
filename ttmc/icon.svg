@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E8CE96"/>
+      <stop offset="0.55" stop-color="#C8A15A"/>
+      <stop offset="1" stop-color="#97722F"/>
+    </linearGradient>
+    <radialGradient id="bg" cx="0.5" cy="0.38" r="0.75">
+      <stop offset="0" stop-color="#1E222B"/>
+      <stop offset="1" stop-color="#0E0F13"/>
+    </radialGradient>
+  </defs>
+  <!-- Full-bleed background for maskable safe-zone -->
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="150" fill="none" stroke="url(#gold)" stroke-width="7" opacity="0.9"/>
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#EDE7DB" stroke-width="1" opacity="0.06"/>
+  <text x="256" y="258" text-anchor="middle" dominant-baseline="central"
+        font-family="'Iowan Old Style','Palatino',Georgia,'Times New Roman',serif"
+        font-size="196" font-weight="700" font-style="italic" fill="url(#gold)">?</text>
+</svg>
