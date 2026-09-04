@@ -271,6 +271,48 @@ export function legsFor(graph, times, stationId) {
 }
 
 // --------------------------------------------------------------------------------------
+// Lieux
+// --------------------------------------------------------------------------------------
+
+/**
+ * Lieux à moins de `radiusM` d'au moins une des stations données, chacun une seule fois,
+ * du plus proche au plus loin. `kinds` : 'bar', 'eat', ou rien pour les deux.
+ *
+ * L'union, jamais la somme : les rayons des stations d'un même quartier se recouvrent, et
+ * un bar à cheval sur deux d'entre elles reste un seul bar. On garde sa plus courte
+ * distance, celle qui compte pour qui descend au meilleur endroit.
+ */
+export function placesNear(data, stations, radiusM, kinds) {
+  const places = data.places || [];
+  const cuisines = data.cuisines || [];
+  const wantBar = !kinds || kinds.includes('bar');
+  const wantEat = !kinds || kinds.includes('eat');
+  const dLat = radiusM / 111320;
+  const out = [];
+
+  for (let i = 0; i < places.length; i++) {
+    const p = places[i], isBar = p[3] === 1;
+    if (isBar ? !wantBar : !wantEat) continue;
+    let best = Infinity;
+    for (const s of stations) {
+      // Rejet par boîte englobante : évite 20 000 haversines par station.
+      if (Math.abs(p[1] - s.lat) > dLat) continue;
+      const dLon = radiusM / (111320 * Math.cos(s.lat * Math.PI / 180) || 1);
+      if (Math.abs(p[2] - s.lon) > dLon) continue;
+      const d = haversineM(s.lat, s.lon, p[1], p[2]);
+      if (d < best) best = d;
+    }
+    if (best <= radiusM) {
+      out.push({ id: i, name: p[0], lat: p[1], lon: p[2], bar: isBar,
+                 cuisine: p[4] >= 0 ? (cuisines[p[4]] || '') : '',
+                 terrace: !!(p[5] & 1), access: !!(p[5] & 2),
+                 meters: Math.round(best) });
+    }
+  }
+  return out.sort((a, b) => a.meters - b.meters || a.name.localeCompare(b.name));
+}
+
+// --------------------------------------------------------------------------------------
 // Classement
 // --------------------------------------------------------------------------------------
 
@@ -315,7 +357,9 @@ function bestPerQuartier(rows) {
  * bars. On écarte les stations où quelqu'un dépasserait le budget de trajet, puis on classe
  * ce qui reste par densité de lieux.
  *
- * `people` : [{ name, origin }]. `opts` : { profile, toleranceMin, maxChanges, limit }.
+ * `people` : [{ name, origin }].
+ * `opts` : { profile, toleranceMin, maxChanges, limit, skip } — `skip` écarte des quartiers
+ * nommément, pour « celui-là non, on y était samedi ».
  */
 export function rank(graph, people, opts = {}) {
   const profile = PROFILES[opts.profile] || PROFILES.both;
@@ -324,6 +368,10 @@ export function rank(graph, people, opts = {}) {
   const times = people.map(p => travelTimes(graph, p.origin));
   const quartierOf = quartierIndex(graph.data);
 
+  // Comparaison sur des chaînes : un identifiant de quartier est un nombre dans data.js
+  // mais une chaîne quand il vient d'un attribut HTML — ou du repli « une station, un
+  // quartier ». Normaliser les deux côtés évite un filtre qui ne filtre rien.
+  const skip = new Set((opts.skip || []).map(String));
   const rows = [];
   for (const s of graph.data.stations) {
     if (!s.z) continue;                                 // hors zone : jamais un lieu de RDV
@@ -331,6 +379,7 @@ export function rank(graph, people, opts = {}) {
     if (per.some(v => !isFinite(v))) continue;
     const tmax = Math.max(...per), tmin = Math.min(...per);
     const quartier = quartierOf(s);
+    if (skip.has(String(quartier.id))) continue;         // écarté à la main
     rows.push({
       station: s, quartier, times: per, tmax, tmin, spread: tmax - tmin,
       total: per.reduce((a, b) => a + b, 0), animation: profile.score(quartier)

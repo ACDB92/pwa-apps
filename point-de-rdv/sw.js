@@ -1,4 +1,4 @@
-const CACHE = 'rdv-v4';
+const CACHE = 'rdv-v5';
 const ASSETS = [
   './',
   './index.html',

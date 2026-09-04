@@ -70,6 +70,27 @@
   /* Une ligne écartée reste lisible — on doit pouvoir la retrouver pour la réactiver. */
   .badge.off { background: transparent !important; color: var(--faint) !important;
                border-color: var(--line); text-decoration: line-through; }
+  /* Sans touch-action:none, un glissement sur le plan ferait défiler la page. */
+  .map { touch-action: none; cursor: grab; }
+  .map:active { cursor: grabbing; }
+  .zoomrow { display: flex; gap: 6px; align-items: center; margin-top: 8px; }
+  .zoomrow button { width: auto; padding: 6px 12px; font-size: 14px; margin: 0; }
+  .places { list-style: none; padding: 0; margin: 10px 0 0; }
+  .places li { display: flex; align-items: center; gap: 8px; padding: 9px 0;
+               border-top: 1px solid var(--line); }
+  .places li:first-child { border-top: 0; }
+  .places .who-btn { flex: 1; min-width: 0; text-align: left; background: none; border: 0;
+                     padding: 0; color: inherit; cursor: pointer; font: inherit; }
+  .places li[aria-current=true] .who-btn .name { color: var(--warm); }
+  .places .gm { flex: 0 0 auto; font-size: 12.5px; color: var(--accent);
+                text-decoration: none; white-space: nowrap; }
+  .fav { flex: 0 0 auto; background: none; border: 0; cursor: pointer; font-size: 17px;
+         line-height: 1; padding: 2px 4px; color: var(--faint); }
+  .fav[aria-pressed=true] { color: var(--warm); }
+  .keys { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; font-size: 12px;
+          color: var(--muted); }
+  .key { display: inline-flex; align-items: center; gap: 5px; }
+  .key i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
   .linegroup { font-size: 11.5px; color: var(--faint); text-transform: uppercase;
                letter-spacing: .09em; margin-top: 14px; font-weight: 700; }
 
@@ -120,7 +141,8 @@
 
 <script src="./data.js"></script>
 <script type="module">
-import { buildGraph, rank, searchStations, nearestStations, PROFILES } from './engine.js';
+import { buildGraph, rank, searchStations, nearestStations, placesNear, haversineM, PROFILES }
+  from './engine.js';
 
 const DATA = window.RDV_DATA || null;
 const app = document.getElementById('app');
@@ -131,7 +153,7 @@ const PEOPLE_COLORS = ['#1B5FCE', '#C2410C', '#157347', '#7C3AED', '#B91C1C', '#
 
 function freshStore() {
   return { v: 1, people: [], profile: 'both', tolerance: 8, direct: false, dark: null,
-           banned: [] };
+           banned: [], favs: [], skip: [] };
 }
 let S = freshStore();
 function load() {
@@ -385,13 +407,28 @@ async function lookupAddress(text, ctx) {
 /* ---------------------------------------------------------------- écran : résultats */
 
 let LAST = null, CURRENT = null;
-let MAP_WHO = -1;            // -1 = vue d’ensemble ; sinon l’index de la personne regardée
+let MAP_VIEW = 'ensemble';   // 'ensemble' | 'zones' | index de la personne regardée
+let PLACE = null;            // lieu sélectionné, montré sur le plan
+let MAP_Z = 1, MAP_C = null; // zoom et centre du plan, en coordonnées projetées
+let MAP_F = null;            // cadre du dernier rendu, pour convertir écran -> carte
+let NEAR = [];               // lieux du quartier courant, du plus proche au plus loin
+
+/* Un favori doit survivre à une régénération de data.js, où les index changent : on le
+   repère par son nom et sa position arrondie, pas par sa place dans le tableau. */
+const favKey = p => `${p.name}|${p.lat.toFixed(4)}|${p.lon.toFixed(4)}`;
+const isFav = p => S.favs.some(f => favKey(f) === favKey(p));
+
+/* Lien vers Google Maps : un simple lien, aucune clé, aucune donnée recopiée. Les faits
+   viennent d’OpenStreetMap, les avis restent chez Google. */
+const gmapsUrl = p =>
+  'https://www.google.com/maps/search/?api=1&query=' +
+  encodeURIComponent(`${p.name} ${p.lat},${p.lon}`);
 
 function results() {
   if (S.people.length < 2) return goto('home');
   const r = rank(graph, S.people, {
     profile: S.profile, toleranceMin: S.tolerance,
-    maxChanges: S.direct ? 0 : null, limit: 6
+    maxChanges: S.direct ? 0 : null, limit: 6, skip: S.skip
   });
   LAST = r;
   if (!r.candidates.length) {
@@ -415,6 +452,10 @@ function results() {
             : ''}</div></div>
     </header>
     ${demoBanner()}
+    ${S.skip.length ? `<div class="row between" style="margin-bottom:12px">
+      <span class="sub">${S.skip.length} quartier${S.skip.length > 1 ? 's' : ''} écarté${S.skip.length > 1 ? 's' : ''}</span>
+      <button class="ghost" style="width:auto;margin:0" data-act="unskip">Tout remettre</button>
+    </div>` : ''}
 
     <h2>Le meilleur compromis</h2>
     <ul class="results">${r.candidates.map((c, i) => card(c, i, r)).join('')}</ul>
@@ -436,8 +477,17 @@ function alsoStations(c) {
     ? `<div class="sub" style="margin-top:4px">avec ${others.map(esc).join(', ')}</div>` : '';
 }
 
+/* Combien de VOS lieux dans ce quartier. « 101 bars » ne dit rien ; « 2 de vos lieux » dit
+   tout. Le calcul est trivial : les favoris se comptent sur les doigts. */
+function favsIn(q) {
+  const R = DATA.meta.model.poiRadiusM;
+  const sts = (q.s || []).map(id => DATA.stations[id]);
+  return S.favs.filter(f => sts.some(s => haversineM(s.lat, s.lon, f.lat, f.lon) <= R));
+}
+
 function card(c, i, r) {
   const s = c.station, q = c.quartier;
+  const fav = favsIn(q);
   const cost = c.cost > 0.5
     ? `<span class="tag warm">+${mins(c.cost)} min de détour</span>`
     : `<span class="tag">le plus équitable</span>`;
@@ -450,6 +500,8 @@ function card(c, i, r) {
           <div class="name">${esc(q.n)}</div>
           <div style="margin-top:5px">${lineBadges(s.l)}</div>
           ${alsoStations(c)}
+          ${fav.length ? `<div class="sub" style="margin-top:4px;color:var(--warm)">★ ${fav.length}
+            de vos lieux : ${fav.slice(0, 3).map(f => esc(f.name)).join(', ')}</div>` : ''}
         </div>
       </div>
       <div style="text-align:right">
@@ -476,8 +528,11 @@ function detail(id) {
     || (LAST.fairest.station.id === id ? LAST.fairest : null);
   if (!c) return goto('results');
   CURRENT = c;
-  MAP_WHO = -1;
+  MAP_VIEW = 'ensemble';
+  PLACE = null;
   const s = c.station, q = c.quartier;
+  const stations = (q.s || [s.id]).map(id => DATA.stations[id]);
+  NEAR = placesNear(DATA, stations, DATA.meta.model.poiRadiusM, LAST.profile.counts);
   render(`
     <header>
       <button class="icon-btn" data-go="results">←</button>
@@ -508,16 +563,73 @@ function detail(id) {
       </div>`;
     }).join('')}
     <h2>Sur le plan</h2>
-    <div class="who" role="group" aria-label="Quel trajet afficher">
-      <button data-act="mapwho" data-i="-1" aria-pressed="true">Tous</button>
+    <div class="who" role="group" aria-label="Quelle vue du plan">
+      <button data-act="mapview" data-v="ensemble" aria-pressed="true">Ensemble</button>
+      <button data-act="mapview" data-v="zones" aria-pressed="false">Zones</button>
       ${S.people.map((p, i) =>
-        `<button data-act="mapwho" data-i="${i}" aria-pressed="false">${esc(p.name)}</button>`
+        `<button data-act="mapview" data-v="${i}" aria-pressed="false">${esc(p.name)}</button>`
       ).join('')}
     </div>
-    <div id="mapbox">${mapSvg(c, -1)}</div>
-    <button class="primary" data-act="copy">Copier le résumé</button>
+    <div id="mapbox">${mapSvg(c, 'ensemble', null)}</div>
+    <div class="zoomrow">
+      <button class="ghost" data-act="mapzoom" data-v="1.8" title="Zoomer">+</button>
+      <button class="ghost" data-act="mapzoom" data-v="0.55" title="Dézoomer">−</button>
+      <button class="ghost" data-act="mapzoom" data-v="reset">Recadrer</button>
+      <span class="sub">Molette, pincement ou glissement — les noms de stations
+        apparaissent en zoomant.</span>
+    </div>
+
+    <h2>${placesTitle()}</h2>
+    <div id="placebox">${placesHtml()}</div>
+    <div class="zoomrow" style="margin-top:20px">
+      <button class="primary" style="margin:0" data-act="share">Partager</button>
+      <button class="ghost" style="margin:0;width:auto" data-act="copy">Copier le résumé</button>
+      <button class="ghost" style="margin:0;width:auto" data-act="skip"
+        data-v="${esc(q.id)}">Pas celui-là</button>
+    </div>
     ${modelNote()}
   `);
+  attachMapGestures();     // le premier rendu ne passe pas par drawMap()
+}
+
+function placesTitle() {
+  return { verre: 'Les bars', manger: 'Les restaurants' }[S.profile] || 'Où aller';
+}
+
+const PLACE_SHOWN = 25;
+
+/* La liste répond au manque le plus concret : « 108 bars » ne dit pas où aller. On trie par
+   distance à pied depuis le quartier — faute de notes, c'est le seul critère qu'OpenStreetMap
+   fournit de façon fiable, et les avis se lisent d'un clic chez Google. */
+function placesHtml() {
+  if (!NEAR.length) {
+    return `<div class="empty">Aucun lieu référencé dans un rayon de
+      ${DATA.meta.model.poiRadiusM} m.</div>`;
+  }
+  const shown = NEAR.slice(0, PLACE_SHOWN);
+  const favs = NEAR.filter(isFav).length;
+  return `
+    <div class="sub">${NEAR.length} lieu${NEAR.length > 1 ? 'x' : ''} à moins de
+      ${DATA.meta.model.poiRadiusM} m, du plus proche au plus loin${
+      favs ? ` · <b>${favs} de vos favoris</b>` : ''}. Touche un nom pour le situer sur le plan.</div>
+    <ul class="places">
+      ${shown.map(p => `
+        <li data-key="${esc(favKey(p))}" aria-current="${PLACE && favKey(PLACE) === favKey(p)}">
+          <button class="who-btn" data-act="place" data-key="${esc(favKey(p))}">
+            <div class="name">${esc(p.name)}</div>
+            <div class="sub">${[p.cuisine && esc(p.cuisine), `${p.meters} m`,
+                                p.terrace && 'terrasse', p.access && 'accessible']
+                                .filter(Boolean).join(' · ')}</div>
+          </button>
+          <button class="fav" data-act="fav" data-key="${esc(favKey(p))}"
+            aria-pressed="${isFav(p)}" title="Garder en favori">${isFav(p) ? '★' : '☆'}</button>
+          <a class="gm" href="${gmapsUrl(p)}" target="_blank" rel="noopener noreferrer"
+            >avis ↗</a>
+        </li>`).join('')}
+    </ul>
+    ${NEAR.length > PLACE_SHOWN
+      ? `<div class="sub" style="margin-top:8px">…et ${NEAR.length - PLACE_SHOWN} autres, plus loin.</div>`
+      : ''}`;
 }
 
 function routeHtml(route) {
@@ -533,101 +645,248 @@ function routeHtml(route) {
 
 /* ---------------------------------------------------------------- plan schématique */
 
-function mapSvg(c, who) {
-  const st = DATA.stations;
-  const zone = st.filter(s => s.z);
+/* Trois vues, trois questions distinctes :
+     « ensemble »  est-ce équitable ?      -> tous les trajets, une couleur par PERSONNE
+     « zones »     jusqu'où peut-on aller ? -> chaque station teintée selon le plus mal loti
+     un prénom     comment j'y vais ?      -> son trajet seul, aux couleurs des LIGNES
+   Mélanger les deux codes couleur dans une même vue rendrait les deux illisibles. */
+
+const ZONE_BANDS = ['#1B5FCE', '#3E8E5A', '#C08A2E', '#B4553C', '#6B6F7B'];
+
+function originOf(p) {
+  return p.origin.station != null
+    ? DATA.stations[p.origin.station] : { lat: p.origin.lat, lon: p.origin.lon };
+}
+
+/* Cadre commun : projection, étendue minimale, marge, et correction du rapport pour que
+   l'échelle reste identique en X et en Y — sinon le tracé apparaîtrait étiré. */
+function frame(points, { minSpan = 0, margin = 0.06, height = null } = {}) {
+  const zone = DATA.stations.filter(s => s.z);
   const lat0 = zone.reduce((a, s) => a + s.lat, 0) / zone.length;
   const k = Math.cos(lat0 * Math.PI / 180);
   const X = o => o.lon * k, Y = o => -o.lat;
-  const originOf = p => p.origin.station != null
-    ? st[p.origin.station] : { lat: p.origin.lat, lon: p.origin.lon };
-
-  const route = who >= 0 && c.routes[who] && c.routes[who].path.length ? c.routes[who] : null;
-  // Ce qu'il faut voir : tout le réseau, ou le seul trajet regardé.
-  const focus = route
-    ? [originOf(S.people[who]), ...route.path.map(id => st[id]), c.station]
-    : zone;
-
-  let x0 = Math.min(...focus.map(X)), x1 = Math.max(...focus.map(X));
-  let y0 = Math.min(...focus.map(Y)), y1 = Math.max(...focus.map(Y));
-  if (route) {
-    // Un trajet de deux stations ne doit pas s'afficher à la loupe : étendue minimale
-    // d'environ 2,5 km, puis une marge pour que le tracé ne colle pas au bord.
-    const MIN = 0.022;
-    const span = (a, b) => {
-      const mid = (a + b) / 2, half = Math.max((b - a) / 2, MIN / 2);
-      return [mid - half, mid + half];
-    };
+  let x0 = Math.min(...points.map(X)), x1 = Math.max(...points.map(X));
+  let y0 = Math.min(...points.map(Y)), y1 = Math.max(...points.map(Y));
+  if (minSpan) {
+    const span = (a, b) => { const m = (a + b) / 2, h = Math.max((b - a) / 2, minSpan / 2);
+                             return [m - h, m + h]; };
     [x0, x1] = span(x0, x1); [y0, y1] = span(y0, y1);
   }
-  const m = route ? 0.14 : 0.04;
-  const mx = (x1 - x0) * m || 0.004, my = (y1 - y0) * m || 0.004;
+  const mx = (x1 - x0) * margin || 0.004, my = (y1 - y0) * margin || 0.004;
   x0 -= mx; x1 += mx; y0 -= my; y1 += my;
 
+  // Zoom et déplacement interactifs : on resserre la fenêtre autour du centre courant.
+  // Appliqué AVANT la correction de rapport, sinon le zoom déformerait le plan.
+  if (MAP_Z !== 1 || MAP_C) {
+    const cx = MAP_C ? MAP_C.x : (x0 + x1) / 2, cy = MAP_C ? MAP_C.y : (y0 + y1) / 2;
+    const w = (x1 - x0) / MAP_Z, h = (y1 - y0) / MAP_Z;
+    x0 = cx - w / 2; x1 = cx + w / 2; y0 = cy - h / 2; y1 = cy + h / 2;
+  }
+
   const W = 640;
-  const H = route ? 430 : Math.max(220, Math.round(W * (y1 - y0) / (x1 - x0 || 1)));
-  // Le cadre est étendu au rapport de la vue : sans cela l'échelle différerait en X et en Y,
-  // et le tracé apparaîtrait étiré.
+  const H = height || Math.max(220, Math.min(560, Math.round(W * (y1 - y0) / (x1 - x0 || 1))));
   const want = H / W;
   if ((y1 - y0) / (x1 - x0) < want) {
-    const h = (x1 - x0) * want, mid = (y0 + y1) / 2; y0 = mid - h / 2; y1 = mid + h / 2;
+    const h = (x1 - x0) * want, m = (y0 + y1) / 2; y0 = m - h / 2; y1 = m + h / 2;
   } else {
-    const w = (y1 - y0) / want, mid = (x0 + x1) / 2; x0 = mid - w / 2; x1 = mid + w / 2;
+    const w = (y1 - y0) / want, m = (x0 + x1) / 2; x0 = m - w / 2; x1 = m + w / 2;
   }
-  const px = o => ((X(o) - x0) / (x1 - x0 || 1) * W).toFixed(1);
-  const py = o => ((Y(o) - y0) / (y1 - y0 || 1) * H).toFixed(1);
-  const inBox = o => X(o) >= x0 && X(o) <= x1 && Y(o) >= y0 && Y(o) <= y1;
+  return {
+    W, H,
+    px: o => ((X(o) - x0) / (x1 - x0 || 1) * W).toFixed(1),
+    py: o => ((Y(o) - y0) / (y1 - y0 || 1) * H).toFixed(1),
+    inBox: o => X(o) >= x0 && X(o) <= x1 && Y(o) >= y0 && Y(o) <= y1,
+    widthM: (x1 - x0) * 111320,                // largeur réelle du cadre, en mètres
+    box: { x0, x1, y0, y1 },
+    project: o => ({ x: X(o), y: Y(o) }),
+    unproject: (sx, sy) => ({ x: x0 + sx / W * (x1 - x0), y: y0 + sy / H * (y1 - y0) })
+  };
+}
 
+/* Le réseau en fond. Plus la vue est chargée en information utile, plus il s'efface. */
+function networkSvg(f, opacity) {
+  const st = DATA.stations;
   const edges = DATA.edges
-    .filter(e => e[3] !== null && st[e[0]].z && st[e[1]].z && (inBox(st[e[0]]) || inBox(st[e[1]])))
+    .filter(e => e[3] !== null && st[e[0]].z && st[e[1]].z && (f.inBox(st[e[0]]) || f.inBox(st[e[1]])))
     .map(([a, b, , lid]) => {
       const l = LINES.get(lid);
-      return `<line x1="${px(st[a])}" y1="${py(st[a])}" x2="${px(st[b])}" y2="${py(st[b])}"
+      return `<line x1="${f.px(st[a])}" y1="${f.py(st[a])}" x2="${f.px(st[b])}" y2="${f.py(st[b])}"
         stroke="${(l && l.color) || '#888'}" stroke-width="2" stroke-linecap="round"
-        opacity="${route ? '.18' : '.45'}"/>`;
+        opacity="${opacity}"/>`;
     }).join('');
-  const dots = zone.filter(inBox).map(s =>
-    `<circle cx="${px(s)}" cy="${py(s)}" r="2" fill="currentColor" opacity="${route ? '.22' : '.35'}"/>`
-  ).join('');
+  return edges;
+}
 
-  // Le tracé suit les stations traversées, tronçon par tronçon, aux couleurs des lignes.
-  const trace = route ? route.legs.map(l => {
-    const pts = l.stations.map(id => `${px(st[id])},${py(st[id])}`).join(' ');
-    const col = l.kind === 'walk' ? 'currentColor' : ((LINES.get(l.line) || {}).color || '#888');
+/* Les noms de stations n'apparaissent qu'une fois le cadre assez serré pour qu'ils tiennent.
+   Au-delà d'une quinzaine, ils se chevauchent et nuisent plus qu'ils n'aident : on garde les
+   stations prioritaires (celles du trajet, l'arrivée) puis les plus desservies. */
+function stationLabels(f, priority) {
+  if (f.widthM > 6500) return '';
+  const st = DATA.stations;
+  const budget = f.widthM < 1200 ? 26 : f.widthM < 2500 ? 18 : 11;
+  const prio = new Set(priority || []);
+  const cands = st.filter(s => s.z && f.inBox(s))
+    .sort((a, b) => (prio.has(b.id) - prio.has(a.id)) || (b.l.length - a.l.length))
+    .slice(0, budget);
+  return cands.map(s => {
+    const x = +f.px(s), y = +f.py(s);
+    return `<text x="${(x + 7).toFixed(1)}" y="${(y + 3.5).toFixed(1)}" font-size="10"
+      fill="currentColor" opacity="${prio.has(s.id) ? '.95' : '.6'}"
+      style="paint-order:stroke;stroke:var(--surface);stroke-width:3px"
+      >${esc(s.n)}</text>`;
+  }).join('');
+}
+
+function routeSvg(f, route, colour) {
+  const st = DATA.stations;
+  return route.legs.map(l => {
+    const pts = l.stations.map(id => `${f.px(st[id])},${f.py(st[id])}`).join(' ');
+    const col = colour || (l.kind === 'walk' ? 'currentColor'
+                                            : ((LINES.get(l.line) || {}).color || '#888'));
     return `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="5"
       stroke-linecap="round" stroke-linejoin="round"
       ${l.kind === 'walk' ? 'stroke-dasharray="2 8"' : ''}/>`;
-  }).join('') : '';
-  // Depuis une adresse, la marche jusqu'à la première station fait partie du trajet.
-  const o0 = route ? originOf(S.people[who]) : null;
-  const approach = route && S.people[who].origin.station == null
-    ? `<line x1="${px(o0)}" y1="${py(o0)}" x2="${px(st[route.path[0]])}" y2="${py(st[route.path[0]])}"
-        stroke="currentColor" stroke-width="3" stroke-dasharray="2 8" stroke-linecap="round"/>` : '';
-
-  const origins = S.people.map((p, i) => {
-    if (route && i !== who) return '';           // zoomé : seule la personne regardée
-    const o = originOf(p);
-    const r = route ? 11 : 7;
-    return `<circle cx="${px(o)}" cy="${py(o)}" r="${r}"
-        fill="${personColor(i)}" stroke="var(--surface)" stroke-width="2"/>` +
-      (route ? `<text x="${px(o)}" y="${(+py(o) + 3.5).toFixed(1)}" text-anchor="middle"
-        font-size="10" font-weight="700" fill="#fff">${esc(initials(p.name))}</text>` : '');
   }).join('');
-  const target = `<circle cx="${px(c.station)}" cy="${py(c.station)}" r="11"
-      fill="none" stroke="var(--ink)" stroke-width="2.5"/>
-    <circle cx="${px(c.station)}" cy="${py(c.station)}" r="4" fill="var(--ink)"/>`;
+}
 
-  const legende = route
-    ? `Trajet de ${esc(S.people[who].name)} jusqu’à ${esc(c.quartier.n)} —
-       pointillés : la marche. Cercle noir : le lieu proposé.`
-    : 'Cercle noir : le lieu proposé. Pastilles colorées : les points de départ.';
-  const titre = route
-    ? `Trajet de ${esc(S.people[who].name)} vers ${esc(c.station.n)}`
-    : `Plan schématique : ${esc(c.station.n)} et les points de départ`;
+function approachSvg(f, i, route) {
+  if (S.people[i].origin.station != null || !route.path.length) return '';
+  const o = originOf(S.people[i]), first = DATA.stations[route.path[0]];
+  return `<line x1="${f.px(o)}" y1="${f.py(o)}" x2="${f.px(first)}" y2="${f.py(first)}"
+    stroke="currentColor" stroke-width="3" stroke-dasharray="2 8" stroke-linecap="round"/>`;
+}
 
-  return `<svg class="map" viewBox="0 0 ${W} ${H}" role="img" aria-label="${titre}">
-    ${edges}${dots}${approach}${trace}${origins}${target}</svg>
-    <div class="sub" style="margin-top:6px">${legende}</div>`;
+function originSvg(f, i, big) {
+  const o = originOf(S.people[i]), r = big ? 11 : 7;
+  return `<circle cx="${f.px(o)}" cy="${f.py(o)}" r="${r}" fill="${personColor(i)}"
+      stroke="var(--surface)" stroke-width="2"/>` +
+    (big ? `<text x="${f.px(o)}" y="${(+f.py(o) + 3.5).toFixed(1)}" text-anchor="middle"
+      font-size="10" font-weight="700" fill="#fff">${esc(initials(S.people[i].name))}</text>` : '');
+}
+
+function targetSvg(f, station) {
+  return `<circle cx="${f.px(station)}" cy="${f.py(station)}" r="11" fill="none"
+      stroke="var(--ink)" stroke-width="2.5"/>
+    <circle cx="${f.px(station)}" cy="${f.py(station)}" r="4" fill="var(--ink)"/>`;
+}
+
+function placeSvg(f, place) {
+  if (!place) return '';
+  return `<circle cx="${f.px(place)}" cy="${f.py(place)}" r="9" fill="var(--warm)"
+      stroke="var(--surface)" stroke-width="2"/>
+    <text x="${f.px(place)}" y="${(+f.py(place) - 14).toFixed(1)}" text-anchor="middle"
+      font-size="11" font-weight="700" fill="currentColor"
+      style="paint-order:stroke;stroke:var(--surface);stroke-width:3.5px">${esc(place.name)}</text>`;
+}
+
+function mapSvg(c, view, place) {
+  const st = DATA.stations;
+  const routes = S.people.map((_, i) => c.routes[i]).filter(r => r && r.path.length);
+
+  // ---- vue « zones » : chaque station teintée selon le temps du plus mal loti
+  if (view === 'zones') {
+    const f = MAP_F = frame(st.filter(s => s.z), { margin: 0.04 });
+    const step = Math.max(LAST.tolerance, 5);
+    const band = t => !isFinite(t) ? 4
+      : t <= LAST.floor + step ? 0 : t <= LAST.floor + 2 * step ? 1
+      : t <= LAST.floor + 4 * step ? 2 : 3;
+    const dots = st.filter(s => s.z).map(s => {
+      const tmax = Math.max(...LAST.times.map(t => t.arrival[s.id]));
+      const b = band(tmax);
+      return `<circle cx="${f.px(s)}" cy="${f.py(s)}" r="${b === 0 ? 3.4 : 2.6}"
+        fill="${ZONE_BANDS[b]}" opacity="${b === 4 ? '.28' : b === 0 ? '1' : '.8'}"/>`;
+    }).join('');
+    const legende = [
+      `moins de ${mins(LAST.floor + step)} min`, `jusqu’à ${mins(LAST.floor + 2 * step)} min`,
+      `jusqu’à ${mins(LAST.floor + 4 * step)} min`, 'au-delà', 'injoignable'
+    ].map((t, i) => `<span class="key"><i style="background:${ZONE_BANDS[i]}"></i>${t}</span>`).join('');
+    return `<svg class="map" viewBox="0 0 ${f.W} ${f.H}" role="img"
+        aria-label="Zones atteignables par tout le monde">
+      ${networkSvg(f, '.12')}${dots}
+      ${S.people.map((_, i) => originSvg(f, i, false)).join('')}${targetSvg(f, c.station)}</svg>
+      <div class="keys">${legende}</div>
+      <div class="sub" style="margin-top:4px">Chaque station est teintée par le temps de la
+        personne la plus mal lotie. La première bande est le budget que tu as fixé.</div>`;
+  }
+
+  // ---- vue « une personne » : son trajet seul, aux couleurs des lignes
+  if (typeof view === 'number' && c.routes[view] && c.routes[view].path.length) {
+    const route = c.routes[view];
+    const pts = [originOf(S.people[view]), ...route.path.map(id => st[id]), c.station];
+    const f = MAP_F = frame(pts, { minSpan: 0.022, margin: 0.14, height: 430 });
+    return `<svg class="map" viewBox="0 0 ${f.W} ${f.H}" role="img"
+        aria-label="Trajet de ${esc(S.people[view].name)} vers ${esc(c.station.n)}">
+      ${networkSvg(f, '.18')}${stationLabels(f, route.path.concat([c.station.id]))}
+      ${approachSvg(f, view, route)}${routeSvg(f, route)}
+      ${originSvg(f, view, true)}${targetSvg(f, c.station)}${placeSvg(f, place)}</svg>
+      <div class="sub" style="margin-top:6px">Trajet de ${esc(S.people[view].name)} jusqu’à
+        ${esc(c.quartier.n)} — pointillés : la marche.</div>`;
+  }
+
+  // ---- vue « ensemble » : tous les trajets, une couleur par personne
+  const pts = routes.length
+    ? [...S.people.map((_, i) => originOf(S.people[i])), ...routes.flatMap(r => r.path.map(id => st[id])), c.station]
+    : st.filter(s => s.z);
+  const f = MAP_F = frame(pts, { margin: 0.1 });
+  const traces = S.people.map((_, i) => {
+    const r = c.routes[i];
+    if (!r || !r.path.length) return '';
+    return approachSvg(f, i, r) + routeSvg(f, r, personColor(i));
+  }).join('');
+  return `<svg class="map" viewBox="0 0 ${f.W} ${f.H}" role="img"
+      aria-label="Les trajets de chacun vers ${esc(c.station.n)}">
+    ${networkSvg(f, '.15')}${stationLabels(f, [c.station.id])}${traces}
+    ${S.people.map((_, i) => originSvg(f, i, true)).join('')}
+    ${targetSvg(f, c.station)}${placeSvg(f, place)}</svg>
+    <div class="sub" style="margin-top:6px">Une couleur par personne — l’image répond à
+      « est-ce équitable ? ». Cercle noir : le lieu proposé.</div>`;
+}
+
+/* ------------------------------------------------------------ état partageable par lien */
+
+/* L'état tient dans le hash de l'URL : pas de serveur, pas de compte, et le lien rouvre
+   l'appli telle quelle chez la personne d'en face. base64url parce qu'un JSON brut dans une
+   URL se fait massacrer par les messageries. */
+function encodeState() {
+  const st = {
+    p: S.people.map(x => x.origin.station != null
+      ? [x.name, x.origin.station]
+      : [x.name, null, x.origin.lat, x.origin.lon, x.origin.label || '']),
+    f: S.profile, t: S.tolerance, d: S.direct ? 1 : 0, b: S.banned
+  };
+  const bytes = new TextEncoder().encode(JSON.stringify(st));
+  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function decodeState(hash) {
+  try {
+    const b = hash.replace(/-/g, '+').replace(/_/g, '/');
+    const json = new TextDecoder().decode(
+      Uint8Array.from(atob(b), ch => ch.charCodeAt(0)));
+    const st = JSON.parse(json);
+    if (!Array.isArray(st.p) || st.p.length < 2) return null;
+    return {
+      people: st.p.map(x => x[1] != null
+        ? { name: x[0], origin: { station: x[1] } }
+        : { name: x[0], origin: { lat: x[2], lon: x[3], label: x[4] } }),
+      profile: PROFILES[st.f] ? st.f : 'both',
+      tolerance: Math.max(0, Math.min(20, +st.t || 8)),
+      direct: !!st.d,
+      banned: Array.isArray(st.b) ? st.b : []
+    };
+  } catch (e) { return null; }
+}
+
+async function shareState(c) {
+  const url = location.origin + location.pathname + '#' + encodeState();
+  const text = `${summary(c)}\n${url}`;
+  try {
+    if (navigator.share) { await navigator.share({ title: 'Point de RDV', text }); return; }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  try {
+    await navigator.clipboard.writeText(text);
+    alert('Lien copié.');
+  } catch (e) { prompt('Copier ce lien :', text); }
 }
 
 /* ---------------------------------------------------------------- résumé partageable */
@@ -693,17 +952,55 @@ document.addEventListener('click', e => {
   else if (a === 'profile') { S.profile = act.dataset.v; save(); home(); }
   else if (a === 'theme') { setTheme(!document.documentElement.classList.contains('dark')); }
   else if (a === 'copy' && CURRENT) copySummary(CURRENT);
+  else if (a === 'skip') {
+    if (!S.skip.includes(act.dataset.v)) S.skip.push(act.dataset.v);
+    save(); goto('results');
+  }
+  else if (a === 'unskip') { S.skip = []; save(); goto('results'); }
+  else if (a === 'share' && CURRENT) shareState(CURRENT);
   else if (a === 'ban') {
     const id = act.dataset.v, i = S.banned.indexOf(id);
     if (i >= 0) S.banned.splice(i, 1); else S.banned.push(id);
     refreshLines();
   }
   else if (a === 'unban') { S.banned = []; refreshLines(); }
-  else if (a === 'mapwho' && CURRENT) {
-    MAP_WHO = +act.dataset.i;
-    document.getElementById('mapbox').innerHTML = mapSvg(CURRENT, MAP_WHO);
-    document.querySelectorAll('[data-act="mapwho"]').forEach(b =>
-      b.setAttribute('aria-pressed', +b.dataset.i === MAP_WHO));
+  else if (a === 'mapview' && CURRENT) {
+    const v = act.dataset.v;
+    MAP_VIEW = (v === 'ensemble' || v === 'zones') ? v : +v;
+    MAP_Z = 1; MAP_C = null;              // changer de vue remet le cadrage à zéro
+    drawMap();
+    document.querySelectorAll('[data-act="mapview"]').forEach(b =>
+      b.setAttribute('aria-pressed', b.dataset.v === String(MAP_VIEW)));
+  }
+  else if (a === 'mapzoom' && CURRENT) {
+    const k = act.dataset.v;
+    if (k === 'reset') {
+      MAP_Z = 1; MAP_C = null;
+    } else {
+      // Zoomer sans viser, c'est vouloir voir le lieu proposé — pas le milieu géométrique
+      // du cadre, qui pour deux départs opposés tombe n'importe où.
+      if (!MAP_C && MAP_F) MAP_C = MAP_F.project(PLACE || CURRENT.station);
+      MAP_Z = Math.max(1, MAP_Z * +k);
+    }
+    drawMap();
+  }
+  else if (a === 'place' && CURRENT) {
+    const k = act.dataset.key;
+    PLACE = (PLACE && favKey(PLACE) === k) ? null : NEAR.find(p => favKey(p) === k) || null;
+    drawMap();
+    document.querySelectorAll('.places li').forEach(li =>
+      li.setAttribute('aria-current', String(!!PLACE && li.dataset.key === favKey(PLACE))));
+    document.getElementById('mapbox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  else if (a === 'fav') {
+    const k = act.dataset.key, p = NEAR.find(x => favKey(x) === k);
+    if (p) {
+      const i = S.favs.findIndex(f => favKey(f) === k);
+      if (i >= 0) S.favs.splice(i, 1);
+      else S.favs.push({ name: p.name, lat: p.lat, lon: p.lon, bar: p.bar });
+      save();
+      document.getElementById('placebox').innerHTML = placesHtml();
+    }
   }
 });
 
@@ -726,6 +1023,84 @@ function refreshLines() {
   if (box) box.innerHTML = linesSection();
 }
 
+function drawMap() {
+  document.getElementById('mapbox').innerHTML = mapSvg(CURRENT, MAP_VIEW, PLACE);
+  attachMapGestures();
+}
+
+/* Zoom et déplacement du plan.
+   Pendant le geste on ne touche qu'au viewBox — c'est un seul attribut, donc c'est fluide.
+   On ne redessine qu'à la fin, parce que le zoom change ce qu'il faut AFFICHER (les noms de
+   stations apparaissent) et pas seulement le cadrage : ça, un viewBox ne sait pas le faire. */
+function attachMapGestures() {
+  const svg = document.querySelector('#mapbox svg');
+  if (!svg || !MAP_F) return;
+  const base = MAP_F, W = base.W, H = base.H;
+  let v = { x: 0, y: 0, w: W, h: H };
+  const apply = () => svg.setAttribute('viewBox', `${v.x} ${v.y} ${v.w} ${v.h}`);
+
+  // Bornes : on ne zoome pas au-delà du quartier, ni en deçà du cadre entier.
+  const clamp = () => {
+    const min = W / 40;
+    v.w = Math.min(W, Math.max(min, v.w)); v.h = v.w * (H / W);
+    v.x = Math.max(-W * 0.2, Math.min(W * 1.2 - v.w, v.x));
+    v.y = Math.max(-H * 0.2, Math.min(H * 1.2 - v.h, v.y));
+  };
+  const commit = () => {
+    const c = base.unproject(v.x + v.w / 2, v.y + v.h / 2);
+    MAP_Z = MAP_Z * (W / v.w);
+    MAP_C = c;
+    drawMap();
+  };
+
+  let timer = null;
+  const later = () => { clearTimeout(timer); timer = setTimeout(commit, 260); };
+
+  const zoomAt = (sx, sy, k) => {
+    const px = v.x + sx * v.w, py = v.y + sy * v.h;   // point visé, en unités du viewBox
+    v.w /= k; clamp();
+    v.x = px - sx * v.w; v.y = py - sy * v.h; clamp();
+    apply(); later();
+  };
+
+  svg.addEventListener('wheel', e => {
+    e.preventDefault();
+    const r = svg.getBoundingClientRect();
+    zoomAt((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height,
+           Math.exp(-e.deltaY * 0.0018));
+  }, { passive: false });
+
+  const pts = new Map();
+  let last = null;
+  svg.addEventListener('pointerdown', e => {
+    pts.set(e.pointerId, e); svg.setPointerCapture(e.pointerId); last = null;
+  });
+  svg.addEventListener('pointermove', e => {
+    if (!pts.has(e.pointerId)) return;
+    pts.set(e.pointerId, e);
+    const r = svg.getBoundingClientRect(), all = [...pts.values()];
+    if (all.length === 1) {                                   // glisser
+      if (last) {
+        v.x -= (e.clientX - last.x) / r.width * v.w;
+        v.y -= (e.clientY - last.y) / r.height * v.h;
+        clamp(); apply();
+      }
+      last = { x: e.clientX, y: e.clientY };
+    } else if (all.length >= 2) {                             // pincer
+      const d = Math.hypot(all[0].clientX - all[1].clientX, all[0].clientY - all[1].clientY);
+      if (last && last.d) {
+        const mx = (all[0].clientX + all[1].clientX) / 2 - r.left;
+        const my = (all[0].clientY + all[1].clientY) / 2 - r.top;
+        zoomAt(mx / r.width, my / r.height, d / last.d);
+      }
+      last = { d };
+    }
+  });
+  const end = e => { pts.delete(e.pointerId); last = null; if (!pts.size) later(); };
+  svg.addEventListener('pointerup', end);
+  svg.addEventListener('pointercancel', end);
+}
+
 function setTheme(dark) {
   S.dark = dark;
   document.documentElement.classList.toggle('dark', dark);
@@ -742,6 +1117,14 @@ if (!DATA || !DATA.stations || !DATA.stations.length) {
     ou sans <code>--demo</code> pour le vrai réseau.</p></div>`;
 } else {
   load();
+  // Un lien partagé prime sur l'état local : celui qui l'ouvre veut voir CE rendez-vous,
+  // pas le sien. On nettoie le hash aussitôt pour ne pas figer l'appli dessus.
+  const shared = location.hash.length > 1 && decodeState(location.hash.slice(1));
+  if (shared) {
+    Object.assign(S, shared);
+    save();
+    history.replaceState(null, '', location.pathname + location.search);
+  }
   LINES = new Map(DATA.lines.map(l => [l.id, l]));
   graph = buildGraph(DATA, { banned: S.banned });
   const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
