@@ -1,0 +1,15 @@
+{
+  "name": "Point de RDV — Paris",
+  "short_name": "Point de RDV",
+  "description": "Où se retrouver dans Paris quand on part de plusieurs endroits.",
+  "lang": "fr",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F5F6F8",
+  "theme_color": "#1B5FCE",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
