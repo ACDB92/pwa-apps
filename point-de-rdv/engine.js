@@ -46,7 +46,14 @@ export function walkMinutes(meters, model = DEFAULT_MODEL) {
 // Construction du graphe
 // --------------------------------------------------------------------------------------
 
-export function buildGraph(data) {
+/**
+ * `opts.banned` : identifiants de lignes à écarter. Une ligne écartée n'existe tout
+ * simplement pas dans le réseau construit — pas d'arête, donc pas d'état desservi, donc
+ * aucun embarquement possible. Les correspondances à pied restent, elles : écarter une
+ * ligne ne doit pas supprimer les liaisons de rue entre stations voisines.
+ */
+export function buildGraph(data, opts = {}) {
+  const banned = new Set(opts.banned || []);
   const model = Object.assign({}, DEFAULT_MODEL, (data.meta && data.meta.model) || {});
   const lines = new Map((data.lines || []).map(l => [l.id, l]));
   const nStations = data.stations.length;
@@ -78,7 +85,7 @@ export function buildGraph(data) {
       const u = state(a, WALK), v = state(b, WALK);
       link(u, v, minutes, 'walk', null);
       link(v, u, minutes, 'walk', null);
-    } else {
+    } else if (!banned.has(lineId)) {
       const u = state(a, lineId), v = state(b, lineId);
       link(u, v, minutes, 'ride', lineId);
       link(v, u, minutes, 'ride', lineId);
@@ -107,7 +114,7 @@ export function buildGraph(data) {
     }
   }
 
-  return { data, model, lines, states, adj, byStation, bigFactor, wait };
+  return { data, model, lines, states, adj, byStation, bigFactor, wait, banned };
 }
 
 // --------------------------------------------------------------------------------------

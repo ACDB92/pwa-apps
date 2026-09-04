@@ -64,6 +64,14 @@
   .badge { display: inline-grid; place-items: center; min-width: 21px; height: 21px; padding: 0 5px;
            border-radius: 6px; font-size: 12px; font-weight: 700; line-height: 1; }
   .badges { display: inline-flex; gap: 4px; flex-wrap: wrap; vertical-align: middle; }
+  .lines { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .lines .badge { min-width: 28px; height: 28px; font-size: 13px; cursor: pointer;
+                  border: 1px solid transparent; }
+  /* Une ligne écartée reste lisible — on doit pouvoir la retrouver pour la réactiver. */
+  .badge.off { background: transparent !important; color: var(--faint) !important;
+               border-color: var(--line); text-decoration: line-through; }
+  .linegroup { font-size: 11.5px; color: var(--faint); text-transform: uppercase;
+               letter-spacing: .09em; margin-top: 14px; font-weight: 700; }
 
   .name { font-weight: 600; font-size: 16px; }
   .big { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
@@ -122,7 +130,8 @@ const PEOPLE_COLORS = ['#1B5FCE', '#C2410C', '#157347', '#7C3AED', '#B91C1C', '#
 /* ---------------------------------------------------------------- état persistant */
 
 function freshStore() {
-  return { v: 1, people: [], profile: 'both', tolerance: 8, direct: false, dark: null };
+  return { v: 1, people: [], profile: 'both', tolerance: 8, direct: false, dark: null,
+           banned: [] };
 }
 let S = freshStore();
 function load() {
@@ -151,6 +160,42 @@ function lineBadge(id) {
   return `<span class="badge" style="background:${c};color:${ink}">${esc(l.name)}</span>`;
 }
 const lineBadges = ids => `<span class="badges">${(ids || []).map(lineBadge).join('')}</span>`;
+
+const MODES = [['metro', 'Métro'], ['rer', 'RER & Transilien'], ['tram', 'Tramway']];
+// « 1, 2, 3, 10 » et non « 1, 10, 2, 3 » — et « T2 » avant « T10 », donc le nombre est
+// cherché n’importe où dans le nom, pas seulement en tête. Sans chiffre (Orlyval) : à la fin.
+function lineOrder(l) {
+  const m = /(\d+)/.exec(l.name);
+  return m ? [0, +m[1], l.name] : [1, 0, l.name];
+}
+function lineToggle(l) {
+  const off = S.banned.includes(l.id);
+  const c = l.color || '#667085';
+  const r = parseInt(c.slice(1, 3), 16), g = parseInt(c.slice(3, 5), 16), b = parseInt(c.slice(5, 7), 16);
+  const ink = (0.299 * r + 0.587 * g + 0.114 * b) > 150 ? '#14171F' : '#FFFFFF';
+  return `<button class="badge${off ? ' off' : ''}" data-act="ban" data-v="${esc(l.id)}"
+    style="${off ? '' : `background:${c};color:${ink}`}" aria-pressed="${off}"
+    title="${off ? 'Remettre' : 'Écarter'} la ligne ${esc(l.name)}">${esc(l.name)}</button>`;
+}
+
+/* Toutes les lignes, groupées par mode. On les affiche pour qu'on puisse en écarter :
+   une ligne écartée disparaît du réseau, elle n'est pas seulement pénalisée. */
+function linesSection() {
+  const n = S.banned.length;
+  return `
+    <div class="sub">Touche une ligne pour l’écarter : aucun trajet ne l’empruntera.</div>
+    ${MODES.map(([mode, label]) => {
+      const ls = DATA.lines.filter(l => l.mode === mode)
+        .sort((a, b) => { const x = lineOrder(a), y = lineOrder(b);
+                          return x[0] - y[0] || x[1] - y[1] || String(x[2]).localeCompare(y[2]); });
+      return ls.length ? `<div class="linegroup">${label}</div>
+        <div class="lines">${ls.map(lineToggle).join('')}</div>` : '';
+    }).join('')}
+    ${n ? `<div class="row between" style="margin-top:14px">
+        <span class="sub">${n} ligne${n > 1 ? 's' : ''} écartée${n > 1 ? 's' : ''}</span>
+        <button class="ghost" style="width:auto;margin:0" data-act="unban">Tout remettre</button>
+      </div>` : ''}`;
+}
 const personColor = i => PEOPLE_COLORS[i % PEOPLE_COLORS.length];
 const initials = n => (n || '?').trim().slice(0, 2).toUpperCase();
 const walkRadiusMin = () =>
@@ -210,6 +255,9 @@ function home() {
         <span>Privilégier les trajets sans correspondance</span>
       </label>
     </div>
+
+    <h2>Lignes</h2>
+    <div class="card" id="linesbox">${linesSection()}</div>
 
     <button class="primary" data-go="results" ${enough ? '' : 'disabled'}>
       ${enough ? 'Trouver le point de RDV' : 'Il faut au moins deux personnes'}</button>
@@ -351,7 +399,10 @@ function results() {
       <header><button class="icon-btn" data-go="home">←</button>
         <div class="grow"><h1>Aucun point commun</h1></div></header>
       <div class="empty">Aucune station n’est joignable depuis tous les points de départ.
-        Vérifie les adresses saisies.</div>`);
+        ${S.banned.length
+          ? `Tu écartes ${S.banned.length} ligne${S.banned.length > 1 ? 's' : ''} :
+             en remettre une rouvrira sans doute le réseau.`
+          : 'Vérifie les adresses saisies.'}</div>`);
   }
   const fairestShown = r.candidates.some(c => c.quartier.id === r.fairest.quartier.id);
   render(`
@@ -359,7 +410,9 @@ function results() {
       <button class="icon-btn" data-go="home">←</button>
       <div class="grow"><h1>${r.candidates.length} lieux possibles</h1>
         <div class="sub">${esc(r.profile.label)} · détour toléré ${r.tolerance} min ·
-          ${S.people.length} personnes</div></div>
+          ${S.people.length} personnes${S.banned.length
+            ? ` · ${S.banned.length} ligne${S.banned.length > 1 ? 's' : ''} écartée${S.banned.length > 1 ? 's' : ''}`
+            : ''}</div></div>
     </header>
     ${demoBanner()}
 
@@ -640,6 +693,12 @@ document.addEventListener('click', e => {
   else if (a === 'profile') { S.profile = act.dataset.v; save(); home(); }
   else if (a === 'theme') { setTheme(!document.documentElement.classList.contains('dark')); }
   else if (a === 'copy' && CURRENT) copySummary(CURRENT);
+  else if (a === 'ban') {
+    const id = act.dataset.v, i = S.banned.indexOf(id);
+    if (i >= 0) S.banned.splice(i, 1); else S.banned.push(id);
+    refreshLines();
+  }
+  else if (a === 'unban') { S.banned = []; refreshLines(); }
   else if (a === 'mapwho' && CURRENT) {
     MAP_WHO = +act.dataset.i;
     document.getElementById('mapbox').innerHTML = mapSvg(CURRENT, MAP_WHO);
@@ -658,6 +717,15 @@ document.addEventListener('keydown', e => {
   el.click();
 });
 
+// Écarter une ligne change le réseau lui-même : le graphe est reconstruit, pas filtré après
+// coup. Seule la section des lignes est redessinée, pour ne pas perdre la position de lecture.
+function refreshLines() {
+  graph = buildGraph(DATA, { banned: S.banned });
+  save();
+  const box = document.getElementById('linesbox');
+  if (box) box.innerHTML = linesSection();
+}
+
 function setTheme(dark) {
   S.dark = dark;
   document.documentElement.classList.toggle('dark', dark);
@@ -675,7 +743,7 @@ if (!DATA || !DATA.stations || !DATA.stations.length) {
 } else {
   load();
   LINES = new Map(DATA.lines.map(l => [l.id, l]));
-  graph = buildGraph(DATA);
+  graph = buildGraph(DATA, { banned: S.banned });
   const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   setTheme(S.dark == null ? prefersDark : S.dark);
   home();
