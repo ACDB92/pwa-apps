@@ -235,24 +235,32 @@ export function legsFor(graph, times, stationId) {
   }
   steps.reverse();
 
+  // Chaque tronçon garde la suite des stations traversées, pas seulement ses extrémités :
+  // un plan qui relierait Nation à Étoile en droite couperait à travers Paris au lieu de
+  // suivre la ligne 1.
   const legs = [];
   for (const { edge, from, to } of steps) {
     const a = graph.states[from].station, b = graph.states[to].station;
     const last = legs[legs.length - 1];
     if (edge.kind === 'ride') {
       if (last && last.kind === 'ride' && last.line === edge.line) {
-        last.to = b; last.stops += 1; last.minutes += edge.cost;
+        last.to = b; last.stops += 1; last.minutes += edge.cost; last.stations.push(b);
       } else {
-        legs.push({ kind: 'ride', line: edge.line, from: a, to: b, stops: 1, minutes: edge.cost });
+        legs.push({ kind: 'ride', line: edge.line, from: a, to: b, stops: 1,
+                    minutes: edge.cost, stations: [a, b] });
       }
     } else if (edge.kind === 'walk') {
-      legs.push({ kind: 'walk', from: a, to: b, stops: 0, minutes: edge.cost });
+      legs.push({ kind: 'walk', from: a, to: b, stops: 0, minutes: edge.cost, stations: [a, b] });
     } else if (last) {
       last.minutes += edge.cost;                        // attente et couloirs : sur le tronçon
     }
   }
   const rides = legs.filter(l => l.kind === 'ride').length;
-  return { legs, changes: Math.max(0, rides - 1) + legs.filter(l => l.kind === 'walk').length };
+  // Suite continue de stations, du départ à l'arrivée, sans répéter les raccords.
+  const path = [];
+  for (const l of legs) for (const sid of l.stations) if (path[path.length - 1] !== sid) path.push(sid);
+  return { legs, path,
+           changes: Math.max(0, rides - 1) + legs.filter(l => l.kind === 'walk').length };
 }
 
 // --------------------------------------------------------------------------------------

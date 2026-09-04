@@ -80,6 +80,12 @@
   }
   input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
   .seg { display: flex; gap: 6px; }
+  /* Jusqu'à 6 personnes : on fait défiler la bande plutôt que de réduire les prénoms à
+     quelques pixels — et le défilement reste dans le bandeau, jamais dans la page. */
+  .who { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+  .who button { flex: 0 0 auto; padding: 9px 13px; font-size: 14px; white-space: nowrap; }
+  .who button[aria-pressed=true] { background: var(--accent-soft); border-color: var(--accent);
+                                   color: var(--accent); font-weight: 600; }
   .seg button { flex: 1; padding: 9px 4px; font-size: 14px; }
   .seg button[aria-pressed=true] { background: var(--accent-soft); border-color: var(--accent);
                                    color: var(--accent); font-weight: 600; }
@@ -167,7 +173,8 @@ function home() {
 
     <h2>Qui vient ?</h2>
     ${S.people.map((p, i) => `
-      <div class="card row between">
+      <div class="card row between tap" data-go="person" data-id="${i}"
+           role="button" tabindex="0" aria-label="Modifier ${esc(p.name)}">
         <div class="row" style="min-width:0">
           <span class="dot" style="background:${personColor(i)}">${esc(initials(p.name))}</span>
           <div style="min-width:0">
@@ -176,10 +183,13 @@ function home() {
               ${esc(originLabel(p.origin))}</div>
           </div>
         </div>
-        <button class="icon-btn" data-act="remove" data-i="${i}" title="Retirer">✕</button>
+        <div class="row" style="gap:2px">
+          <span class="sub" aria-hidden="true">modifier</span>
+          <button class="icon-btn" data-act="remove" data-i="${i}" title="Retirer ${esc(p.name)}">✕</button>
+        </div>
       </div>`).join('')}
     ${S.people.length ? '' : '<div class="empty">Ajoute au moins deux points de départ.</div>'}
-    <button class="ghost" data-go="add">+ Ajouter quelqu’un</button>
+    <button class="ghost" data-go="person">+ Ajouter quelqu’un</button>
 
     <h2>Ce qu’on cherche</h2>
     <div class="card">
@@ -216,34 +226,52 @@ function home() {
   });
 }
 
-/* ---------------------------------------------------------------- écran : ajouter */
+/* ------------------------------------------------------- écran : ajouter / modifier */
 
-function add() {
+/**
+ * Ajouter et modifier font exactement la même chose — choisir un prénom et un point de
+ * départ — donc un seul écran. `i` absent : on ajoute. `i` présent : on modifie.
+ */
+function person(i) {
+  const editing = i != null && S.people[i] != null;
+  const p = editing ? S.people[i] : null;
   render(`
     <header>
       <button class="icon-btn" data-go="home">←</button>
-      <div class="grow"><h1>Ajouter un point de départ</h1></div>
+      <div class="grow"><h1>${editing ? 'Modifier' : 'Ajouter un point de départ'}</h1>
+        ${editing ? `<div class="sub">Départ actuel : ${esc(originLabel(p.origin))}</div>` : ''}
+      </div>
     </header>
     <div class="card">
       <input type="text" id="who" placeholder="Prénom" autocomplete="off">
       <div style="height:10px"></div>
-      <input type="search" id="q" placeholder="Station, ou adresse complète" autocomplete="off">
+      <input type="search" id="q" autocomplete="off"
+        placeholder="${editing ? 'Changer de point de départ' : 'Station, ou adresse complète'}">
       <div class="sub" style="margin-top:8px">La station marche hors ligne. Une adresse demande
         du réseau : elle est cherchée dans la Base Adresse Nationale.</div>
       <div class="hits" id="hits"></div>
     </div>
+    ${editing ? `
+      <button class="primary" id="save">Enregistrer</button>
+      <button class="ghost" data-act="remove" data-i="${i}">Retirer cette personne</button>` : ''}
   `);
   const who = document.getElementById('who');
   const q = document.getElementById('q');
   const hits = document.getElementById('hits');
-  who.value = 'Personne ' + (S.people.length + 1);
-  setTimeout(() => q.focus(), 50);
+  who.value = editing ? p.name : 'Personne ' + (S.people.length + 1);
+  // En modification, le prénom est le champ qu'on vient le plus souvent corriger, et il est
+  // déjà rempli : on le sélectionne pour qu'une frappe le remplace.
+  setTimeout(() => { if (editing) { who.focus(); who.select(); } else q.focus(); }, 50);
 
   const pick = origin => {
-    S.people.push({ name: who.value.trim() || 'Sans nom', origin });
+    const name = who.value.trim() || 'Sans nom';
+    if (editing) S.people[i] = { name, origin };
+    else S.people.push({ name, origin });
     save();
     goto('home');
   };
+  // Enregistrer sans toucher au départ : renommer ne doit pas obliger à resaisir un lieu.
+  if (editing) document.getElementById('save').addEventListener('click', () => pick(p.origin));
 
   const show = list => { hits.innerHTML = ''; list.forEach(el => hits.appendChild(el)); };
   const button = (html, onClick) => {
@@ -309,6 +337,7 @@ async function lookupAddress(text, ctx) {
 /* ---------------------------------------------------------------- écran : résultats */
 
 let LAST = null, CURRENT = null;
+let MAP_WHO = -1;            // -1 = vue d’ensemble ; sinon l’index de la personne regardée
 
 function results() {
   if (S.people.length < 2) return goto('home');
@@ -359,7 +388,8 @@ function card(c, i, r) {
   const cost = c.cost > 0.5
     ? `<span class="tag warm">+${mins(c.cost)} min de détour</span>`
     : `<span class="tag">le plus équitable</span>`;
-  return `<li class="card tap" data-go="detail" data-id="${s.id}">
+  return `<li class="card tap" data-go="detail" data-id="${s.id}"
+    role="button" tabindex="0" aria-label="Voir le détail de ${esc(q.n)}">
     <div class="row between">
       <div class="row" style="min-width:0">
         ${i >= 0 ? `<span class="rank">${i + 1}</span>` : ''}
@@ -393,6 +423,7 @@ function detail(id) {
     || (LAST.fairest.station.id === id ? LAST.fairest : null);
   if (!c) return goto('results');
   CURRENT = c;
+  MAP_WHO = -1;
   const s = c.station, q = c.quartier;
   render(`
     <header>
@@ -424,7 +455,13 @@ function detail(id) {
       </div>`;
     }).join('')}
     <h2>Sur le plan</h2>
-    ${mapSvg(c)}
+    <div class="who" role="group" aria-label="Quel trajet afficher">
+      <button data-act="mapwho" data-i="-1" aria-pressed="true">Tous</button>
+      ${S.people.map((p, i) =>
+        `<button data-act="mapwho" data-i="${i}" aria-pressed="false">${esc(p.name)}</button>`
+      ).join('')}
+    </div>
+    <div id="mapbox">${mapSvg(c, -1)}</div>
     <button class="primary" data-act="copy">Copier le résumé</button>
     ${modelNote()}
   `);
@@ -443,42 +480,101 @@ function routeHtml(route) {
 
 /* ---------------------------------------------------------------- plan schématique */
 
-function mapSvg(c) {
-  const zone = DATA.stations.filter(s => s.z);
+function mapSvg(c, who) {
+  const st = DATA.stations;
+  const zone = st.filter(s => s.z);
   const lat0 = zone.reduce((a, s) => a + s.lat, 0) / zone.length;
   const k = Math.cos(lat0 * Math.PI / 180);
-  const xs = zone.map(s => s.lon * k), ys = zone.map(s => -s.lat);
-  const [x0, x1] = [Math.min(...xs), Math.max(...xs)];
-  const [y0, y1] = [Math.min(...ys), Math.max(...ys)];
-  const W = 640, H = Math.max(220, Math.round(W * (y1 - y0) / (x1 - x0 || 1))), pad = 18;
-  const px = s => pad + (s.lon * k - x0) / (x1 - x0 || 1) * (W - 2 * pad);
-  const py = s => pad + (-s.lat - y0) / (y1 - y0 || 1) * (H - 2 * pad);
-  const st = DATA.stations;
+  const X = o => o.lon * k, Y = o => -o.lat;
+  const originOf = p => p.origin.station != null
+    ? st[p.origin.station] : { lat: p.origin.lat, lon: p.origin.lon };
 
-  const edges = DATA.edges.filter(e => e[3] !== null && st[e[0]].z && st[e[1]].z)
+  const route = who >= 0 && c.routes[who] && c.routes[who].path.length ? c.routes[who] : null;
+  // Ce qu'il faut voir : tout le réseau, ou le seul trajet regardé.
+  const focus = route
+    ? [originOf(S.people[who]), ...route.path.map(id => st[id]), c.station]
+    : zone;
+
+  let x0 = Math.min(...focus.map(X)), x1 = Math.max(...focus.map(X));
+  let y0 = Math.min(...focus.map(Y)), y1 = Math.max(...focus.map(Y));
+  if (route) {
+    // Un trajet de deux stations ne doit pas s'afficher à la loupe : étendue minimale
+    // d'environ 2,5 km, puis une marge pour que le tracé ne colle pas au bord.
+    const MIN = 0.022;
+    const span = (a, b) => {
+      const mid = (a + b) / 2, half = Math.max((b - a) / 2, MIN / 2);
+      return [mid - half, mid + half];
+    };
+    [x0, x1] = span(x0, x1); [y0, y1] = span(y0, y1);
+  }
+  const m = route ? 0.14 : 0.04;
+  const mx = (x1 - x0) * m || 0.004, my = (y1 - y0) * m || 0.004;
+  x0 -= mx; x1 += mx; y0 -= my; y1 += my;
+
+  const W = 640;
+  const H = route ? 430 : Math.max(220, Math.round(W * (y1 - y0) / (x1 - x0 || 1)));
+  // Le cadre est étendu au rapport de la vue : sans cela l'échelle différerait en X et en Y,
+  // et le tracé apparaîtrait étiré.
+  const want = H / W;
+  if ((y1 - y0) / (x1 - x0) < want) {
+    const h = (x1 - x0) * want, mid = (y0 + y1) / 2; y0 = mid - h / 2; y1 = mid + h / 2;
+  } else {
+    const w = (y1 - y0) / want, mid = (x0 + x1) / 2; x0 = mid - w / 2; x1 = mid + w / 2;
+  }
+  const px = o => ((X(o) - x0) / (x1 - x0 || 1) * W).toFixed(1);
+  const py = o => ((Y(o) - y0) / (y1 - y0 || 1) * H).toFixed(1);
+  const inBox = o => X(o) >= x0 && X(o) <= x1 && Y(o) >= y0 && Y(o) <= y1;
+
+  const edges = DATA.edges
+    .filter(e => e[3] !== null && st[e[0]].z && st[e[1]].z && (inBox(st[e[0]]) || inBox(st[e[1]])))
     .map(([a, b, , lid]) => {
       const l = LINES.get(lid);
-      return `<line x1="${px(st[a]).toFixed(1)}" y1="${py(st[a]).toFixed(1)}"
-        x2="${px(st[b]).toFixed(1)}" y2="${py(st[b]).toFixed(1)}"
-        stroke="${(l && l.color) || '#888'}" stroke-width="2" stroke-linecap="round" opacity=".45"/>`;
+      return `<line x1="${px(st[a])}" y1="${py(st[a])}" x2="${px(st[b])}" y2="${py(st[b])}"
+        stroke="${(l && l.color) || '#888'}" stroke-width="2" stroke-linecap="round"
+        opacity="${route ? '.18' : '.45'}"/>`;
     }).join('');
-  const dots = zone.map(s =>
-    `<circle cx="${px(s).toFixed(1)}" cy="${py(s).toFixed(1)}" r="2" fill="currentColor" opacity=".35"/>`
+  const dots = zone.filter(inBox).map(s =>
+    `<circle cx="${px(s)}" cy="${py(s)}" r="2" fill="currentColor" opacity="${route ? '.22' : '.35'}"/>`
   ).join('');
-  const origins = S.people.map((p, i) => {
-    const o = p.origin.station != null ? st[p.origin.station] : { lat: p.origin.lat, lon: p.origin.lon };
-    return `<circle cx="${px(o).toFixed(1)}" cy="${py(o).toFixed(1)}" r="7"
-      fill="${personColor(i)}" stroke="var(--surface)" stroke-width="2"/>`;
-  }).join('');
-  const target = `<circle cx="${px(c.station).toFixed(1)}" cy="${py(c.station).toFixed(1)}" r="11"
-      fill="none" stroke="var(--ink)" stroke-width="2.5"/>
-    <circle cx="${px(c.station).toFixed(1)}" cy="${py(c.station).toFixed(1)}" r="4" fill="var(--ink)"/>`;
 
-  return `<svg class="map" viewBox="0 0 ${W} ${H}" role="img"
-      aria-label="Plan schématique : ${esc(c.station.n)} et les points de départ">
-    ${edges}${dots}${origins}${target}</svg>
-    <div class="sub" style="margin-top:6px">Cercle noir : le lieu proposé. Pastilles colorées :
-      les points de départ.</div>`;
+  // Le tracé suit les stations traversées, tronçon par tronçon, aux couleurs des lignes.
+  const trace = route ? route.legs.map(l => {
+    const pts = l.stations.map(id => `${px(st[id])},${py(st[id])}`).join(' ');
+    const col = l.kind === 'walk' ? 'currentColor' : ((LINES.get(l.line) || {}).color || '#888');
+    return `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="5"
+      stroke-linecap="round" stroke-linejoin="round"
+      ${l.kind === 'walk' ? 'stroke-dasharray="2 8"' : ''}/>`;
+  }).join('') : '';
+  // Depuis une adresse, la marche jusqu'à la première station fait partie du trajet.
+  const o0 = route ? originOf(S.people[who]) : null;
+  const approach = route && S.people[who].origin.station == null
+    ? `<line x1="${px(o0)}" y1="${py(o0)}" x2="${px(st[route.path[0]])}" y2="${py(st[route.path[0]])}"
+        stroke="currentColor" stroke-width="3" stroke-dasharray="2 8" stroke-linecap="round"/>` : '';
+
+  const origins = S.people.map((p, i) => {
+    if (route && i !== who) return '';           // zoomé : seule la personne regardée
+    const o = originOf(p);
+    const r = route ? 11 : 7;
+    return `<circle cx="${px(o)}" cy="${py(o)}" r="${r}"
+        fill="${personColor(i)}" stroke="var(--surface)" stroke-width="2"/>` +
+      (route ? `<text x="${px(o)}" y="${(+py(o) + 3.5).toFixed(1)}" text-anchor="middle"
+        font-size="10" font-weight="700" fill="#fff">${esc(initials(p.name))}</text>` : '');
+  }).join('');
+  const target = `<circle cx="${px(c.station)}" cy="${py(c.station)}" r="11"
+      fill="none" stroke="var(--ink)" stroke-width="2.5"/>
+    <circle cx="${px(c.station)}" cy="${py(c.station)}" r="4" fill="var(--ink)"/>`;
+
+  const legende = route
+    ? `Trajet de ${esc(S.people[who].name)} jusqu’à ${esc(c.quartier.n)} —
+       pointillés : la marche. Cercle noir : le lieu proposé.`
+    : 'Cercle noir : le lieu proposé. Pastilles colorées : les points de départ.';
+  const titre = route
+    ? `Trajet de ${esc(S.people[who].name)} vers ${esc(c.station.n)}`
+    : `Plan schématique : ${esc(c.station.n)} et les points de départ`;
+
+  return `<svg class="map" viewBox="0 0 ${W} ${H}" role="img" aria-label="${titre}">
+    ${edges}${dots}${approach}${trace}${origins}${target}</svg>
+    <div class="sub" style="margin-top:6px">${legende}</div>`;
 }
 
 /* ---------------------------------------------------------------- résumé partageable */
@@ -526,22 +622,40 @@ function modelNote() {
 
 /* ---------------------------------------------------------------- routage */
 
-const ROUTES = { home, add, results, detail };
+const ROUTES = { home, person, results, detail };
 function goto(name, arg) { (ROUTES[name] || home)(arg); }
 
 document.addEventListener('click', e => {
   const go = e.target.closest('[data-go]');
-  if (go) {
+  const act = e.target.closest('[data-act]');
+  // Le plus proche gagne : le bouton « retirer » vit à l'intérieur de la fiche qui ouvre
+  // l'édition, et un clic dessus ne doit pas ouvrir la fiche.
+  if (go && (!act || !go.contains(act))) {
     const id = go.dataset.id;
     return goto(go.dataset.go, id === undefined ? undefined : +id);
   }
-  const act = e.target.closest('[data-act]');
   if (!act) return;
   const a = act.dataset.act;
   if (a === 'remove') { S.people.splice(+act.dataset.i, 1); save(); home(); }
   else if (a === 'profile') { S.profile = act.dataset.v; save(); home(); }
   else if (a === 'theme') { setTheme(!document.documentElement.classList.contains('dark')); }
   else if (a === 'copy' && CURRENT) copySummary(CURRENT);
+  else if (a === 'mapwho' && CURRENT) {
+    MAP_WHO = +act.dataset.i;
+    document.getElementById('mapbox').innerHTML = mapSvg(CURRENT, MAP_WHO);
+    document.querySelectorAll('[data-act="mapwho"]').forEach(b =>
+      b.setAttribute('aria-pressed', +b.dataset.i === MAP_WHO));
+  }
+});
+
+// Les fiches cliquables sont des div : sans ce relais, elles resteraient inatteignables
+// au clavier alors qu'elles ouvrent un écran.
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const el = e.target.closest('[data-go],[data-act]');
+  if (!el || el.tagName === 'BUTTON' || el.tagName === 'INPUT') return;
+  e.preventDefault();
+  el.click();
 });
 
 function setTheme(dark) {
