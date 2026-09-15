@@ -1,0 +1,10 @@
+Pièces « Staunty » — le jeu affiché par Coup d'œil
+
+Auteur : sadsnake1
+Source : projet lila (lichess), public/piece/staunty
+         https://github.com/lichess-org/lila/tree/master/public/piece/staunty
+Fournies par cm-chessboard 8.14.0 (assets/pieces/staunty.svg), sans modification.
+
+Licence : Creative Commons Attribution - Pas d'Utilisation Commerciale - Partage dans les Mêmes
+Conditions 4.0 International (CC BY-NC-SA 4.0)
+Texte complet : https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode.fr
