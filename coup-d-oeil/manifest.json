@@ -1,0 +1,15 @@
+{
+  "name": "Coup d'œil — sparring d'échecs",
+  "short_name": "Coup d'œil",
+  "description": "Jouer contre Stockfish, avec un retour sur chacun de ses coups.",
+  "lang": "fr",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F4F2EC",
+  "theme_color": "#739552",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

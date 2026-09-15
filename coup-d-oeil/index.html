@@ -1,0 +1,951 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#739552">
+<title>Coup d'œil</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="vendor/cm-chessboard/assets/chessboard.css">
+<link rel="stylesheet" href="vendor/cm-chessboard/assets/extensions/markers/markers.css">
+<link rel="stylesheet" href="vendor/cm-chessboard/assets/extensions/arrows/arrows.css">
+<link rel="stylesheet" href="vendor/cm-chessboard/assets/extensions/promotion-dialog/promotion-dialog.css">
+<style>
+  :root {
+    --fond: #f4f2ec; --carte: #ffffff; --texte: #1f2328; --doux: #5f656d; --bord: #e3dfd4;
+    --accent: #739552; --accent-fonce: #5a7a3d;
+    --case-claire: #ebecd0; --case-foncee: #739552;
+    --v-meilleur: #4f8f2f; --v-excellent: #6aa84f; --v-bon: #7f9a78;
+    --v-imprecision: #c99a06; --v-erreur: #e07b24; --v-gaffe: #d63b2a;
+    --alerte-fond: #fff1e3;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fond: #17191b; --carte: #222528; --texte: #e8e6e1; --doux: #a1a6ab; --bord: #34383c;
+      --alerte-fond: #3a2616;
+      color-scheme: dark;
+    }
+  }
+  [hidden] { display: none !important; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--fond); color: var(--texte); }
+  small { color: var(--doux); }
+  .doux { color: var(--doux); }
+
+  .barre { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; padding: .6rem 1rem; max-width: 76rem; margin: 0 auto; }
+  .barre h1 { display: flex; align-items: center; gap: .5rem; font-size: 1.15rem; margin: 0; }
+  .barre h1 img { border-radius: 6px; }
+  .statut { margin: 0; flex: 1 1 12rem; color: var(--doux); }
+  .actions { display: flex; gap: .5rem; }
+  .bouton { font: inherit; border: 1px solid transparent; border-radius: 8px; padding: .45rem .9rem; background: var(--accent); color: #fff; cursor: pointer; }
+  .bouton:hover { background: var(--accent-fonce); }
+  .bouton.discret { background: transparent; color: var(--texte); border-color: var(--bord); }
+  .bouton.discret:hover { border-color: var(--accent); }
+
+  .jeu { display: grid; gap: 1rem; padding: 0 1rem 2rem; max-width: 76rem; margin: 0 auto; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 900px) { .jeu { grid-template-columns: minmax(0, 1.2fr) minmax(19rem, 1fr); align-items: start; } }
+  .largeur-plateau { width: min(100%, calc(100svh - 11rem)); min-width: 16rem; margin: 0 auto; }
+  .plateau { aspect-ratio: 1; }
+  .sous-plateau { margin: .3rem auto 0; font-size: .85rem; min-height: 1.3em; }
+
+  .garde-fou { margin-top: .6rem; padding: .7rem .9rem; background: var(--alerte-fond); border: 2px solid var(--v-erreur); border-radius: 10px; display: grid; gap: .15rem; }
+  .garde-fou strong { font-size: 1.05rem; }
+  .apercu { margin-top: .6rem; padding: .6rem .8rem; background: var(--carte); border: 1px solid var(--bord); border-radius: 10px; }
+  .apercu-tete { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .4rem; }
+  .apercu-coups { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .45rem; }
+  .pas { font: inherit; font-size: .9rem; border: 1px solid var(--bord); background: var(--carte); color: var(--texte); border-radius: 6px; padding: .15rem .45rem; cursor: pointer; }
+  .pas.actif { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .colonne-retour { display: grid; gap: 1rem; }
+  .carte { background: var(--carte); border: 1px solid var(--bord); border-radius: 12px; padding: .9rem 1rem; }
+  .carte > :first-child { margin-top: 0; }
+  .entete { display: flex; flex-wrap: wrap; align-items: baseline; gap: .35rem .6rem; }
+  .badge { display: inline-block; padding: .08rem .55rem; border-radius: 999px; color: #fff; font-weight: 600; font-size: .85rem; }
+  .v-meilleur { background: var(--v-meilleur); }
+  .v-excellent { background: var(--v-excellent); }
+  .v-bon { background: var(--v-bon); }
+  .v-imprecision { background: var(--v-imprecision); }
+  .v-erreur { background: var(--v-erreur); }
+  .v-gaffe { background: var(--v-gaffe); }
+  .coup { font-weight: 600; font-size: 1.05rem; }
+  .eval { font-variant-numeric: tabular-nums; color: var(--doux); }
+  .signaux { list-style: none; margin: .7rem 0 0; padding: 0; display: grid; gap: .4rem; }
+  .signal { margin: .5rem 0 0; padding: .45rem .6rem; border-left: 3px solid var(--v-gaffe); background: color-mix(in srgb, var(--v-gaffe) 9%, transparent); border-radius: 0 6px 6px 0; }
+  .signaux .signal { margin: 0; }
+  .signal.discret { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  h3 { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--doux); margin: 1rem 0 .35rem; }
+  .lignes { list-style: none; margin: 0; padding: 0; display: grid; gap: .3rem; }
+  .ligne { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .6rem; width: 100%; text-align: left; font: inherit; color: inherit; background: none; border: 1px solid var(--bord); border-radius: 8px; padding: .4rem .6rem; cursor: pointer; }
+  .ligne:hover { border-color: var(--accent); }
+  .ligne b { min-width: 3.2rem; }
+  .variante { color: var(--doux); font-size: .9rem; }
+  .constats { list-style: none; margin: 0; padding: 0; display: grid; gap: .35rem; }
+  .constat { display: flex; justify-content: space-between; align-items: baseline; gap: .2rem .8rem; padding: .4rem .6rem; border: 1px solid var(--bord); border-radius: 8px; }
+  .constats .signal { margin: 0; border: 0; border-left: 3px solid var(--v-gaffe); border-radius: 0 6px 6px 0; }
+  .partie-tete { display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
+  .partie-tete h2 { margin: 0; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--doux); }
+  .liste-coups { list-style: none; margin: .5rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: .2rem .25rem; max-height: 9rem; overflow: auto; }
+  .liste-coups:empty { display: none; }
+  .coup-liste { display: inline-flex; align-items: center; gap: .2rem; }
+  .coup-liste .numero { color: var(--doux); font-size: .85rem; margin-left: .3rem; }
+  .coup-liste.a-toi .pas { font-weight: 600; }
+  .coup-liste .pastille { display: inline-block; margin-left: .3rem; vertical-align: middle; }
+  .bouton:disabled { opacity: .45; cursor: default; }
+  .voir { font: inherit; font-size: .85rem; white-space: nowrap; padding: 0; border: 0; background: none; color: var(--accent); cursor: pointer; }
+  .details { margin-top: .9rem; }
+  .details > summary { cursor: pointer; color: var(--doux); font-size: .85rem; }
+  .san { text-transform: none; letter-spacing: 0; }   /* la notation garde sa casse, même dans un titre en capitales */
+  .coup-lien { font: inherit; font-weight: 600; padding: 0 .05em; border: 0; background: none; color: var(--accent); cursor: pointer; text-decoration: underline dotted; text-underline-offset: .2em; }
+
+  .revue h2 { margin: 0 0 .2rem; font-size: 1.1rem; }
+  .compteurs { display: flex; flex-wrap: wrap; gap: .35rem; margin: .5rem 0; }
+  .compteur { display: inline-flex; align-items: center; gap: .35rem; border: 1px solid var(--bord); border-radius: 999px; padding: .1rem .55rem; font-size: .88rem; }
+  .pastille { width: .6rem; height: .6rem; border-radius: 50%; }
+  .figure-courbe { margin: .6rem 0; }
+  .figure-courbe figcaption { font-size: .8rem; }
+  .courbe { display: block; width: 100%; height: auto; }
+  .courbe-milieu { stroke: var(--bord); stroke-dasharray: 3 3; }
+  .courbe-ligne { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; }
+  .courbe-point { stroke: var(--carte); stroke-width: 1; }
+  .courbe-point.v-imprecision { fill: var(--v-imprecision); }
+  .courbe-point.v-erreur { fill: var(--v-erreur); }
+  .courbe-point.v-gaffe { fill: var(--v-gaffe); }
+  .coups-revue { list-style: none; padding: 0; margin: 0; display: grid; gap: .25rem; max-height: 22rem; overflow: auto; }
+  .boutons { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .5rem; margin-top: 1rem; }
+  .historique-conteneur { overflow-x: auto; }
+  .historique { width: 100%; border-collapse: collapse; font-size: .88rem; }
+  .historique th, .historique td { text-align: left; padding: .25rem .4rem; border-bottom: 1px solid var(--bord); white-space: nowrap; }
+
+  dialog { border: 1px solid var(--bord); border-radius: 14px; background: var(--carte); color: var(--texte); padding: 1.1rem 1.2rem; width: min(27rem, calc(100vw - 2rem)); }
+  dialog::backdrop { background: rgb(0 0 0 / .35); }
+  dialog h2 { margin: 0 0 .7rem; font-size: 1.15rem; }
+  fieldset { border: 0; padding: 0; margin: 0 0 .9rem; display: flex; flex-wrap: wrap; gap: .3rem 1rem; }
+  legend { font-weight: 600; margin-bottom: .3rem; padding: 0; }
+  .champ { display: grid; gap: .3rem; margin-bottom: .9rem; font-weight: 600; }
+  .champ small { font-weight: 400; }
+  .case { display: flex; gap: .5rem; align-items: center; font-weight: 600; margin-bottom: .2rem; }
+
+  /* Plateau : tons proches de chess.com, pour s'entraîner sur le rendu où la vision décroche. */
+  .cm-chessboard.coup-d-oeil .board .square.white { fill: var(--case-claire); }
+  .cm-chessboard.coup-d-oeil .board .square.black { fill: var(--case-foncee); }
+  .cm-chessboard.coup-d-oeil.border-type-none .board .border { stroke: var(--case-foncee); stroke-width: 0; fill: var(--case-foncee); }
+  .cm-chessboard.coup-d-oeil .coordinates { pointer-events: none; user-select: none; }
+  .cm-chessboard.coup-d-oeil .coordinates .coordinate { font-size: 7px; font-weight: 600; cursor: default; }
+  .cm-chessboard.coup-d-oeil .coordinates .coordinate.white { fill: var(--case-foncee); }
+  .cm-chessboard.coup-d-oeil .coordinates .coordinate.black { fill: var(--case-claire); }
+  .cm-chessboard .markers .marker.marker-dernier { fill: #f6e94b; opacity: .5; }
+</style>
+</head>
+<body>
+<header class="barre">
+  <h1><img src="icon.svg" alt="" width="28" height="28"> Coup d'œil</h1>
+  <p id="statut" class="statut" role="status" aria-live="polite">Chargement du moteur…</p>
+  <div class="actions">
+    <button id="bouton-abandon" class="bouton discret" hidden>Abandonner</button>
+    <button id="bouton-nouvelle" class="bouton">Nouvelle partie</button>
+  </div>
+</header>
+
+<main class="jeu">
+  <section>
+    <div class="largeur-plateau">
+      <div id="plateau" class="plateau"></div>
+      <!-- Sous le plateau, jamais au-dessus : un bandeau qui apparaît ne doit pas déplacer les cases. -->
+      <div id="garde-fou" class="garde-fou" role="alert" hidden>
+        <strong>Regarde encore.</strong>
+        <span id="garde-fou-indice"></span>
+        <small>Ton coup a été repris : trouve ce qui cloche, puis rejoue.</small>
+      </div>
+      <div id="apercu" class="apercu" hidden>
+        <div class="apercu-tete">
+          <strong id="apercu-titre"></strong>
+          <button id="apercu-fermer" class="bouton discret">Revenir à la partie</button>
+        </div>
+        <div id="apercu-coups" class="apercu-coups"></div>
+      </div>
+      <p id="profondeur" class="sous-plateau doux"></p>
+    </div>
+  </section>
+
+  <section class="colonne-retour">
+    <article id="partie" class="carte">
+      <div class="partie-tete">
+        <h2>Coups</h2>
+        <button id="bouton-reprendre" class="bouton discret" disabled>◀ Reprendre mon coup</button>
+      </div>
+      <ol id="coups" class="liste-coups"></ol>
+    </article>
+    <article id="retour" class="carte" aria-live="polite">
+      <p class="doux">Joue un coup : le retour s’affiche ici.</p>
+    </article>
+    <section id="revue" class="carte revue" hidden></section>
+  </section>
+</main>
+
+<dialog id="dialogue-nouvelle">
+  <form method="dialog" id="formulaire-nouvelle">
+    <h2>Nouvelle partie</h2>
+    <fieldset>
+      <legend>Tu joues</legend>
+      <label><input type="radio" name="couleur" value="w"> les Blancs</label>
+      <label><input type="radio" name="couleur" value="b"> les Noirs</label>
+      <label><input type="radio" name="couleur" value="hasard"> au hasard</label>
+    </fieldset>
+    <label class="champ">
+      <span>Niveau de l’adversaire : <output id="elo-valeur"></output></span>
+      <input type="range" name="elo" min="1320" max="3190" step="10">
+      <small>≈ classement chess.com rapide : une estimation, pas une mesure — personne n’a mesuré Stockfish bridé face aux joueurs de chess.com.</small>
+    </label>
+    <label class="case"><input type="checkbox" name="gardeFou"> Garde-fou : m’arrêter avant une gaffe</label>
+    <small>Il reprend le coup sans donner la réponse. Après trois parties sans gaffe rattrapée, joue sans.</small>
+    <div class="boutons">
+      <button value="annuler" class="bouton discret">Annuler</button>
+      <button value="jouer" class="bouton">Jouer</button>
+    </div>
+  </form>
+</dialog>
+
+<script type="module">
+import { Chess } from './vendor/chess.js';
+import { Chessboard, INPUT_EVENT_TYPE, BORDER_TYPE, FEN } from './vendor/cm-chessboard/src/Chessboard.js';
+import { Markers, MARKER_TYPE } from './vendor/cm-chessboard/src/extensions/markers/Markers.js';
+import { Arrows, ARROW_TYPE } from './vendor/cm-chessboard/src/extensions/arrows/Arrows.js';
+import { PromotionDialog, PROMOTION_DIALOG_RESULT_TYPE } from './vendor/cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js';
+import { Moteur } from './uci.js';
+import { LIBELLES, NOMS_SIGNAUX, doitIntercepter, indiceGardeFou, sanFr } from './coach.js';
+import { jugerCoup, PROFONDEUR, PROFONDEUR_MIN, OPTIONS_ANALYSTE, ELO, TEMPS_ADVERSAIRE, optionsAdversaire, eloChessCom } from './analyste.js';
+import { formaterScore, formaterChances } from './explication.js';
+
+// ── Outils ───────────────────────────────────────────────────────────────────────────────────
+
+const $ = selecteur => document.querySelector(selecteur);
+const pause = ms => new Promise(r => setTimeout(r, ms));
+const versObjet = uci => ({ from: uci.slice(0, 2), to: uci.slice(2, 4), ...(uci[4] ? { promotion: uci[4] } : {}) });
+const BONS = ['meilleur', 'excellent', 'bon'];
+const ORDRE_VERDICTS = ['meilleur', 'excellent', 'bon', 'imprecision', 'erreur', 'gaffe'];
+const numero = r => `${Math.ceil(r.demiCoup / 2)}${r.demiCoup % 2 ? '.' : '…'}`;
+const texteVariante = coups => coups.map(c => c.san).join(' ');
+const libelleNiveau = elo => `Stockfish ${elo} · ≈ ${eloChessCom(elo)} chess.com`;
+
+function el(balise, attributs = {}, ...enfants) {
+  const noeud = document.createElement(balise);
+  for (const [nom, valeur] of Object.entries(attributs)) {
+    if (nom === 'onclick') noeud.addEventListener('click', valeur);
+    else if (valeur != null && valeur !== false) noeud.setAttribute(nom, valeur === true ? '' : valeur);
+  }
+  noeud.append(...enfants.flat().filter(e => e != null && e !== false));
+  return noeud;
+}
+
+// ── Stockage local : réglages, partie en cours, historique ───────────────────────────────────
+
+const CLES = { reglages: 'coup-d-oeil:reglages', partie: 'coup-d-oeil:partie', historique: 'coup-d-oeil:historique' };
+const lire = (cle, defaut) => { try { return JSON.parse(localStorage.getItem(cle)) ?? defaut; } catch { return defaut; } };
+const ecrire = (cle, valeur) => { try { localStorage.setItem(cle, JSON.stringify(valeur)); } catch { /* stockage indisponible */ } };
+const effacer = cle => { try { localStorage.removeItem(cle); } catch { /* stockage indisponible */ } };
+
+const reglages = { couleur: 'w', elo: ELO.defaut, gardeFou: true, ...lire(CLES.reglages, {}) };
+
+// ── État ─────────────────────────────────────────────────────────────────────────────────────
+
+const etat = {
+  id: 0,                  // numéro de partie : le résultat d'un moteur arrivé après un changement est ignoré
+  partie: new Chess(),
+  couleur: 'w',           // ta couleur
+  elo: ELO.defaut,
+  gardeFou: true,
+  retours: [],            // un par coup à toi : le retour de coach.js, plus demiCoup, fenAvant, interceptee
+  preAnalyse: null,       // analyse de la position pendant que tu réfléchis
+  gaffeInterceptee: null, // la gaffe reprise par le garde-fou sur ce coup, s'il y en a une
+  dernierCoup: null,
+  apercu: null,           // variante montrée sur le plateau, hors partie
+  terminee: true,
+  resultat: null,
+  reprises: 0,            // coups à toi repris, comptés dans la revue
+  debut: null,            // début de la partie : l'identifie dans l'historique
+};
+
+// ── Plateau et moteurs ───────────────────────────────────────────────────────────────────────
+
+const MARQUE_DERNIER = { class: 'marker-dernier', slice: 'markerSquare' };
+// Flèches des explications : ce qui attaque en rouge, ce qui défend en vert, le coup en bleu.
+const TYPES_FLECHE = { attaque: ARROW_TYPE.danger, defense: ARROW_TYPE.success, coup: ARROW_TYPE.info };
+
+const plateau = new Chessboard($('#plateau'), {
+  position: FEN.start,
+  assetsUrl: './vendor/cm-chessboard/assets/',
+  style: {
+    cssClass: 'coup-d-oeil', borderType: BORDER_TYPE.none, showCoordinates: true, animationDuration: 200,
+    pieces: { file: 'pieces/staunty.svg' },
+  },
+  extensions: [{ class: Markers }, { class: Arrows }, { class: PromotionDialog }],
+});
+const marqueurs = plateau.getExtension(Markers);
+
+// Deux instances : l'adversaire est bridé, l'analyste jamais.
+const URL_MOTEUR = new URL('./vendor/stockfish/stockfish-18-lite-single.js', import.meta.url);
+const analyste = new Moteur(new Worker(URL_MOTEUR));
+const adversaire = new Moteur(new Worker(URL_MOTEUR));
+const moteursPrets = Promise.all([
+  analyste.demarrer(OPTIONS_ANALYSTE),
+  adversaire.demarrer(optionsAdversaire(reglages.elo)),
+]);
+
+function statut(texte) {
+  $('#statut').textContent = texte;
+}
+
+function panne(erreur) {
+  console.error(erreur);
+  statut(`Moteur indisponible : ${erreur.message}`);
+  plateau.disableMoveInput();
+}
+
+// Le plateau montre la partie, sauf pendant un aperçu : on redessine en le quittant.
+function dessinerPartie(animer = true) {
+  if (etat.apercu) return Promise.resolve();
+  return plateau.setPosition(etat.partie.fen(), animer);
+}
+
+function marquerDernierCoup(coup) {
+  etat.dernierCoup = coup ? { from: coup.from, to: coup.to } : null;
+  if (etat.apercu) return;
+  plateau.removeMarkers(MARQUE_DERNIER);
+  if (!etat.dernierCoup) return;
+  plateau.addMarker(MARQUE_DERNIER, etat.dernierCoup.from);
+  plateau.addMarker(MARQUE_DERNIER, etat.dernierCoup.to);
+}
+
+function activerSaisie() {
+  plateau.disableMoveInput();
+  if (etat.terminee || etat.apercu || !etat.preAnalyse || etat.partie.turn() !== etat.couleur) return;
+  plateau.enableMoveInput(saisie, etat.couleur);
+}
+
+function saisie(evenement) {
+  switch (evenement.type) {
+    case INPUT_EVENT_TYPE.moveInputStarted: {
+      const coups = etat.partie.moves({ square: evenement.squareFrom, verbose: true });
+      marqueurs.addLegalMovesMarkers(coups);
+      return coups.length > 0;
+    }
+    case INPUT_EVENT_TYPE.validateMoveInput: {
+      marqueurs.removeLegalMovesMarkers();
+      const coup = etat.partie.moves({ square: evenement.squareFrom, verbose: true }).find(c => c.to === evenement.squareTo);
+      if (!coup) return false;
+      if (coup.promotion) {
+        plateau.showPromotionDialog(evenement.squareTo, etat.couleur, choix => {
+          if (choix?.type === PROMOTION_DIALOG_RESULT_TYPE.pieceSelected) jouerCoupJoueur(coup.from + coup.to + choix.piece.slice(-1));
+          else dessinerPartie();
+        });
+        return true;
+      }
+      setTimeout(() => jouerCoupJoueur(coup.from + coup.to));   // le plateau termine d'abord son geste
+      return true;
+    }
+    case INPUT_EVENT_TYPE.moveInputCanceled:
+      marqueurs.removeLegalMovesMarkers();
+      return undefined;
+    default:
+      return undefined;
+  }
+}
+
+// ── Le déroulé d'une partie ──────────────────────────────────────────────────────────────────
+
+// Ton tour : l'analyste étudie la position pendant que tu réfléchis. Quand tu joues, on attend
+// au moins la profondeur PROFONDEUR_MIN, puis on l'arrête : le retour arrive presque aussitôt.
+function tourJoueur() {
+  const id = etat.id;
+  const fen = etat.partie.fen();
+  const pre = { fen, profondeur: 0, jugerDesQue: false, stopEnvoye: false, promesse: null };
+  pre.arreterSiPret = () => {
+    if (!pre.jugerDesQue || pre.stopEnvoye || pre.profondeur < PROFONDEUR_MIN) return;
+    pre.stopEnvoye = true;
+    analyste.arreter();
+  };
+  pre.promesse = analyste.analyser(fen, { depth: PROFONDEUR }, {
+    surInfo: info => {
+      if (info.multipv !== 1) return;
+      pre.profondeur = info.depth;
+      if (id === etat.id && etat.preAnalyse === pre) $('#profondeur').textContent = `Analyse de la position : profondeur ${info.depth}`;
+      pre.arreterSiPret();
+    },
+  });
+  pre.promesse.catch(() => {});   // traitée là où on attend le résultat
+  etat.preAnalyse = pre;
+  if (!etat.gaffeInterceptee) statut('À toi de jouer.');
+  activerSaisie();
+}
+
+async function jouerCoupJoueur(uci) {
+  const id = etat.id;
+  const pre = etat.preAnalyse;
+  const fenAvant = etat.partie.fen();
+  plateau.disableMoveInput();
+  $('#garde-fou').hidden = true;
+  statut('Analyse de ton coup…');
+  if (!etat.apercu) {
+    const essai = new Chess(fenAvant);
+    essai.move(versObjet(uci));
+    plateau.setPosition(essai.fen(), true);   // roque, prise en passant, promotion : tout de suite juste
+  }
+
+  pre.jugerDesQue = true;
+  pre.arreterSiPret();
+  let analyse;
+  let retour;
+  try {
+    analyse = await pre.promesse;
+    if (id !== etat.id) return;
+    retour = await jugerCoup(analyste, { fen: fenAvant, coup: uci, analyse });
+  } catch (erreur) {
+    if (id === etat.id) panne(erreur);
+    return;
+  }
+  if (id !== etat.id) return;
+
+  if (doitIntercepter(retour, { gardeFou: etat.gardeFou, dejaIntercepte: Boolean(etat.gaffeInterceptee) })) {
+    etat.gaffeInterceptee = retour;
+    etat.preAnalyse = { ...pre, promesse: Promise.resolve(analyse) };   // la même position : l'analyse reste valable
+    await dessinerPartie();
+    $('#garde-fou-indice').textContent = indiceGardeFou(retour);
+    $('#garde-fou').hidden = false;
+    statut('Regarde encore, puis rejoue.');
+    activerSaisie();
+    return;
+  }
+
+  const coup = etat.partie.move(versObjet(uci));
+  const entree = { ...retour, demiCoup: etat.partie.history().length, fenAvant, interceptee: etat.gaffeInterceptee };
+  etat.retours.push(entree);
+  if (!BONS.includes(entree.verdict) || entree.interceptee) etat.partie.setComment(commentairePgn(entree));
+  etat.gaffeInterceptee = null;
+  await dessinerPartie();
+  marquerDernierCoup(coup);
+  afficherRetour(entree);
+  afficherCoups();
+  sauvegarder();
+  if (etat.partie.isGameOver()) return terminer();
+  tourAdversaire();
+}
+
+async function tourAdversaire() {
+  const id = etat.id;
+  statut('L’adversaire réfléchit…');
+  $('#profondeur').textContent = '';
+  let resultat;
+  try {
+    [resultat] = await Promise.all([adversaire.analyser(etat.partie.fen(), { movetime: TEMPS_ADVERSAIRE }), pause(300)]);
+  } catch (erreur) {
+    if (id === etat.id) panne(erreur);
+    return;
+  }
+  if (id !== etat.id) return;
+  const coup = etat.partie.move(versObjet(resultat.coup));
+  await dessinerPartie();
+  marquerDernierCoup(coup);
+  afficherCoups();
+  sauvegarder();
+  if (etat.partie.isGameOver()) return terminer();
+  tourJoueur();
+}
+
+async function nouvellePartie({ couleur, elo, gardeFou, pgn = null, retours = [], reprises = 0, debut = new Date().toISOString() }) {
+  etat.id += 1;
+  const id = etat.id;
+  analyste.arreter();
+  adversaire.arreter();
+  fermerApercu({ redessiner: false });
+
+  const partie = new Chess();
+  if (pgn) {
+    partie.loadPgn(pgn);
+  } else {
+    const adverse = `Stockfish (niveau ${elo})`;
+    partie.setHeader('Event', 'Coup d’œil');
+    partie.setHeader('Date', new Date().toISOString().slice(0, 10).replaceAll('-', '.'));
+    partie.setHeader('White', couleur === 'w' ? 'Toi' : adverse);
+    partie.setHeader('Black', couleur === 'b' ? 'Toi' : adverse);
+  }
+  Object.assign(etat, { partie, couleur, elo, gardeFou, retours, reprises, debut, preAnalyse: null, gaffeInterceptee: null, terminee: false, resultat: null });
+
+  $('#garde-fou').hidden = true;
+  $('#revue').hidden = true;
+  $('#bouton-abandon').hidden = false;
+  $('#profondeur').textContent = '';
+  // Le texte d'abord : il ne dépend pas du plateau, dont les animations attendent que la page soit visible.
+  if (retours.length) afficherRetour(retours.at(-1));
+  else $('#retour').replaceChildren(el('p', { class: 'doux' }, 'Joue un coup : le retour s’affiche ici.'));
+  afficherCoups();
+  plateau.disableMoveInput();
+  plateau.removeArrows();
+  plateau.removeMarkers();
+  if (plateau.getOrientation() !== couleur) await plateau.setOrientation(couleur);
+  await plateau.setPosition(partie.fen(), false);
+  marquerDernierCoup(partie.history({ verbose: true }).at(-1) ?? null);
+
+  statut('Préparation des moteurs…');
+  try {
+    await moteursPrets;
+    await Promise.all([
+      analyste.nouvellePartie(),
+      adversaire.regler(optionsAdversaire(elo)).then(() => adversaire.nouvellePartie()),
+    ]);
+  } catch (erreur) {
+    if (id === etat.id) panne(erreur);
+    return;
+  }
+  if (id !== etat.id) return;
+  sauvegarder();
+  if (partie.isGameOver()) return terminer();
+  if (partie.turn() === couleur) tourJoueur();
+  else tourAdversaire();
+}
+
+function terminer({ abandon = false } = {}) {
+  etat.id += 1;
+  analyste.arreter();
+  adversaire.arreter();
+  etat.terminee = true;
+  plateau.disableMoveInput();
+  $('#garde-fou').hidden = true;
+  $('#bouton-abandon').hidden = true;
+  $('#profondeur').textContent = '';
+
+  const p = etat.partie;
+  let texte;
+  let score = '1/2-1/2';
+  if (abandon) {
+    texte = 'Tu as abandonné.';
+    score = etat.couleur === 'w' ? '0-1' : '1-0';
+  } else if (p.isCheckmate()) {
+    texte = p.turn() === etat.couleur ? 'Échec et mat : tu perds.' : 'Échec et mat : tu gagnes !';
+    score = p.turn() === 'w' ? '0-1' : '1-0';
+  } else if (p.isStalemate()) {
+    texte = 'Pat : partie nulle.';
+  } else if (p.isThreefoldRepetition()) {
+    texte = 'Nulle par triple répétition.';
+  } else if (p.isInsufficientMaterial()) {
+    texte = 'Nulle : matériel insuffisant.';
+  } else {
+    texte = 'Nulle : règle des 50 coups.';
+  }
+  etat.resultat = { texte, score };
+  p.setHeader('Result', score);
+  statut(texte);
+  if (etat.retours.length) archiver();
+  effacer(CLES.partie);
+  afficherCoups();
+  afficherRevue();
+}
+
+function commentairePgn(r) {
+  const mieux = r.alternatives[0]?.variante[0]?.san;
+  return [
+    r.verdict ? LIBELLES[r.verdict] + '.' : '',
+    ...r.signaux.map(s => s.texte),
+    !BONS.includes(r.verdict) && mieux ? `Mieux : ${mieux}.` : '',
+    r.interceptee ? `Gaffe rattrapée avant : ${r.interceptee.san}.` : '',
+  ].filter(Boolean).join(' ');
+}
+
+function sauvegarder() {
+  if (etat.terminee) return;
+  ecrire(CLES.partie, { pgn: etat.partie.pgn(), couleur: etat.couleur, elo: etat.elo, gardeFou: etat.gardeFou, retours: etat.retours, reprises: etat.reprises, debut: etat.debut });
+}
+
+// ── Le retour sur un coup ────────────────────────────────────────────────────────────────────
+
+function afficherRetour(r, { repris = false } = {}) {
+  const blocs = [];
+  if (repris) blocs.push(el('p', { class: 'signal discret' }, el('strong', {}, 'Coup repris. '), 'Voici pourquoi ; rejoue à la place.'));
+  if (r.interceptee) {
+    blocs.push(el('p', { class: 'signal discret' },
+      el('strong', {}, `Gaffe rattrapée : ${r.interceptee.san}. `),
+      r.interceptee.explication?.raisons?.[0]?.texte ?? r.interceptee.signaux[0]?.texte ?? 'Le garde-fou l’a reprise.'));
+  }
+  if (r.force) {
+    blocs.push(el('p', {}, el('span', { class: 'coup' }, `${numero(r)} ${r.san}`), ' — coup forcé, rien à juger.'));
+    $('#retour').replaceChildren(...blocs);
+    return;
+  }
+
+  const bon = BONS.includes(r.verdict);
+  blocs.push(el('div', { class: 'entete' },
+    el('span', { class: `badge v-${r.verdict}` }, LIBELLES[r.verdict]),
+    el('span', { class: 'coup' }, `${numero(r)} ${r.san}`),
+    el('span', { class: 'eval' }, r.verdict === 'meilleur'
+      ? `${formaterScore(r.scoreJoue)} (chances ${formaterChances(r.scoreJoue)})`
+      : `${formaterScore(r.scoreMeilleur)} → ${formaterScore(r.scoreJoue)} (chances ${formaterChances(r.scoreMeilleur)} → ${formaterChances(r.scoreJoue)})`),
+  ));
+
+  // La raison, puis ce que le meilleur coup fait de différent. Une partie sauvée avant ce format
+  // n'a pas d'explication lisible : on retombe sur les signaux.
+  const e = r.explication?.raisons ? r.explication : null;
+  if (e) {
+    blocs.push(el('h3', {}, e.titre), el('ul', { class: 'constats' }, e.raisons.map(c => ligneConstat(c, e.titre, !bon))));
+    if (e.alternative) {
+      const [avantSan, apresSan] = e.alternative.titre.split(e.alternative.san);
+      blocs.push(el('h3', {}, avantSan, e.alternative.reference ? lienCoup(e.alternative.reference, 'san') : el('span', { class: 'san' }, e.alternative.san), apresSan), el('ul', { class: 'constats' }, e.alternative.raisons.map(c => ligneConstat(c, e.alternative.titre, false))));
+    }
+  } else if (r.signaux.length) {
+    blocs.push(el('ul', { class: 'signaux' }, r.signaux.map(s => el('li', { class: 'signal' }, s.texte))));
+  }
+  if (bon && r.coupUnique) blocs.push(el('p', { class: 'doux' }, 'C’était le seul bon coup : bien vu.'));
+
+  // Repliés : le reste des constats, la suite qui punit ton coup, les autres bons coups.
+  const details = [];
+  if (e?.details.length) details.push(el('ul', { class: 'constats' }, e.details.map(c => ligneConstat(c, 'Détail', false))));
+  if (!bon && r.refutation.length) {
+    const apres = new Chess(r.fenAvant);
+    apres.move(versObjet(r.coup));
+    const [premier, ...suite] = r.refutation;
+    details.push(el('h3', {}, 'La suite après ton coup'), el('button', {
+      class: 'ligne',
+      onclick: () => ouvrirApercu({
+        titre: `Après ${r.san}`, fenDepart: apres.fen(), variante: r.refutation,
+        fleche: ARROW_TYPE.danger, cases: r.signaux.flatMap(s => s.cases),
+      }),
+    }, el('b', {}, `${premier.couleur === 'b' ? '…' : ''}${premier.san}`), el('span', { class: 'variante' }, texteVariante(suite.slice(0, 5)))));
+  }
+  const autres = r.alternatives.filter(a => a.uci !== r.coup);
+  if (autres.length) {
+    details.push(el('h3', {}, bon ? 'Aussi bons' : 'Les meilleures suites'), el('ul', { class: 'lignes' }, autres.map(a => ligneAlternative(r, a))));
+  }
+  if (details.length) blocs.push(el('details', { class: 'details' }, el('summary', {}, 'Détails'), ...details));
+  $('#retour').replaceChildren(...blocs);
+}
+
+// Un coup cité, cliquable : l'échiquier montre la position juste avant lui, avec sa flèche, et ◀ ▶
+// déroulent la suite de sa ligne. Ton coup en orange, un coup à jouer en vert, ce qui punit en rouge.
+const FLECHE_ROLE = { joue: ARROW_TYPE.warning, propose: ARROW_TYPE.success, punit: ARROW_TYPE.danger, suite: ARROW_TYPE.secondary };
+
+function lienCoup(ref, classe = '') {
+  return el('button', {
+    class: `coup-lien ${classe}`.trim(),
+    title: 'Voir ce coup sur l’échiquier',
+    onclick: () => ouvrirApercu({ titre: ref.san, fenDepart: ref.fen, variante: ref.variante, fleche: FLECHE_ROLE[ref.role] ?? ARROW_TYPE.secondary }),
+  }, ref.san);
+}
+
+// Le texte d'un constat, ses coups en liens. Une partie sauvée avant ce format n'a que le texte.
+const phraseAvecCoups = c => (c.morceaux ? c.morceaux.map(m => (typeof m === 'string' ? m : lienCoup(m))) : c.texte);
+
+// Un constat, et de quoi le voir sur l'échiquier : sa position, ses flèches, ses cases.
+function ligneConstat(c, titre, alerte) {
+  return el('li', { class: alerte ? 'constat signal' : 'constat' },
+    el('span', {}, phraseAvecCoups(c)),
+    c.fen ? el('button', {
+      class: 'voir',
+      onclick: () => ouvrirApercu({
+        titre, fenDepart: c.fen, variante: [], fleches: c.fleches, cases: c.cases,
+        marque: alerte ? MARKER_TYPE.circleDanger : MARKER_TYPE.circlePrimary,
+      }),
+    }, '▸ voir') : null);
+}
+
+function ligneAlternative(r, a) {
+  const [premier, ...suite] = a.variante;
+  return el('li', {}, el('button', {
+    class: 'ligne',
+    onclick: () => ouvrirApercu({ titre: `Au lieu de ${r.san} : ${premier.san}`, fenDepart: r.fenAvant, variante: a.variante, fleche: ARROW_TYPE.success }),
+  }, el('b', {}, premier.san), el('span', { class: 'eval' }, formaterScore(a.score)), el('span', { class: 'variante' }, texteVariante(suite.slice(0, 4)))));
+}
+
+// ── Liste des coups et reprise ───────────────────────────────────────────────────────────────
+
+// La liste des coups ; toucher un coup y ramène, à ton trait. Tes coups discutables portent leur pastille.
+function afficherCoups() {
+  const verdicts = new Map(etat.retours.map(r => [r.demiCoup, r.verdict]));
+  $('#coups').replaceChildren(...etat.partie.history({ verbose: true }).map((c, i) => {
+    const demiCoup = i + 1;
+    const aToi = c.color === etat.couleur;
+    const verdict = verdicts.get(demiCoup);
+    return el('li', { class: aToi ? 'coup-liste a-toi' : 'coup-liste' },
+      c.color === 'w' ? el('span', { class: 'numero' }, `${Math.ceil(demiCoup / 2)}.`) : null,
+      el('button', {
+        class: 'pas',
+        title: aToi ? 'Revenir juste avant ce coup' : 'Revenir juste après ce coup',
+        onclick: () => revenirA(aToi ? demiCoup - 1 : demiCoup),
+      }, sanFr(c.san), verdict && !BONS.includes(verdict) ? el('span', { class: `pastille v-${verdict}` }) : null));
+  }));
+  $('#coups').scrollTop = $('#coups').scrollHeight;
+  $('#bouton-reprendre').disabled = etat.retours.length === 0;
+}
+
+function reprendreDernierCoup() {
+  const dernier = etat.retours.at(-1);
+  if (dernier) reprendre(dernier.demiCoup - 1, [dernier]);
+}
+
+function revenirA(garder) {
+  if (garder >= etat.partie.history().length) return;
+  const repris = etat.retours.filter(r => r.demiCoup > garder);
+  if (repris.length > 1 && !confirm(`Revenir avant ${numero(repris[0])} ${repris[0].san} ? Les coups qui suivent sont effacés.`)) return;
+  reprendre(garder, repris);
+}
+
+// Revient à la position après `garder` demi-coups, à ton trait. La suite est effacée ; chaque coup à
+// toi repris est compté dans la revue. Une partie finie se rouvre, et son résumé sort de l'historique.
+function reprendre(garder, repris) {
+  etat.id += 1;
+  analyste.arreter();
+  adversaire.arreter();
+  fermerApercu({ redessiner: false });
+  if (etat.terminee) {
+    ecrire(CLES.historique, lire(CLES.historique, []).filter(h => h.debut !== etat.debut));
+    etat.partie.setHeader('Result', '*');
+    Object.assign(etat, { terminee: false, resultat: null });
+    $('#revue').hidden = true;
+    $('#bouton-abandon').hidden = false;
+  }
+  while (etat.partie.history().length > garder) {
+    etat.partie.removeComment();
+    etat.partie.undo();
+  }
+  etat.retours = etat.retours.filter(r => r.demiCoup <= garder);
+  etat.reprises += repris.length;
+  Object.assign(etat, { preAnalyse: null, gaffeInterceptee: null });
+  $('#garde-fou').hidden = true;
+  plateau.setPosition(etat.partie.fen(), true);
+  marquerDernierCoup(etat.partie.history({ verbose: true }).at(-1) ?? null);
+  if (repris[0]) afficherRetour(repris[0], { repris: true });
+  afficherCoups();
+  sauvegarder();
+  tourJoueur();
+}
+
+// ── Aperçu d'une variante sur le plateau ─────────────────────────────────────────────────────
+
+function ouvrirApercu({ titre, fenDepart, variante, fleche = null, fleches = [], cases = [], marque = MARKER_TYPE.circleDanger }) {
+  etat.apercu = { fenDepart, variante, fleche, fleches, cases, marque, index: -1 };
+  plateau.disableMoveInput();
+  $('#apercu-titre').textContent = titre;
+  $('#apercu-coups').replaceChildren(
+    el('button', { class: 'pas', 'data-index': -1, onclick: () => montrerEtape(-1) }, 'Départ'),
+    ...variante.map((c, i) => el('button', { class: 'pas', 'data-index': i, onclick: () => montrerEtape(i) }, `${c.couleur === 'b' ? '…' : ''}${c.san}`)),
+  );
+  $('#apercu-coups').hidden = !variante.length;
+  $('#apercu').hidden = false;
+  montrerEtape(-1);
+}
+
+function montrerEtape(index) {
+  const a = etat.apercu;
+  if (!a) return;
+  a.index = Math.max(-1, Math.min(index, a.variante.length - 1));
+  plateau.setPosition(a.index < 0 ? a.fenDepart : a.variante[a.index].fen, true);
+  plateau.removeArrows();
+  plateau.removeMarkers();
+  const suivant = a.variante[a.index + 1];
+  if (suivant) plateau.addArrow(a.index < 0 ? a.fleche : ARROW_TYPE.secondary, suivant.uci.slice(0, 2), suivant.uci.slice(2, 4));
+  if (a.index < 0) {
+    for (const f of a.fleches) plateau.addArrow(TYPES_FLECHE[f.type], f.de, f.vers);
+    for (const c of a.cases) plateau.addMarker(a.marque, c);
+  }
+  for (const bouton of $('#apercu-coups').children) bouton.classList.toggle('actif', Number(bouton.dataset.index) === a.index);
+}
+
+function fermerApercu({ redessiner = true } = {}) {
+  if (!etat.apercu) return;
+  etat.apercu = null;
+  $('#apercu').hidden = true;
+  plateau.removeArrows();
+  plateau.removeMarkers();
+  if (!redessiner) return;
+  dessinerPartie();
+  marquerDernierCoup(etat.dernierCoup);
+  activerSaisie();
+}
+
+$('#apercu-fermer').addEventListener('click', () => fermerApercu());
+document.addEventListener('keydown', e => {
+  if (!etat.apercu || $('#dialogue-nouvelle').open) return;
+  if (e.key === 'ArrowRight') montrerEtape(etat.apercu.index + 1);
+  else if (e.key === 'ArrowLeft') montrerEtape(etat.apercu.index - 1);
+  else if (e.key === 'Escape') fermerApercu();
+  else return;
+  e.preventDefault();
+});
+
+// ── Revue de fin de partie et historique ─────────────────────────────────────────────────────
+
+function resumer(retours) {
+  const verdicts = {};
+  const signaux = {};
+  for (const r of retours) {
+    if (r.verdict) verdicts[r.verdict] = (verdicts[r.verdict] ?? 0) + 1;
+    for (const juge of [r, r.interceptee].filter(Boolean)) {
+      for (const s of juge.signaux) signaux[s.type] = (signaux[s.type] ?? 0) + 1;
+    }
+  }
+  return { verdicts, signaux, interceptions: retours.filter(r => r.interceptee).length };
+}
+
+function archiver() {
+  const historique = lire(CLES.historique, []);
+  historique.push({
+    date: new Date().toISOString(), couleur: etat.couleur, elo: etat.elo, gardeFou: etat.gardeFou,
+    score: etat.resultat.score, coups: etat.retours.length, reprises: etat.reprises, debut: etat.debut, ...resumer(etat.retours),
+  });
+  ecrire(CLES.historique, historique.slice(-100));
+}
+
+function afficherRevue() {
+  const { verdicts, signaux, interceptions } = resumer(etat.retours);
+  const contenu = [
+    el('h2', {}, 'Revue de la partie'),
+    el('p', {}, etat.resultat?.texte ?? ''),
+    el('div', { class: 'compteurs' },
+      ORDRE_VERDICTS.filter(v => verdicts[v]).map(v => el('span', { class: 'compteur' }, el('span', { class: `pastille v-${v}` }), `${LIBELLES[v]} ${verdicts[v]}`)),
+      etat.gardeFou ? el('span', { class: 'compteur' }, `Gaffes rattrapées ${interceptions}`) : null,
+      etat.reprises ? el('span', { class: 'compteur' }, `Coups repris ${etat.reprises}`) : null,
+    ),
+    Object.keys(signaux).length
+      ? el('p', {}, el('strong', {}, 'Mécanismes : '), Object.entries(signaux).map(([t, n]) => `${NOMS_SIGNAUX[t]} ×${n}`).join(' · '))
+      : null,
+    courbe(etat.retours),
+    etat.retours.length ? el('h3', {}, 'Tes coups') : null,
+    el('ol', { class: 'coups-revue' }, etat.retours.map(r => el('li', {}, el('button', { class: 'ligne', onclick: () => afficherRetour(r) },
+      el('b', {}, `${numero(r)} ${r.san}`),
+      r.verdict ? el('span', { class: `badge v-${r.verdict}` }, LIBELLES[r.verdict]) : el('span', { class: 'doux' }, 'forcé'),
+      r.signaux[0] ? el('span', { class: 'variante' }, NOMS_SIGNAUX[r.signaux[0].type]) : null,
+      r.interceptee ? el('span', { class: 'variante' }, 'gaffe rattrapée') : null,
+    )))),
+    blocHistorique(),
+    el('div', { class: 'boutons' },
+      el('button', { class: 'bouton discret', onclick: copierPgn }, 'Copier le PGN'),
+      el('button', { class: 'bouton', onclick: ouvrirDialogue }, 'Nouvelle partie'),
+    ),
+  ];
+  $('#revue').replaceChildren(...contenu.filter(Boolean));   // la courbe et l'historique peuvent manquer
+  $('#revue').hidden = false;
+}
+
+// Tes chances de gain après chacun de tes coups : SVG écrit à la main.
+function courbe(retours) {
+  const points = retours.filter(r => r.winJoue != null);
+  if (points.length < 2) return null;
+  const L = 320, H = 96, M = 4;
+  const x = i => (M + (i * (L - 2 * M)) / (points.length - 1)).toFixed(1);
+  const y = w => (M + ((100 - w) * (H - 2 * M)) / 100).toFixed(1);
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  const ajouter = (balise, attributs) => {
+    const n = document.createElementNS(NS, balise);
+    for (const [k, v] of Object.entries(attributs)) n.setAttribute(k, v);
+    svg.append(n);
+  };
+  svg.setAttribute('viewBox', `0 0 ${L} ${H}`);
+  svg.setAttribute('class', 'courbe');
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', 'Tes chances de gain après chacun de tes coups');
+  ajouter('line', { x1: M, x2: L - M, y1: y(50), y2: y(50), class: 'courbe-milieu' });
+  ajouter('path', { d: points.map((r, i) => `${i ? 'L' : 'M'}${x(i)} ${y(r.winJoue)}`).join(' '), class: 'courbe-ligne' });
+  points.forEach((r, i) => {
+    if (!BONS.includes(r.verdict)) ajouter('circle', { cx: x(i), cy: y(r.winJoue), r: 3.4, class: `courbe-point v-${r.verdict}` });
+  });
+  return el('figure', { class: 'figure-courbe' }, svg,
+    el('figcaption', { class: 'doux' }, 'Tes chances de gain après chacun de tes coups — pointillés : 50 %.'));
+}
+
+const resultatPourToi = h => (h.score === '1/2-1/2' ? 'Nulle' : (h.score === '1-0') === (h.couleur === 'w') ? 'Gagnée' : 'Perdue');
+
+function blocHistorique() {
+  const tout = lire(CLES.historique, []);
+  if (!tout.length) return null;
+  const recentes = tout.slice(-10).reverse();
+  const totaux = {};
+  for (const h of recentes) for (const [t, n] of Object.entries(h.signaux ?? {})) totaux[t] = (totaux[t] ?? 0) + n;
+  const trois = tout.slice(-3);
+  const conseil = trois.length === 3 && trois.every(h => h.gardeFou && h.interceptions === 0)
+    ? el('p', { class: 'signal discret' }, 'Trois parties d’affilée sans gaffe rattrapée : essaie la prochaine sans garde-fou.')
+    : null;
+  return el('div', {},
+    el('h3', {}, recentes.length > 1 ? `Tes ${recentes.length} dernières parties` : 'Ta dernière partie'),
+    conseil,
+    Object.keys(totaux).length
+      ? el('p', {}, Object.entries(totaux).sort((a, b) => b[1] - a[1]).map(([t, n]) => `${NOMS_SIGNAUX[t]} ×${n}`).join(' · '))
+      : el('p', { class: 'doux' }, 'Aucun mécanisme d’erreur relevé.'),
+    el('div', { class: 'historique-conteneur' }, el('table', { class: 'historique' },
+      el('thead', {}, el('tr', {}, ['Date', 'Résultat', 'Gaffes', 'Erreurs', 'Rattrapées', 'Repris'].map(t => el('th', {}, t)))),
+      el('tbody', {}, recentes.map(h => el('tr', {},
+        el('td', {}, new Date(h.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })),
+        el('td', {}, resultatPourToi(h)),
+        el('td', {}, h.verdicts?.gaffe ?? 0),
+        el('td', {}, h.verdicts?.erreur ?? 0),
+        el('td', {}, h.gardeFou ? h.interceptions : '—'),
+        el('td', {}, h.reprises ?? 0),
+      ))),
+    )),
+  );
+}
+
+async function copierPgn() {
+  try {
+    await navigator.clipboard.writeText(etat.partie.pgn());
+    statut('PGN copié.');
+  } catch {
+    statut('Copie impossible : le presse-papiers est bloqué.');
+  }
+}
+
+// ── Nouvelle partie, abandon, démarrage ──────────────────────────────────────────────────────
+
+const dialogue = $('#dialogue-nouvelle');
+const formulaire = $('#formulaire-nouvelle');
+
+function ouvrirDialogue() {
+  formulaire.elements.couleur.value = reglages.couleur;
+  formulaire.elements.elo.value = reglages.elo;
+  $('#elo-valeur').textContent = libelleNiveau(reglages.elo);
+  formulaire.elements.gardeFou.checked = reglages.gardeFou;
+  dialogue.showModal();
+}
+
+formulaire.elements.elo.addEventListener('input', () => {
+  $('#elo-valeur').textContent = libelleNiveau(Number(formulaire.elements.elo.value));
+});
+
+dialogue.addEventListener('close', () => {
+  if (dialogue.returnValue !== 'jouer') return;
+  Object.assign(reglages, {
+    couleur: formulaire.elements.couleur.value,
+    elo: Number(formulaire.elements.elo.value),
+    gardeFou: formulaire.elements.gardeFou.checked,
+  });
+  ecrire(CLES.reglages, reglages);
+  const couleur = reglages.couleur === 'hasard' ? (Math.random() < 0.5 ? 'w' : 'b') : reglages.couleur;
+  nouvellePartie({ couleur, elo: reglages.elo, gardeFou: reglages.gardeFou });
+});
+
+$('#bouton-nouvelle').addEventListener('click', ouvrirDialogue);
+$('#bouton-reprendre').addEventListener('click', reprendreDernierCoup);
+$('#bouton-abandon').addEventListener('click', () => {
+  if (!etat.terminee && confirm('Abandonner la partie ?')) terminer({ abandon: true });
+});
+
+moteursPrets.catch(panne);
+const sauvegarde = lire(CLES.partie, null);
+if (sauvegarde) {
+  nouvellePartie(sauvegarde).catch(erreur => {
+    console.error(erreur);
+    effacer(CLES.partie);
+    ouvrirDialogue();
+  });
+} else {
+  moteursPrets.then(() => { if (etat.terminee) statut('Prêt.'); });
+  ouvrirDialogue();
+}
+
+// Pour piloter l'app depuis la console pendant une vérification.
+window.coupDoeil = { etat, plateau, jouerCoupJoueur };
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+</script>
+</body>
+</html>
