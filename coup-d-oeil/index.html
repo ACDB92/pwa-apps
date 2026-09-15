@@ -197,8 +197,8 @@
     </fieldset>
     <label class="champ">
       <span>Niveau de l’adversaire : <output id="elo-valeur"></output></span>
-      <input type="range" name="elo" min="1320" max="3190" step="10">
-      <small>≈ classement chess.com rapide : une estimation, pas une mesure — personne n’a mesuré Stockfish bridé face aux joueurs de chess.com.</small>
+      <input type="range" name="elo" step="10">
+      <small>≈ classement chess.com rapide : une estimation, pas une mesure — personne n’a mesuré Stockfish bridé face aux joueurs de chess.com. Sous 1320 : Fairy-Stockfish, le moteur des bots Lichess, qui se trompe exprès ; ses niveaux sont placés par des parties contre Stockfish 1320.</small>
     </label>
     <label class="case"><input type="checkbox" name="gardeFou"> Garde-fou : m’arrêter avant une gaffe</label>
     <small>Il reprend le coup sans donner la réponse. Après trois parties sans gaffe rattrapée, joue sans.</small>
@@ -217,7 +217,8 @@ import { Arrows, ARROW_TYPE } from './vendor/cm-chessboard/src/extensions/arrows
 import { PromotionDialog, PROMOTION_DIALOG_RESULT_TYPE } from './vendor/cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js';
 import { Moteur } from './uci.js';
 import { LIBELLES, NOMS_SIGNAUX, doitIntercepter, indiceGardeFou, sanFr } from './coach.js';
-import { jugerCoup, PROFONDEUR, PROFONDEUR_MIN, OPTIONS_ANALYSTE, ELO, TEMPS_ADVERSAIRE, optionsAdversaire, eloChessCom } from './analyste.js';
+import { jugerCoup, PROFONDEUR, PROFONDEUR_MIN, OPTIONS_ANALYSTE, OPTIONS_ADVERSAIRE, OPTIONS_FAIRY, ELO, niveau, eloChessCom } from './analyste.js';
+import { creerFairy } from './fairy.js';
 import { formaterScore, formaterChances } from './explication.js';
 
 // ── Outils ───────────────────────────────────────────────────────────────────────────────────
@@ -229,7 +230,10 @@ const BONS = ['meilleur', 'excellent', 'bon'];
 const ORDRE_VERDICTS = ['meilleur', 'excellent', 'bon', 'imprecision', 'erreur', 'gaffe'];
 const numero = r => `${Math.ceil(r.demiCoup / 2)}${r.demiCoup % 2 ? '.' : '…'}`;
 const texteVariante = coups => coups.map(c => c.san).join(' ');
-const libelleNiveau = elo => `Stockfish ${elo} · ≈ ${eloChessCom(elo)} chess.com`;
+const libelleNiveau = elo => {
+  const n = niveau(elo);
+  return `${n.nom} · ≈ ${eloChessCom(n.elo)} chess.com`;
+};
 
 function el(balise, attributs = {}, ...enfants) {
   const noeud = document.createElement(balise);
@@ -286,14 +290,37 @@ const plateau = new Chessboard($('#plateau'), {
 });
 const marqueurs = plateau.getExtension(Markers);
 
-// Deux instances : l'adversaire est bridé, l'analyste jamais.
+// Deux instances : l'adversaire est bridé, l'analyste jamais. Sous 1320, l'adversaire est
+// Fairy-Stockfish, chargé à la première partie qui en a besoin.
 const URL_MOTEUR = new URL('./vendor/stockfish/stockfish-18-lite-single.js', import.meta.url);
 const analyste = new Moteur(new Worker(URL_MOTEUR));
 const adversaire = new Moteur(new Worker(URL_MOTEUR));
 const moteursPrets = Promise.all([
   analyste.demarrer(OPTIONS_ANALYSTE),
-  adversaire.demarrer(optionsAdversaire(reglages.elo)),
+  adversaire.demarrer(OPTIONS_ADVERSAIRE),
 ]);
+let fairy = null;       // promesse du moteur, lancée au premier besoin
+let fairyPret = null;   // le moteur une fois démarré : pour l'arrêter sans attendre
+
+function moteurAdversaire(n) {
+  if (n.moteur !== 'fairy') return Promise.resolve(adversaire);
+  fairy ??= creerFairy()
+    .then(async worker => {
+      const moteur = new Moteur(worker);
+      await moteur.demarrer(OPTIONS_FAIRY);
+      return (fairyPret = moteur);
+    })
+    .catch(erreur => {
+      fairy = null;
+      throw erreur;
+    });
+  return fairy;
+}
+
+function arreterAdversaire() {
+  adversaire.arreter();
+  fairyPret?.arreter();
+}
 
 function statut(texte) {
   $('#statut').textContent = texte;
@@ -440,7 +467,8 @@ async function tourAdversaire() {
   $('#profondeur').textContent = '';
   let resultat;
   try {
-    [resultat] = await Promise.all([adversaire.analyser(etat.partie.fen(), { movetime: TEMPS_ADVERSAIRE }), pause(300)]);
+    const n = niveau(etat.elo);
+    [resultat] = await Promise.all([moteurAdversaire(n).then(m => m.analyser(etat.partie.fen(), n.go)), pause(n.pause)]);
   } catch (erreur) {
     if (id === etat.id) panne(erreur);
     return;
@@ -459,14 +487,14 @@ async function nouvellePartie({ couleur, elo, gardeFou, pgn = null, retours = []
   etat.id += 1;
   const id = etat.id;
   analyste.arreter();
-  adversaire.arreter();
+  arreterAdversaire();
   fermerApercu({ redessiner: false });
 
   const partie = new Chess();
   if (pgn) {
     partie.loadPgn(pgn);
   } else {
-    const adverse = `Stockfish (niveau ${elo})`;
+    const adverse = niveau(elo).nom;
     partie.setHeader('Event', 'Coup d’œil');
     partie.setHeader('Date', new Date().toISOString().slice(0, 10).replaceAll('-', '.'));
     partie.setHeader('White', couleur === 'w' ? 'Toi' : adverse);
@@ -492,9 +520,10 @@ async function nouvellePartie({ couleur, elo, gardeFou, pgn = null, retours = []
   statut('Préparation des moteurs…');
   try {
     await moteursPrets;
+    const n = niveau(elo);
     await Promise.all([
       analyste.nouvellePartie(),
-      adversaire.regler(optionsAdversaire(elo)).then(() => adversaire.nouvellePartie()),
+      moteurAdversaire(n).then(m => m.regler(n.options).then(() => m.nouvellePartie())),
     ]);
   } catch (erreur) {
     if (id === etat.id) panne(erreur);
@@ -510,7 +539,7 @@ async function nouvellePartie({ couleur, elo, gardeFou, pgn = null, retours = []
 function terminer({ abandon = false } = {}) {
   etat.id += 1;
   analyste.arreter();
-  adversaire.arreter();
+  arreterAdversaire();
   etat.terminee = true;
   plateau.disableMoveInput();
   $('#garde-fou').hidden = true;
@@ -695,7 +724,7 @@ function revenirA(garder) {
 function reprendre(garder, repris) {
   etat.id += 1;
   analyste.arreter();
-  adversaire.arreter();
+  arreterAdversaire();
   fermerApercu({ redessiner: false });
   if (etat.terminee) {
     ecrire(CLES.historique, lire(CLES.historique, []).filter(h => h.debut !== etat.debut));
@@ -899,24 +928,29 @@ async function copierPgn() {
 
 const dialogue = $('#dialogue-nouvelle');
 const formulaire = $('#formulaire-nouvelle');
+Object.assign(formulaire.elements.elo, { max: ELO.max, min: ELO.min });
 
 function ouvrirDialogue() {
+  const { elo } = niveau(reglages.elo);
   formulaire.elements.couleur.value = reglages.couleur;
-  formulaire.elements.elo.value = reglages.elo;
-  $('#elo-valeur').textContent = libelleNiveau(reglages.elo);
+  formulaire.elements.elo.value = elo;
+  $('#elo-valeur').textContent = libelleNiveau(elo);
   formulaire.elements.gardeFou.checked = reglages.gardeFou;
   dialogue.showModal();
 }
 
+// Sous 1320, le curseur se cale sur les niveaux mesurés de Fairy-Stockfish.
 formulaire.elements.elo.addEventListener('input', () => {
-  $('#elo-valeur').textContent = libelleNiveau(Number(formulaire.elements.elo.value));
+  const { elo } = niveau(Number(formulaire.elements.elo.value));
+  formulaire.elements.elo.value = elo;
+  $('#elo-valeur').textContent = libelleNiveau(elo);
 });
 
 dialogue.addEventListener('close', () => {
   if (dialogue.returnValue !== 'jouer') return;
   Object.assign(reglages, {
     couleur: formulaire.elements.couleur.value,
-    elo: Number(formulaire.elements.elo.value),
+    elo: niveau(Number(formulaire.elements.elo.value)).elo,
     gardeFou: formulaire.elements.gardeFou.checked,
   });
   ecrire(CLES.reglages, reglages);
@@ -946,7 +980,12 @@ if (sauvegarde) {
 // Pour piloter l'app depuis la console pendant une vérification.
 window.coupDoeil = { etat, plateau, jouerCoupJoueur };
 
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+// Fairy-Stockfish veut une page isolée, et ce sont les en-têtes du service worker qui l'isolent : une page
+// ouverte avant lui (première visite, mise à jour) se recharge une fois, quand il en prend le contrôle.
+if ('serviceWorker' in navigator) {
+  if (!crossOriginIsolated) navigator.serviceWorker.addEventListener('controllerchange', () => location.reload(), { once: true });
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
 </script>
 </body>
 </html>

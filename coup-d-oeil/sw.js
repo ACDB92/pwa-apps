@@ -1,5 +1,5 @@
-const CACHE = 'coup-d-oeil-v6';
-// Tout est précaché, moteur compris (.wasm, 7 Mo) : sans lui l'app ne joue ni n'analyse hors-ligne.
+const CACHE = 'coup-d-oeil-v7';
+// Tout est précaché, moteurs compris (.wasm, 7 Mo et 1,6 Mo) : sans eux l'app ne joue ni n'analyse hors-ligne.
 const ASSETS = [
   './',
   './index.html',
@@ -8,11 +8,15 @@ const ASSETS = [
   './motifs.js',
   './uci.js',
   './analyste.js',
+  './fairy.js',
   './manifest.json',
   './icon.svg',
   './vendor/chess.js',
   './vendor/stockfish/stockfish-18-lite-single.js',
   './vendor/stockfish/stockfish-18-lite-single.wasm',
+  './vendor/fairy-stockfish/stockfish.js',
+  './vendor/fairy-stockfish/stockfish.wasm',
+  './vendor/fairy-stockfish/stockfish.worker.js',
   './vendor/cm-chessboard/src/Chessboard.js',
   './vendor/cm-chessboard/src/lib/Svg.js',
   './vendor/cm-chessboard/src/lib/Utils.js',
@@ -63,22 +67,38 @@ function chercherEtGarder(requete, fraiche = false) {
   });
 }
 
-// Deux régimes. `vendor/` ne change qu'avec sa version : cache d'abord, pour ne pas retélécharger
-// 7 Mo de moteur à chaque ouverture. Le code de l'app : réseau d'abord, pour qu'une mise à jour se
-// voie tout de suite, et le cache en secours hors-ligne. Les tests ne passent jamais par le cache.
+// Fairy-Stockfish est compilé multi-fil : il lui faut une page isolée, donc les en-têtes COOP et COEP.
+// GitHub Pages ne les envoie pas ; le service worker les pose sur tout ce qu'il sert. Tout vient du même
+// site, `require-corp` ne bloque rien.
+function isoler(res) {
+  if (!res || res.status === 0) return res;
+  const entetes = new Headers(res.headers);
+  entetes.set('Cross-Origin-Opener-Policy', 'same-origin');
+  entetes.set('Cross-Origin-Embedder-Policy', 'require-corp');
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers: entetes });
+}
+
+// Deux régimes. `vendor/` ne change qu'avec sa version : cache d'abord, pour ne pas retélécharger les
+// moteurs à chaque ouverture. Le code de l'app : réseau d'abord, pour qu'une mise à jour se voie tout de
+// suite, et le cache en secours hors-ligne. Les tests ne passent jamais par le cache, mais reçoivent les
+// en-têtes : sans eux, Fairy-Stockfish ne se teste pas dans le navigateur.
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
-  if (url.origin !== location.origin || url.pathname.includes('/tests/')) return;
+  if (url.origin !== location.origin) return;
+  if (url.pathname.includes('/tests/')) {
+    e.respondWith(fetch(e.request).then(isoler));
+    return;
+  }
   if (url.pathname.includes('/vendor/')) {
-    e.respondWith(caches.match(e.request).then(r => r || chercherEtGarder(e.request)));
+    e.respondWith(caches.match(e.request).then(r => r || chercherEtGarder(e.request)).then(isoler));
     return;
   }
   // Hors-ligne, une page retombe sur index.html ; un fichier absent du cache échoue franchement,
   // plutôt que de recevoir du HTML à la place d'un script.
   e.respondWith(
-    chercherEtGarder(e.request, true).catch(() =>
-      caches.match(e.request).then(r => r || (e.request.mode === 'navigate' ? caches.match('./index.html') : Response.error()))
-    )
+    chercherEtGarder(e.request, true)
+      .catch(() => caches.match(e.request).then(r => r || (e.request.mode === 'navigate' ? caches.match('./index.html') : Response.error())))
+      .then(isoler)
   );
 });
