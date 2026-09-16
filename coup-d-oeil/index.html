@@ -182,6 +182,7 @@
       <div class="partie-tete">
         <h2>Coups</h2>
         <span id="adversaire"></span>
+        <button id="bouton-parcourir" class="bouton discret" disabled>Parcourir</button>
         <button id="bouton-reprendre" class="bouton discret" disabled>◀ Reprendre mon coup</button>
       </div>
       <ol id="coups" class="liste-coups"></ol>
@@ -749,12 +750,13 @@ function afficherCoups() {
       c.color === 'w' ? el('span', { class: 'numero' }, `${Math.ceil(demiCoup / 2)}.`) : null,
       el('button', {
         class: 'pas',
-        title: aToi ? 'Revenir juste avant ce coup' : 'Revenir juste après ce coup',
-        onclick: () => revenirA(aToi ? demiCoup - 1 : demiCoup),
+        title: 'Voir ce coup sur l’échiquier',
+        onclick: () => montrerCoup(demiCoup),
       }, sanFr(c.san), verdict && !BONS.includes(verdict) ? el('span', { class: `pastille v-${verdict}` }) : null));
   }));
   $('#coups').scrollTop = $('#coups').scrollHeight;
   $('#bouton-reprendre').disabled = etat.retours.length === 0;
+  $('#bouton-parcourir').disabled = etat.partie.history().length === 0;
   // Contre qui tu joues, visible en permanence : sinon le niveau ne se lit que dans le dialogue.
   $('#adversaire').textContent = `contre ${etat.adversaire ?? niveau(etat.elo).nom}`;
 }
@@ -812,17 +814,18 @@ function reprendre(garder, repris) {
 
 // ── Aperçu d'une variante sur le plateau ─────────────────────────────────────────────────────
 
-function ouvrirApercu({ titre, fenDepart, variante, fleche = null, fleches = [], cases = [], marque = MARKER_TYPE.circleDanger }) {
-  etat.apercu = { fenDepart, variante, fleche, fleches, cases, marque, index: -1 };
+function ouvrirApercu({ titre, fenDepart, variante, fleche = null, fleches = [], cases = [], marque = MARKER_TYPE.circleDanger, lecture = false, index = -1, surEtape = null }) {
+  etat.apercu = { fenDepart, variante, fleche, fleches, cases, marque, lecture, surEtape, index: -1 };
   plateau.disableMoveInput();
   $('#apercu-titre').textContent = titre;
-  $('#apercu-coups').replaceChildren(
+  // En lecture, la partie fait des centaines de pas : quatre commandes valent mieux qu'autant de boutons.
+  $('#apercu-coups').replaceChildren(...(lecture ? commandesLecture() : [
     el('button', { class: 'pas', 'data-index': -1, onclick: () => montrerEtape(-1) }, 'Départ'),
     ...variante.map((c, i) => el('button', { class: 'pas', 'data-index': i, onclick: () => montrerEtape(i) }, `${c.couleur === 'b' ? '…' : ''}${c.san}`)),
-  );
+  ]));
   $('#apercu-coups').hidden = !variante.length;
   $('#apercu').hidden = false;
-  montrerEtape(-1);
+  montrerEtape(index);
 }
 
 function montrerEtape(index) {
@@ -832,13 +835,20 @@ function montrerEtape(index) {
   plateau.setPosition(a.index < 0 ? a.fenDepart : a.variante[a.index].fen, true);
   plateau.removeArrows();
   plateau.removeMarkers();
-  const suivant = a.variante[a.index + 1];
-  if (suivant) plateau.addArrow(a.index < 0 ? a.fleche : ARROW_TYPE.secondary, suivant.uci.slice(0, 2), suivant.uci.slice(2, 4));
-  if (a.index < 0) {
-    for (const f of a.fleches) plateau.addArrow(TYPES_FLECHE[f.type], f.de, f.vers);
-    for (const c of a.cases) plateau.addMarker(a.marque, c);
+  if (a.lecture) {
+    // On relit la partie : la flèche montre le coup qu'on vient de jouer, pas celui qui suivra.
+    const joue = a.variante[a.index];
+    if (joue) plateau.addArrow(FLECHE_ROLE.joue, joue.uci.slice(0, 2), joue.uci.slice(2, 4));
+  } else {
+    const suivant = a.variante[a.index + 1];
+    if (suivant) plateau.addArrow(a.index < 0 ? a.fleche : ARROW_TYPE.secondary, suivant.uci.slice(0, 2), suivant.uci.slice(2, 4));
+    if (a.index < 0) {
+      for (const f of a.fleches) plateau.addArrow(TYPES_FLECHE[f.type], f.de, f.vers);
+      for (const c of a.cases) plateau.addMarker(a.marque, c);
+    }
   }
   for (const bouton of $('#apercu-coups').children) bouton.classList.toggle('actif', Number(bouton.dataset.index) === a.index);
+  a.surEtape?.(a.index);
 }
 
 function fermerApercu({ redessiner = true } = {}) {
@@ -853,11 +863,72 @@ function fermerApercu({ redessiner = true } = {}) {
   activerSaisie();
 }
 
+// ── Parcourir la partie ──────────────────────────────────────────────────────────────────────
+//
+// Parcourir n'est pas reprendre : la lecture ne touche jamais à `etat.partie`. C'est un aperçu comme
+// ceux des explications — `etat.apercu` gèle déjà la saisie et le redessin —, dont la variante est la
+// partie elle-même. Revenir en arrière pour de bon reste un geste demandé : « Reprendre d'ici ».
+
+const commandesLecture = () => [
+  el('button', { class: 'pas', title: 'Début de la partie', onclick: () => montrerEtape(-1) }, '⏮'),
+  el('button', { class: 'pas', title: 'Coup précédent', onclick: () => montrerEtape(etat.apercu.index - 1) }, '◀'),
+  el('button', { class: 'pas', title: 'Coup suivant', onclick: () => montrerEtape(etat.apercu.index + 1) }, '▶'),
+  el('button', { class: 'pas', title: 'Fin de la partie', onclick: () => montrerEtape(etat.apercu.variante.length - 1) }, '⏭'),
+  el('button', { class: 'pas', id: 'bouton-reprendre-ici', onclick: reprendreDIci }, 'Reprendre d’ici'),
+];
+
+// Une position par coup joué : l'aperçu ne sait montrer que des FEN.
+function etapesPartie() {
+  const jeu = new Chess();
+  return etat.partie.history({ verbose: true }).map(c => {
+    jeu.move(c.san);
+    return { san: sanFr(c.san), uci: c.from + c.to + (c.promotion ?? ''), fen: jeu.fen(), couleur: c.color };
+  });
+}
+
+// Le nombre de coups à garder pour rejouer depuis l'étape lue, ou null si ce ne serait pas à toi de
+// jouer — sans quoi la partie resterait sans personne pour bouger.
+function repriseDepuis(index) {
+  const coups = etat.partie.history({ verbose: true });
+  const garder = index >= 0 && coups[index].color === etat.couleur ? index : index + 1;
+  return (garder % 2 === 0 ? 'w' : 'b') === etat.couleur ? garder : null;
+}
+
+function reprendreDIci() {
+  const garder = etat.apercu ? repriseDepuis(etat.apercu.index) : null;
+  if (garder !== null) revenirA(garder);
+}
+
+function ouvrirLecture(index) {
+  const variante = etapesPartie();
+  if (!variante.length) return;
+  ouvrirApercu({
+    titre: '', fenDepart: new Chess().fen(), variante, lecture: true,
+    index: Math.max(-1, Math.min(index, variante.length - 1)),
+    surEtape: i => {
+      $('#apercu-titre').textContent = i < 0
+        ? 'Début de la partie'
+        : `${Math.ceil((i + 1) / 2)}${i % 2 ? '…' : '.'} ${variante[i].san}`;
+      $('#bouton-reprendre-ici').disabled = repriseDepuis(i) === null;
+    },
+  });
+}
+
+// Toucher un coup le montre : la position juste après lui, le coup tracé par une flèche. Si c'est un
+// de tes coups et qu'il a été jugé, son retour revient avec.
+function montrerCoup(demiCoup) {
+  const retour = etat.retours.find(r => r.demiCoup === demiCoup);
+  if (retour) afficherRetour(retour);
+  ouvrirLecture(demiCoup - 1);
+}
+
 $('#apercu-fermer').addEventListener('click', () => fermerApercu());
 document.addEventListener('keydown', e => {
   if (!etat.apercu || $('#dialogue-nouvelle').open) return;
   if (e.key === 'ArrowRight') montrerEtape(etat.apercu.index + 1);
   else if (e.key === 'ArrowLeft') montrerEtape(etat.apercu.index - 1);
+  else if (e.key === 'Home') montrerEtape(-1);
+  else if (e.key === 'End') montrerEtape(etat.apercu.variante.length - 1);
   else if (e.key === 'Escape') fermerApercu();
   else return;
   e.preventDefault();
@@ -901,7 +972,7 @@ function afficherRevue() {
       : null,
     courbe(etat.retours),
     etat.retours.length ? el('h3', {}, 'Tes coups') : null,
-    el('ol', { class: 'coups-revue' }, etat.retours.map(r => el('li', {}, el('button', { class: 'ligne', onclick: () => afficherRetour(r) },
+    el('ol', { class: 'coups-revue' }, etat.retours.map(r => el('li', {}, el('button', { class: 'ligne', onclick: () => montrerCoup(r.demiCoup) },
       el('b', {}, `${numero(r)} ${r.san}`),
       r.verdict ? el('span', { class: `badge v-${r.verdict}` }, LIBELLES[r.verdict]) : el('span', { class: 'doux' }, 'forcé'),
       r.signaux[0] ? el('span', { class: 'variante' }, NOMS_SIGNAUX[r.signaux[0].type]) : null,
@@ -1021,6 +1092,7 @@ dialogue.addEventListener('close', () => {
 
 $('#bouton-nouvelle').addEventListener('click', ouvrirDialogue);
 $('#bouton-reprendre').addEventListener('click', reprendreDernierCoup);
+$('#bouton-parcourir').addEventListener('click', () => ouvrirLecture(etat.partie.history().length - 1));
 $('#bouton-abandon').addEventListener('click', () => {
   if (!etat.terminee && confirm('Abandonner la partie ?')) terminer({ abandon: true });
 });
