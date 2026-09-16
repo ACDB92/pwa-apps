@@ -94,3 +94,45 @@ export async function jugerCoup(moteur, { fen, coup, analyse = null, profondeur 
   }
   return retour;
 }
+
+export const PROFONDEUR_RAPIDE = 12;   // passe de repérage sur tous tes coups d'une partie relue
+export const PERTE_A_REVOIR = 3;       // en deçà, le coup est sain : la passe rapide suffit
+
+// Juge sans chercher la menace ni rédiger : on ne veut que la perte, pour savoir quoi regarder de près.
+async function jugerVite(moteur, { fen, coup, profondeur }) {
+  const { lignes } = await moteur.analyser(fen, { depth: profondeur });
+  const ligneJouee = ligneDuCoup(lignes, coup)
+    ?? (await moteur.analyser(fen, { depth: lignes[0].depth, searchmoves: [coup] })).lignes[0];
+  return evaluerCoup({ fen, coup, lignes, ligneJouee, menace: null });
+}
+
+/**
+ * Relit une partie déjà jouée et juge **tes** coups. Deux passes : une rapide sur tous, puis l'analyse
+ * complète — même profondeur qu'en jeu — sur ceux qui perdent quelque chose, en général deux à cinq par
+ * partie. Une partie entière à pleine profondeur demanderait des minutes ; là, des dizaines de secondes.
+ * Les coups sains gardent leur verdict de passe rapide, marqué `rapide`, sans explication détaillée.
+ * Rend des retours de la même forme que ceux d'une partie jouée ici.
+ */
+export async function analyserPartie(moteur, { pgn, couleur, profondeur = PROFONDEUR, surAvancement = null }) {
+  const lecture = new Chess();
+  lecture.loadPgn(pgn);
+  const partie = new Chess();
+  const aJuger = [];
+  for (const joue of lecture.history({ verbose: true })) {
+    const fenAvant = partie.fen();
+    partie.move(joue.san);
+    if (joue.color === couleur) {
+      aJuger.push({ fenAvant, coup: joue.from + joue.to + (joue.promotion ?? ''), demiCoup: partie.history().length });
+    }
+  }
+
+  const retours = [];
+  for (const [i, { fenAvant, coup, demiCoup }] of aJuger.entries()) {
+    surAvancement?.({ fait: i, total: aJuger.length });
+    const vite = await jugerVite(moteur, { fen: fenAvant, coup, profondeur: PROFONDEUR_RAPIDE });
+    const complet = vite.perte >= PERTE_A_REVOIR ? await jugerCoup(moteur, { fen: fenAvant, coup, profondeur }) : null;
+    retours.push({ ...(complet ?? vite), demiCoup, fenAvant, interceptee: null, rapide: !complet });
+  }
+  surAvancement?.({ fait: aJuger.length, total: aJuger.length });
+  return retours;
+}

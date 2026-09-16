@@ -80,6 +80,7 @@
   .lignes { list-style: none; margin: 0; padding: 0; display: grid; gap: .3rem; }
   .ligne { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .6rem; width: 100%; text-align: left; font: inherit; color: inherit; background: none; border: 1px solid var(--bord); border-radius: 8px; padding: .4rem .6rem; cursor: pointer; }
   .ligne:hover { border-color: var(--accent); }
+  #import-liste { max-height: 40vh; overflow: auto; margin-top: .6rem; }
   .ligne b { min-width: 3.2rem; }
   .variante { color: var(--doux); font-size: .9rem; }
   .constats { list-style: none; margin: 0; padding: 0; display: grid; gap: .35rem; }
@@ -144,6 +145,7 @@
   <h1><img src="icon.svg" alt="" width="28" height="28"> Coup d'œil</h1>
   <p id="statut" class="statut" role="status" aria-live="polite">Chargement du moteur…</p>
   <div class="actions">
+    <button id="bouton-import" class="bouton discret">Mes parties</button>
     <button id="bouton-abandon" class="bouton discret" hidden>Abandonner</button>
     <button id="bouton-nouvelle" class="bouton">Nouvelle partie</button>
   </div>
@@ -203,9 +205,27 @@
     <label class="case"><input type="checkbox" name="gardeFou"> Garde-fou : m’arrêter avant une gaffe</label>
     <small>Il reprend le coup sans donner la réponse. Après trois parties sans gaffe rattrapée, joue sans.</small>
     <div class="boutons">
+      <button type="button" id="bouton-relire" class="bouton discret">Relire une partie chess.com</button>
       <button value="annuler" class="bouton discret">Annuler</button>
       <button value="jouer" class="bouton">Jouer</button>
     </div>
+  </form>
+</dialog>
+
+<dialog id="dialogue-import">
+  <form id="formulaire-import">
+    <h2>Relire tes parties chess.com</h2>
+    <label class="champ">
+      <span>Ton pseudo chess.com</span>
+      <input type="text" name="pseudo" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+      <small>Rien à relier, rien à installer : l’API publique de chess.com ne publie que des parties <strong>terminées</strong>. ⚠️ Jamais à côté d’une partie en cours — ce serait de l’aide extérieure.</small>
+    </label>
+    <div class="boutons">
+      <button type="button" id="bouton-fermer-import" class="bouton discret">Fermer</button>
+      <button type="submit" class="bouton">Charger mes parties</button>
+    </div>
+    <p id="import-etat" class="doux"></p>
+    <ul id="import-liste" class="lignes"></ul>
   </form>
 </dialog>
 
@@ -217,7 +237,8 @@ import { Arrows, ARROW_TYPE } from './vendor/cm-chessboard/src/extensions/arrows
 import { PromotionDialog, PROMOTION_DIALOG_RESULT_TYPE } from './vendor/cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js';
 import { Moteur } from './uci.js';
 import { LIBELLES, NOMS_SIGNAUX, doitIntercepter, indiceGardeFou, sanFr } from './coach.js';
-import { jugerCoup, PROFONDEUR, PROFONDEUR_MIN, OPTIONS_ANALYSTE, OPTIONS_ADVERSAIRE, OPTIONS_FAIRY, ELO, niveau, eloChessCom } from './analyste.js';
+import { jugerCoup, analyserPartie, PROFONDEUR, PROFONDEUR_MIN, OPTIONS_ANALYSTE, OPTIONS_ADVERSAIRE, OPTIONS_FAIRY, ELO, niveau, eloChessCom } from './analyste.js';
+import { chargerParties, resumeFr } from './chesscom.js';
 import { creerFairy } from './fairy.js';
 import { formaterScore, formaterChances } from './explication.js';
 
@@ -252,7 +273,7 @@ const lire = (cle, defaut) => { try { return JSON.parse(localStorage.getItem(cle
 const ecrire = (cle, valeur) => { try { localStorage.setItem(cle, JSON.stringify(valeur)); } catch { /* stockage indisponible */ } };
 const effacer = cle => { try { localStorage.removeItem(cle); } catch { /* stockage indisponible */ } };
 
-const reglages = { couleur: 'w', elo: ELO.defaut, gardeFou: true, ...lire(CLES.reglages, {}) };
+const reglages = { couleur: 'w', elo: ELO.defaut, gardeFou: true, pseudo: '', ...lire(CLES.reglages, {}) };
 
 // ── État ─────────────────────────────────────────────────────────────────────────────────────
 
@@ -268,6 +289,7 @@ const etat = {
   dernierCoup: null,
   apercu: null,           // variante montrée sur le plateau, hors partie
   terminee: true,
+  importee: false,        // partie relue depuis chess.com : elle n'a pas été jouée ici
   resultat: null,
   reprises: 0,            // coups à toi repris, comptés dans la revue
   debut: null,            // début de la partie : l'identifie dans l'historique
@@ -483,7 +505,7 @@ async function tourAdversaire() {
   tourJoueur();
 }
 
-async function nouvellePartie({ couleur, elo, gardeFou, pgn = null, retours = [], reprises = 0, debut = new Date().toISOString() }) {
+async function nouvellePartie({ couleur, elo, gardeFou, pgn = null, retours = [], reprises = 0, debut = new Date().toISOString(), termine = null }) {
   etat.id += 1;
   const id = etat.id;
   analyste.arreter();
@@ -500,7 +522,7 @@ async function nouvellePartie({ couleur, elo, gardeFou, pgn = null, retours = []
     partie.setHeader('White', couleur === 'w' ? 'Toi' : adverse);
     partie.setHeader('Black', couleur === 'b' ? 'Toi' : adverse);
   }
-  Object.assign(etat, { partie, couleur, elo, gardeFou, retours, reprises, debut, preAnalyse: null, gaffeInterceptee: null, terminee: false, resultat: null });
+  Object.assign(etat, { partie, couleur, elo, gardeFou, retours, reprises, debut, preAnalyse: null, gaffeInterceptee: null, terminee: false, importee: Boolean(termine), resultat: null });
 
   $('#garde-fou').hidden = true;
   $('#revue').hidden = true;
@@ -531,12 +553,14 @@ async function nouvellePartie({ couleur, elo, gardeFou, pgn = null, retours = []
   }
   if (id !== etat.id) return;
   sauvegarder();
+  // Une partie relue arrive avec son résultat : on montre la revue, sans laisser l'adversaire jouer.
+  if (termine) return terminer({ importee: termine });
   if (partie.isGameOver()) return terminer();
   if (partie.turn() === couleur) tourJoueur();
   else tourAdversaire();
 }
 
-function terminer({ abandon = false } = {}) {
+function terminer({ abandon = false, importee = null } = {}) {
   etat.id += 1;
   analyste.arreter();
   arreterAdversaire();
@@ -545,6 +569,16 @@ function terminer({ abandon = false } = {}) {
   $('#garde-fou').hidden = true;
   $('#bouton-abandon').hidden = true;
   $('#profondeur').textContent = '';
+
+  // Une partie relue vient avec son résultat, et ne rejoint pas l'historique : elle n'a pas été jouée ici.
+  if (importee) {
+    etat.resultat = importee;
+    statut(importee.texte);
+    sauvegarder();
+    afficherCoups();
+    afficherRevue();
+    return;
+  }
 
   const p = etat.partie;
   let texte;
@@ -583,9 +617,11 @@ function commentairePgn(r) {
   ].filter(Boolean).join(' ');
 }
 
+// Une partie jouée ici et terminée part à l'historique, pas en sauvegarde. Une partie relue, si : elle
+// n'entre pas dans l'historique, et on veut la retrouver après un rechargement.
 function sauvegarder() {
-  if (etat.terminee) return;
-  ecrire(CLES.partie, { pgn: etat.partie.pgn(), couleur: etat.couleur, elo: etat.elo, gardeFou: etat.gardeFou, retours: etat.retours, reprises: etat.reprises, debut: etat.debut });
+  if (etat.terminee && !etat.importee) return;
+  ecrire(CLES.partie, { pgn: etat.partie.pgn(), couleur: etat.couleur, elo: etat.elo, gardeFou: etat.gardeFou, retours: etat.retours, reprises: etat.reprises, debut: etat.debut, termine: etat.terminee ? etat.resultat : null });
 }
 
 // ── Le retour sur un coup ────────────────────────────────────────────────────────────────────
@@ -612,6 +648,8 @@ function afficherRetour(r, { repris = false } = {}) {
       ? `${formaterScore(r.scoreJoue)} (chances ${formaterChances(r.scoreJoue)})`
       : `${formaterScore(r.scoreMeilleur)} → ${formaterScore(r.scoreJoue)} (chances ${formaterChances(r.scoreMeilleur)} → ${formaterChances(r.scoreJoue)})`),
   ));
+  // Relecture : un coup sain ne passe que par la passe rapide, et n'a donc pas d'explication rédigée.
+  if (r.rapide) blocs.push(el('p', { class: 'doux' }, 'Coup sain, vu en passe rapide : pas d’explication détaillée.'));
 
   // La raison, puis ce que le meilleur coup fait de différent. Une partie sauvée avant ce format
   // n'a pas d'explication lisible : on retombe sur les signaux.
@@ -729,7 +767,7 @@ function reprendre(garder, repris) {
   if (etat.terminee) {
     ecrire(CLES.historique, lire(CLES.historique, []).filter(h => h.debut !== etat.debut));
     etat.partie.setHeader('Result', '*');
-    Object.assign(etat, { terminee: false, resultat: null });
+    Object.assign(etat, { terminee: false, importee: false, resultat: null });
     $('#revue').hidden = true;
     $('#bouton-abandon').hidden = false;
   }
@@ -962,6 +1000,81 @@ $('#bouton-nouvelle').addEventListener('click', ouvrirDialogue);
 $('#bouton-reprendre').addEventListener('click', reprendreDernierCoup);
 $('#bouton-abandon').addEventListener('click', () => {
   if (!etat.terminee && confirm('Abandonner la partie ?')) terminer({ abandon: true });
+});
+
+// ── Relire tes parties chess.com ─────────────────────────────────────────────────────────────
+
+const dialogueImport = $('#dialogue-import');
+const formulaireImport = $('#formulaire-import');
+
+function ouvrirImport() {
+  formulaireImport.elements.pseudo.value = reglages.pseudo;
+  $('#import-etat').textContent = '';
+  $('#import-liste').replaceChildren();
+  dialogueImport.showModal();
+}
+
+async function chargerMesParties() {
+  const pseudo = formulaireImport.elements.pseudo.value.trim();
+  if (!pseudo) return;
+  Object.assign(reglages, { pseudo });
+  ecrire(CLES.reglages, reglages);
+  $('#import-etat').textContent = 'Lecture de tes parties…';
+  $('#import-liste').replaceChildren();
+  try {
+    const parties = await chargerParties(pseudo);
+    $('#import-etat').textContent = parties.length
+      ? 'Touche une partie : l’app la relit et juge tes coups.'
+      : 'Aucune partie d’échecs classiques dans tes derniers mois.';
+    $('#import-liste').replaceChildren(...parties.map(partie => el('li', {},
+      el('button', { type: 'button', class: 'ligne', onclick: () => importerPartie(partie) }, resumeFr(partie)))));
+  } catch (erreur) {
+    $('#import-etat').textContent = erreur.message;
+  }
+}
+
+// Relire une partie : juger tes coups, puis la charger comme une partie finie. De là, toucher un coup de
+// la liste efface la suite et te remet dans la position — l'exercice, c'est la reprise.
+async function importerPartie(partie) {
+  dialogueImport.close();
+  etat.id += 1;
+  const id = etat.id;
+  analyste.arreter();
+  arreterAdversaire();
+  plateau.disableMoveInput();
+  fermerApercu({ redessiner: false });
+  statut('Analyse de ta partie…');
+  let retours;
+  try {
+    await moteursPrets;
+    await analyste.nouvellePartie();
+    retours = await analyserPartie(analyste, {
+      pgn: partie.pgn,
+      couleur: partie.couleur,
+      surAvancement: ({ fait, total }) => {
+        if (id === etat.id) statut(`Analyse de ta partie : coup ${Math.min(fait + 1, total)} sur ${total}…`);
+      },
+    });
+  } catch (erreur) {
+    if (id === etat.id) panne(erreur);
+    return;
+  }
+  if (id !== etat.id) return;
+  await nouvellePartie({
+    couleur: partie.couleur, elo: reglages.elo, gardeFou: reglages.gardeFou, pgn: partie.pgn, retours,
+    termine: { texte: `Partie chess.com — ${resumeFr(partie)}`, score: partie.score },
+  });
+}
+
+$('#bouton-import').addEventListener('click', ouvrirImport);
+$('#bouton-relire').addEventListener('click', () => {
+  dialogue.close('relire');
+  ouvrirImport();
+});
+$('#bouton-fermer-import').addEventListener('click', () => dialogueImport.close());
+formulaireImport.addEventListener('submit', evenement => {
+  evenement.preventDefault();
+  chargerMesParties();
 });
 
 moteursPrets.catch(panne);

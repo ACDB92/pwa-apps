@@ -1,7 +1,7 @@
 {
   "name": "Coup d'œil — sparring d'échecs",
   "short_name": "Coup d'œil",
-  "description": "Jouer contre Stockfish, avec un retour sur chacun de ses coups.",
+  "description": "Jouer contre Stockfish avec un retour sur chacun de ses coups, et relire ses parties chess.com.",
   "lang": "fr",
   "start_url": ".",
   "scope": ".",

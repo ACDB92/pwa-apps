@@ -1,4 +1,4 @@
-const CACHE = 'coup-d-oeil-v7';
+const CACHE = 'coup-d-oeil-v8';
 // Tout est précaché, moteurs compris (.wasm, 7 Mo et 1,6 Mo) : sans eux l'app ne joue ni n'analyse hors-ligne.
 const ASSETS = [
   './',
@@ -8,6 +8,7 @@ const ASSETS = [
   './motifs.js',
   './uci.js',
   './analyste.js',
+  './chesscom.js',
   './fairy.js',
   './manifest.json',
   './icon.svg',
