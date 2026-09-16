@@ -479,7 +479,14 @@ async function jouerCoupJoueur(uci) {
   etat.gaffeInterceptee = null;
   await dessinerPartie();
   marquerDernierCoup(coup);
-  afficherRetour(entree);
+  try {
+    afficherRetour(entree);
+  } catch (erreur) {
+    // Ton coup est joué : c'est l'adversaire de répondre, quoi qu'il arrive au retour. Sans ce
+    // filet, une erreur ici laissait la partie figée — le trait à l'adversaire et personne pour jouer.
+    console.error('retour impossible à afficher', erreur);
+    $('#retour').replaceChildren(el('p', { class: 'doux' }, `${numero(entree)} ${entree.san} — retour indisponible pour ce coup.`));
+  }
   afficherCoups();
   sauvegarder();
   if (etat.partie.isGameOver()) return terminer();
@@ -683,7 +690,9 @@ function afficherRetour(r, { repris = false } = {}) {
       }),
     }, el('b', {}, `${premier.couleur === 'b' ? '…' : ''}${premier.san}`), el('span', { class: 'variante' }, texteVariante(suite.slice(0, 5)))));
   }
-  const autres = r.alternatives.filter(a => a.uci !== r.coup);
+  // `variante.length` : une partie sauvegardée avant la correction peut porter une ligne qu'on ne
+  // sait pas rejouer — coach.js ne les produit plus, l'historique en contient encore.
+  const autres = r.alternatives.filter(a => a.uci !== r.coup && a.variante.length);
   if (autres.length) {
     details.push(el('h3', {}, bon ? 'Aussi bons' : 'Les meilleures suites'), el('ul', { class: 'lignes' }, autres.map(a => ligneAlternative(r, a))));
   }

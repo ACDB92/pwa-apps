@@ -171,9 +171,13 @@ export function evaluerCoup({ fen, coup, lignes, ligneJouee, menace = null }) {
   retour.perte = Math.max(0, retour.winMeilleur - retour.winJoue);
   retour.verdict = coup === meilleure.pv[0] ? 'meilleur' : verdictPour(retour.perte);
 
+  // Une recherche écourtée peut rendre une ligne dont le premier coup est illégal ici — elle vient
+  // d'une position précédente. Sans variante rejouable il n'y a rien à montrer : ce n'est pas une
+  // alternative, et la garder ferait planter l'affichage du retour.
   retour.alternatives = lignes
     .filter(l => l.pv.length && winPct(l.score) > retour.winMeilleur - AUSSI_BON)
-    .map(l => ({ uci: l.pv[0], score: l.score, win: winPct(l.score), variante: varianteFr(fen, l.pv, 6) }));
+    .map(l => ({ uci: l.pv[0], score: l.score, win: winPct(l.score), variante: varianteFr(fen, l.pv, 6) }))
+    .filter(l => l.variante.length);
   retour.coupUnique = lignes.length > 1 && retour.alternatives.length === 1;
   retour.refutation = varianteFr(fen, ligneJouee.pv, 9).slice(1);
   retour.signaux = signauxVision({ fen, couleur, meilleure, ligneJouee, menace, verdict: retour.verdict });
