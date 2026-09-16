@@ -1,4 +1,4 @@
-const CACHE = 'coup-d-oeil-v11';
+const CACHE = 'coup-d-oeil-v12';
 // Tout est précaché, moteurs compris (.wasm, 7 Mo et 1,6 Mo) : sans eux l'app ne joue ni n'analyse hors-ligne.
 const ASSETS = [
   './',

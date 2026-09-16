@@ -101,6 +101,17 @@ export function varianteFr(fen, pv, max = Infinity) {
   return coups.map((c, i) => ({ uci: uciDe(c), san: sanFr(c.san), couleur: c.color, fen: fens[i] }));
 }
 
+// Les lignes qui sont bien celles de cette position. Une recherche écourtée peut en rendre une venue de
+// la position d'avant — vu en partie : `g1f3` proposé après 1.f3 d5, alors qu'un pion blanc occupe f3.
+// On exige que le début de sa variante se rejoue ici : une ligne d'ailleurs déraille presque toujours
+// dans les premiers coups, alors qu'une vraie ligne du moteur se rejoue entière.
+const PLIS_VERIFIES = 6;
+
+export const lignesJouables = (fen, lignes) => lignes.filter(l => {
+  const debut = l.pv?.slice(0, PLIS_VERIFIES) ?? [];
+  return debut.length > 0 && rejouer(fen, debut).coups.length === debut.length;
+});
+
 export function materiel(chess, couleur) {
   let total = 0;
   for (const rangee of chess.board()) {
@@ -161,26 +172,30 @@ export function evaluerCoup({ fen, coup, lignes, ligneJouee, menace = null }) {
     alternatives: [], coupUnique: false, refutation: [], signaux: [],
   };
   if (force) return retour;   // un seul coup légal : rien à juger
+  if (!ligneJouee?.pv?.length) throw new Error('evaluerCoup : pas de ligne pour le coup joué');
   if (ligneJouee.pv[0] !== coup) throw new Error(`evaluerCoup : la ligne jouée commence par ${ligneJouee.pv[0]}, pas par ${coup}`);
 
-  const meilleure = lignes[0];
+  // Tout se mesure sur les lignes de cette position : une ligne venue d'ailleurs donnerait une référence
+  // — ou un score du coup joué — pris dans une autre position, et fausserait le verdict sans rien casser,
+  // donc sans qu'on le voie. Mieux vaut dire que le retour manque.
+  const jouables = lignesJouables(fen, lignes);
+  const jouee = lignesJouables(fen, [ligneJouee])[0];
+  if (!jouables.length || !jouee) throw new Error('evaluerCoup : les lignes du moteur ne se rejouent pas dans cette position');
+
+  const meilleure = jouables[0];
   retour.scoreMeilleur = meilleure.score;
-  retour.scoreJoue = ligneJouee.score;
+  retour.scoreJoue = jouee.score;
   retour.winMeilleur = winPct(meilleure.score);
-  retour.winJoue = winPct(ligneJouee.score);
+  retour.winJoue = winPct(jouee.score);
   retour.perte = Math.max(0, retour.winMeilleur - retour.winJoue);
   retour.verdict = coup === meilleure.pv[0] ? 'meilleur' : verdictPour(retour.perte);
 
-  // Une recherche écourtée peut rendre une ligne dont le premier coup est illégal ici — elle vient
-  // d'une position précédente. Sans variante rejouable il n'y a rien à montrer : ce n'est pas une
-  // alternative, et la garder ferait planter l'affichage du retour.
-  retour.alternatives = lignes
-    .filter(l => l.pv.length && winPct(l.score) > retour.winMeilleur - AUSSI_BON)
-    .map(l => ({ uci: l.pv[0], score: l.score, win: winPct(l.score), variante: varianteFr(fen, l.pv, 6) }))
-    .filter(l => l.variante.length);
-  retour.coupUnique = lignes.length > 1 && retour.alternatives.length === 1;
-  retour.refutation = varianteFr(fen, ligneJouee.pv, 9).slice(1);
-  retour.signaux = signauxVision({ fen, couleur, meilleure, ligneJouee, menace, verdict: retour.verdict });
+  retour.alternatives = jouables
+    .filter(l => winPct(l.score) > retour.winMeilleur - AUSSI_BON)
+    .map(l => ({ uci: l.pv[0], score: l.score, win: winPct(l.score), variante: varianteFr(fen, l.pv, 6) }));
+  retour.coupUnique = jouables.length > 1 && retour.alternatives.length === 1;
+  retour.refutation = varianteFr(fen, jouee.pv, 9).slice(1);
+  retour.signaux = signauxVision({ fen, couleur, meilleure, ligneJouee: jouee, menace, verdict: retour.verdict });
   return retour;
 }
 

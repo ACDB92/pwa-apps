@@ -3,7 +3,7 @@
 // l'app et les tests passent par ici.
 
 import { Chess } from './vendor/chess.js';
-import { evaluerCoup, ligneDuCoup, fenCoupNul } from './coach.js';
+import { evaluerCoup, ligneDuCoup, lignesJouables, fenCoupNul } from './coach.js';
 import { expliquer } from './explication.js';
 
 export const PROFONDEUR = 16;         // pré-analyse de la position, pendant que tu réfléchis
@@ -78,13 +78,20 @@ export function eloChessCom(eloMoteur) {
  * déjà ; sinon on la lance. Le coup joué est évalué sur la même position de départ et à la même
  * profondeur que les meilleures lignes : sans quoi la comparaison n'est pas honnête.
  */
+// Les lignes du moteur pour cette position, débarrassées de celles qui viennent d'ailleurs. S'il ne
+// reste rien, on relance la recherche : juger sur la ligne d'une autre position fausserait le verdict.
+async function lignesPour(moteur, fen, limites, analyse = null) {
+  const lignes = lignesJouables(fen, (analyse ?? await moteur.analyser(fen, limites)).lignes);
+  return lignes.length ? lignes : lignesJouables(fen, (await moteur.analyser(fen, limites)).lignes);
+}
+
 export async function jugerCoup(moteur, { fen, coup, analyse = null, profondeur = PROFONDEUR }) {
-  const { lignes } = analyse ?? await moteur.analyser(fen, { depth: profondeur });
+  const lignes = await lignesPour(moteur, fen, { depth: profondeur }, analyse);
   const ligneJouee = ligneDuCoup(lignes, coup)
-    ?? (await moteur.analyser(fen, { depth: lignes[0].depth, searchmoves: [coup] })).lignes[0];
+    ?? (await lignesPour(moteur, fen, { depth: lignes[0]?.depth ?? profondeur, searchmoves: [coup] }))[0];
   const menace = new Chess(fen).isCheck()
     ? null
-    : (await moteur.analyser(fenCoupNul(fen), { depth: PROFONDEUR_MENACE })).lignes[0] ?? null;
+    : (await lignesPour(moteur, fenCoupNul(fen), { depth: PROFONDEUR_MENACE }))[0] ?? null;
   const retour = evaluerCoup({ fen, coup, lignes, ligneJouee, menace });
   try {
     retour.explication = expliquer({ fen, coup, lignes, ligneJouee, menace, retour });
@@ -100,9 +107,9 @@ export const PERTE_A_REVOIR = 3;       // en deçà, le coup est sain : la passe
 
 // Juge sans chercher la menace ni rédiger : on ne veut que la perte, pour savoir quoi regarder de près.
 async function jugerVite(moteur, { fen, coup, profondeur }) {
-  const { lignes } = await moteur.analyser(fen, { depth: profondeur });
+  const lignes = await lignesPour(moteur, fen, { depth: profondeur });
   const ligneJouee = ligneDuCoup(lignes, coup)
-    ?? (await moteur.analyser(fen, { depth: lignes[0].depth, searchmoves: [coup] })).lignes[0];
+    ?? (await lignesPour(moteur, fen, { depth: lignes[0]?.depth ?? profondeur, searchmoves: [coup] }))[0];
   return evaluerCoup({ fen, coup, lignes, ligneJouee, menace: null });
 }
 
