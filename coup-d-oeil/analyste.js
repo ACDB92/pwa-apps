@@ -112,8 +112,11 @@ async function jugerVite(moteur, { fen, coup, profondeur }) {
  * partie. Une partie entière à pleine profondeur demanderait des minutes ; là, des dizaines de secondes.
  * Les coups sains gardent leur verdict de passe rapide, marqué `rapide`, sans explication détaillée.
  * Rend des retours de la même forme que ceux d'une partie jouée ici.
+ *
+ * `arrete` est consulté avant chaque coup : l'analyste est partagé avec la partie en cours, une relecture
+ * abandonnée doit le rendre tout de suite plutôt que de finir dans le vide.
  */
-export async function analyserPartie(moteur, { pgn, couleur, profondeur = PROFONDEUR, surAvancement = null }) {
+export async function analyserPartie(moteur, { pgn, couleur, profondeur = PROFONDEUR, surAvancement = null, arrete = null }) {
   const lecture = new Chess();
   lecture.loadPgn(pgn);
   const partie = new Chess();
@@ -128,6 +131,7 @@ export async function analyserPartie(moteur, { pgn, couleur, profondeur = PROFON
 
   const retours = [];
   for (const [i, { fenAvant, coup, demiCoup }] of aJuger.entries()) {
+    if (arrete?.()) return retours;
     surAvancement?.({ fait: i, total: aJuger.length });
     const vite = await jugerVite(moteur, { fen: fenAvant, coup, profondeur: PROFONDEUR_RAPIDE });
     const complet = vite.perte >= PERTE_A_REVOIR ? await jugerCoup(moteur, { fen: fenAvant, coup, profondeur }) : null;

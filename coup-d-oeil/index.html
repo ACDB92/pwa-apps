@@ -86,7 +86,8 @@
   .constats { list-style: none; margin: 0; padding: 0; display: grid; gap: .35rem; }
   .constat { display: flex; justify-content: space-between; align-items: baseline; gap: .2rem .8rem; padding: .4rem .6rem; border: 1px solid var(--bord); border-radius: 8px; }
   .constats .signal { margin: 0; border: 0; border-left: 3px solid var(--v-gaffe); border-radius: 0 6px 6px 0; }
-  .partie-tete { display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
+  .partie-tete { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .3rem .5rem; }
+  #adversaire { font-size: .85rem; color: var(--doux); }
   .partie-tete h2 { margin: 0; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--doux); }
   .liste-coups { list-style: none; margin: .5rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: .2rem .25rem; max-height: 9rem; overflow: auto; }
   .liste-coups:empty { display: none; }
@@ -180,6 +181,7 @@
     <article id="partie" class="carte">
       <div class="partie-tete">
         <h2>Coups</h2>
+        <span id="adversaire"></span>
         <button id="bouton-reprendre" class="bouton discret" disabled>◀ Reprendre mon coup</button>
       </div>
       <ol id="coups" class="liste-coups"></ol>
@@ -290,6 +292,7 @@ const etat = {
   apercu: null,           // variante montrée sur le plateau, hors partie
   terminee: true,
   importee: false,        // partie relue depuis chess.com : elle n'a pas été jouée ici
+  adversaire: null,       // l'adversaire d'une partie relue ; sinon, c'est le niveau du moteur qui s'affiche
   resultat: null,
   reprises: 0,            // coups à toi repris, comptés dans la revue
   debut: null,            // début de la partie : l'identifie dans l'historique
@@ -522,7 +525,7 @@ async function nouvellePartie({ couleur, elo, gardeFou, pgn = null, retours = []
     partie.setHeader('White', couleur === 'w' ? 'Toi' : adverse);
     partie.setHeader('Black', couleur === 'b' ? 'Toi' : adverse);
   }
-  Object.assign(etat, { partie, couleur, elo, gardeFou, retours, reprises, debut, preAnalyse: null, gaffeInterceptee: null, terminee: false, importee: Boolean(termine), resultat: null });
+  Object.assign(etat, { partie, couleur, elo, gardeFou, retours, reprises, debut, preAnalyse: null, gaffeInterceptee: null, terminee: false, importee: Boolean(termine), adversaire: termine?.adversaire ?? null, resultat: null });
 
   $('#garde-fou').hidden = true;
   $('#revue').hidden = true;
@@ -743,6 +746,8 @@ function afficherCoups() {
   }));
   $('#coups').scrollTop = $('#coups').scrollHeight;
   $('#bouton-reprendre').disabled = etat.retours.length === 0;
+  // Contre qui tu joues, visible en permanence : sinon le niveau ne se lit que dans le dialogue.
+  $('#adversaire').textContent = `contre ${etat.adversaire ?? niveau(etat.elo).nom}`;
 }
 
 function reprendreDernierCoup() {
@@ -764,16 +769,25 @@ function reprendre(garder, repris) {
   analyste.arreter();
   arreterAdversaire();
   fermerApercu({ redessiner: false });
+  const relue = etat.importee;   // à partir d'ici, ce n'est plus l'adversaire d'origine qui répondra
   if (etat.terminee) {
     ecrire(CLES.historique, lire(CLES.historique, []).filter(h => h.debut !== etat.debut));
     etat.partie.setHeader('Result', '*');
-    Object.assign(etat, { terminee: false, importee: false, resultat: null });
+    Object.assign(etat, { terminee: false, importee: false, adversaire: null, resultat: null });
     $('#revue').hidden = true;
     $('#bouton-abandon').hidden = false;
   }
   while (etat.partie.history().length > garder) {
     etat.partie.removeComment();
     etat.partie.undo();
+  }
+  // Reprendre une partie relue, c'est changer d'adversaire : le PGN doit le dire, sinon il attribue à
+  // quelqu'un des coups joués par le moteur.
+  if (relue) {
+    const n = niveau(etat.elo);
+    const avant = etat.partie.getComment?.() ?? '';   // l'horloge de chess.com : on s'y ajoute, on ne l'efface pas
+    etat.partie.setHeader(etat.couleur === 'w' ? 'Black' : 'White', n.nom);
+    etat.partie.setComment(`${avant && `${avant} `}Reprise : la suite est jouée par ${n.nom}, pas par l’adversaire d’origine.`);
   }
   etat.retours = etat.retours.filter(r => r.demiCoup <= garder);
   etat.reprises += repris.length;
@@ -1033,9 +1047,30 @@ async function chargerMesParties() {
   }
 }
 
+// Les verdicts dans le PGN d'une partie relue, comme pour une partie jouée ici. `setComment` écrit sur la
+// position courante : on remonte la partie coup par coup pour commenter, puis on la rejoue telle quelle.
+// Le commentaire s'ajoute à l'horloge de chess.com, il ne la remplace pas.
+function commenterPgn(partie, retours) {
+  const aCommenter = new Map(retours.filter(r => !BONS.includes(r.verdict)).map(r => [r.demiCoup, r]));
+  const rejouer = [];
+  while (partie.history().length) {
+    const r = aCommenter.get(partie.history().length);
+    const texte = r ? commentairePgn(r) : '';
+    if (texte) {
+      const avant = partie.getComment?.() ?? '';
+      partie.setComment(`${avant && `${avant} `}${texte}`);
+    }
+    rejouer.unshift(partie.undo());
+  }
+  for (const coup of rejouer) partie.move(coup);
+}
+
 // Relire une partie : juger tes coups, puis la charger comme une partie finie. De là, toucher un coup de
 // la liste efface la suite et te remet dans la position — l'exercice, c'est la reprise.
 async function importerPartie(partie) {
+  // Relire remplace ce qui est à l'écran : une partie commencée et non finie serait perdue sans retour.
+  if (!etat.terminee && etat.retours.length
+    && !confirm('Ta partie en cours sera perdue. Relire cette partie chess.com ?')) return;
   dialogueImport.close();
   etat.id += 1;
   const id = etat.id;
@@ -1051,6 +1086,7 @@ async function importerPartie(partie) {
     retours = await analyserPartie(analyste, {
       pgn: partie.pgn,
       couleur: partie.couleur,
+      arrete: () => id !== etat.id,
       surAvancement: ({ fait, total }) => {
         if (id === etat.id) statut(`Analyse de ta partie : coup ${Math.min(fait + 1, total)} sur ${total}…`);
       },
@@ -1060,9 +1096,16 @@ async function importerPartie(partie) {
     return;
   }
   if (id !== etat.id) return;
+  const commente = new Chess();
+  commente.loadPgn(partie.pgn);
+  commenterPgn(commente, retours);
   await nouvellePartie({
-    couleur: partie.couleur, elo: reglages.elo, gardeFou: reglages.gardeFou, pgn: partie.pgn, retours,
-    termine: { texte: `Partie chess.com — ${resumeFr(partie)}`, score: partie.score },
+    couleur: partie.couleur, elo: reglages.elo, gardeFou: reglages.gardeFou, pgn: commente.pgn(), retours,
+    termine: {
+      texte: `Partie chess.com — ${resumeFr(partie)}`,
+      score: partie.score,
+      adversaire: `${partie.adversaire} (${partie.sonElo}), sur chess.com`,
+    },
   });
 }
 

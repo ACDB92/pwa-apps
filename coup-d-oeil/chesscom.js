@@ -61,10 +61,19 @@ export const trier = parties => [...parties].sort((a, b) => b.fin - a.fin);
 export async function chargerParties(pseudo, { mois = MOIS_LUS, max = PARTIES_MAX, recuperer = (...a) => fetch(...a) } = {}) {
   const toi = normaliserPseudo(pseudo);
   const lire = async url => {
-    const reponse = await recuperer(url);
+    let reponse;
+    try {
+      reponse = await recuperer(url);
+    } catch {
+      throw new Error('chess.com est injoignable : vérifie ta connexion.');
+    }
     if (reponse.status === 404) throw new Error(`Pseudo inconnu sur chess.com : ${pseudo}`);
-    if (!reponse.ok) throw new Error(`chess.com ne répond pas (${reponse.status})`);
-    return reponse.json();
+    if (!reponse.ok) throw new Error(`chess.com ne répond pas (${reponse.status}).`);
+    try {
+      return await reponse.json();
+    } catch {
+      throw new Error('chess.com a répondu quelque chose d’illisible.');
+    }
   };
   const { archives = [] } = await lire(`${RACINE}/${encodeURIComponent(toi)}/games/archives`);
   const parties = [];
