@@ -168,9 +168,9 @@
 <header class="barre">
   <h1><img src="icon.svg" alt="" width="28" height="28"> Coup d'œil</h1>
   <nav class="onglets" aria-label="Sections">
+    <button class="onglet" data-onglet="entrainement">Entraînement</button>
     <button class="onglet" data-onglet="partie">Partie</button>
     <button class="onglet" data-onglet="analyse">Analyse</button>
-    <button class="onglet" data-onglet="entrainement">Entraînement</button>
   </nav>
   <p id="statut" class="statut" role="status" aria-live="polite">Chargement du moteur…</p>
   <div class="actions">
@@ -319,8 +319,8 @@ const lire = (cle, defaut) => { try { return JSON.parse(localStorage.getItem(cle
 const ecrire = (cle, valeur) => { try { localStorage.setItem(cle, JSON.stringify(valeur)); } catch { /* stockage indisponible */ } };
 const effacer = cle => { try { localStorage.removeItem(cle); } catch { /* stockage indisponible */ } };
 
-const reglages = { couleur: 'w', elo: ELO.defaut, gardeFou: true, pseudo: '', onglet: 'partie', ...lire(CLES.reglages, {}) };
-let onglet = null;   // partie, analyse ou entrainement
+const reglages = { couleur: 'w', elo: ELO.defaut, gardeFou: true, pseudo: '', ...lire(CLES.reglages, {}) };
+let onglet = null;   // entrainement, partie ou analyse
 const cleOnglet = () => (onglet === 'analyse' ? CLES.analyse : CLES.partie);
 
 // ── État ─────────────────────────────────────────────────────────────────────────────────────
@@ -1316,8 +1316,6 @@ async function ouvrirOnglet(nom) {
   if (onglet === 'entrainement') quitterEntrainement();
   else if (onglet) suspendre();
   onglet = nom;
-  Object.assign(reglages, { onglet: nom });
-  ecrire(CLES.reglages, reglages);
   for (const b of document.querySelectorAll('.onglet')) b.setAttribute('aria-current', b.dataset.onglet === nom ? 'page' : 'false');
   const jeu = nom !== 'entrainement';
   $('#retour').hidden = $('#partie').hidden = !jeu;
@@ -1860,7 +1858,9 @@ if (ancienne?.termine && !('jouee' in ancienne)) {
   ecrire(CLES.analyse, ancienne);
   effacer(CLES.partie);
 }
-ouvrirOnglet(['partie', 'analyse', 'entrainement'].includes(reglages.onglet) ? reglages.onglet : 'partie');
+// L'app s'ouvre toujours sur l'entraînement : c'est par là qu'on commence. La partie en cours attend
+// dans son onglet.
+ouvrirOnglet('entrainement');
 
 // Pour piloter l'app depuis la console pendant une vérification.
 window.coupDoeil = { etat, plateau, jouerCoupJoueur, ent, collection: () => collection, ouvrirOnglet, repondre };
