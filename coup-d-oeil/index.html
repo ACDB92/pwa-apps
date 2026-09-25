@@ -1654,13 +1654,24 @@ async function montrerExercice() {
   if (ent.courant !== ex) return;
   ent.pret = true;
   afficherQuestion(ex);
-  // Le dernier coup joué, surligné comme en partie : le tien pour une punition, le sien pour un cadeau.
-  const dernier = ex.type === 'punition' ? ex.coup : ex.precedent?.uci;
-  if (dernier) for (const sq of [dernier.slice(0, 2), dernier.slice(2, 4)]) plateau.addMarker(MARQUE_DERNIER, sq);
+  // Le coup qui vient d'être joué, en flèche orange et surligné : le tien pour une punition, le sien
+  // pour un cadeau. Sans lui, la position ne dit pas ce qui vient de changer.
+  montrerDernierCoup(ex);
   const qui = ex.type === 'punition' ? (ex.couleur === 'w' ? 'b' : 'w') : ex.couleur;
   plateau.enableMoveInput(saisieExercice, qui);
   ent.debut = performance.now();
   statut(`Entraînement · ${ent.index + 1} sur ${ent.file.length}`);
+}
+
+// Le coup qui vient d'être joué dans la position de l'exercice : le tien pour une punition, le sien pour
+// un cadeau. Orange, comme le coup montré quand on parcourt une partie.
+const dernierCoupDe = ex => (ex.type === 'punition' ? ex.coup : ex.precedent?.uci ?? null);
+
+function montrerDernierCoup(ex) {
+  const dernier = dernierCoupDe(ex);
+  if (!dernier) return;
+  for (const sq of [dernier.slice(0, 2), dernier.slice(2, 4)]) plateau.addMarker(MARQUE_DERNIER, sq);
+  plateau.addArrow(FLECHE_ROLE.joue, dernier.slice(0, 2), dernier.slice(2, 4));
 }
 
 const saisieExercice = saisieSur({
@@ -1671,8 +1682,8 @@ const saisieExercice = saisieSur({
 
 function afficherQuestion(ex, attente = null) {
   const question = ex.type === 'punition'
-    ? ['Tu viens de jouer ', el('b', {}, `${ex.numero} ${ex.san}`), '. À l’adversaire : joue le coup qui te punit, ou réponds « rien à craindre ».']
-    : [ex.precedent ? ['Ton adversaire vient de jouer ', el('b', {}, `${ex.precedent.numero} ${ex.precedent.san}`), '. '] : 'Ton adversaire vient de se tromper. ', 'À toi : joue le coup qui en profite.'];
+    ? ['Tu viens de jouer ', el('b', {}, `${ex.numero} ${ex.san}`), ' (flèche orange). À l’adversaire : joue le coup qui te punit, ou réponds « rien à craindre ».']
+    : [ex.precedent ? ['Ton adversaire vient de jouer ', el('b', {}, `${ex.precedent.numero} ${ex.precedent.san}`), ' (flèche orange). '] : 'Ton adversaire vient de se tromper. ', 'À toi : joue le coup qui en profite.'];
   $('#entrainement').replaceChildren(el('article', { class: 'carte' },
     el('div', { class: 'entete' },
       el('span', { class: 'badge neutre' }, `${ent.index + 1} / ${ent.file.length}`),
@@ -1753,7 +1764,7 @@ function afficherCorrection(ex) {
   const pourquoi = [...(ex.signaux ?? []), ...ex.raisons];
   const punition = ex.type === 'punition' && ex.famille !== 'sur';
   const boutons = [
-    ex.suite.length ? el('button', { class: 'bouton discret', onclick: () => montrerSuite(ex.fen, ex.suite, punition ? ARROW_TYPE.danger : ARROW_TYPE.success) }, punition ? 'Voir la punition ▶' : 'Voir la suite ▶') : null,
+    ex.suite.length ? el('button', { class: 'bouton discret', onclick: () => montrerSuite(ex.fen, ex.suite, punition ? ARROW_TYPE.danger : ARROW_TYPE.success, dernierCoupDe(ex) ? [{ uci: dernierCoupDe(ex), type: FLECHE_ROLE.joue }] : []) }, punition ? 'Voir la punition ▶' : 'Voir la suite ▶') : null,
     punition && ex.meilleur ? el('button', { class: 'bouton discret', onclick: () => montrerSuite(ex.fenAvant, [ex.meilleur], ARROW_TYPE.success, [{ uci: ex.coup, type: FLECHE_ROLE.joue }]) }, 'Ce qu’il fallait jouer') : null,
     ex.type === 'cadeau' ? el('button', { class: 'bouton discret', onclick: () => montrerSuite(ex.fenAvant, [ex.coup], FLECHE_ROLE.joue) }, 'Ce que tu as joué') : null,
   ];
@@ -1775,11 +1786,14 @@ function afficherCorrection(ex) {
       el('button', { class: 'bouton', id: 'bouton-suivant', onclick: suivant }, ent.index + 1 < ent.file.length ? 'Suivant' : 'Terminer')),
   ));
 
-  // Sur le plateau : ce qui te punissait (ou gagnait) en flèche, ta réponse en orange si elle diffère.
+  // Sur le plateau : le coup qui venait d'être joué reste en orange ; ce qui te punissait en rouge (ce qui
+  // gagnait en vert) ; ta réponse en bleu si elle diffère.
   plateau.removeArrows();
+  plateau.removeMarkers();
   plateau.setPosition(ex.fen, true);
+  montrerDernierCoup(ex);
   if (attendu) plateau.addArrow(ex.type === 'punition' ? ARROW_TYPE.danger : ARROW_TYPE.success, attendu.slice(0, 2), attendu.slice(2, 4));
-  if (sienne && sienne !== attendu) plateau.addArrow(FLECHE_ROLE.joue, sienne.slice(0, 2), sienne.slice(2, 4));
+  if (sienne && sienne !== attendu) plateau.addArrow(ARROW_TYPE.info, sienne.slice(0, 2), sienne.slice(2, 4));
   $('#bouton-suivant').focus({ preventScroll: true });
 }
 
