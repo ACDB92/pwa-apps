@@ -139,14 +139,41 @@
   .cm-chessboard.coup-d-oeil .coordinates .coordinate.white { fill: var(--case-foncee); }
   .cm-chessboard.coup-d-oeil .coordinates .coordinate.black { fill: var(--case-claire); }
   .cm-chessboard .markers .marker.marker-dernier { fill: #f6e94b; opacity: .5; }
+
+  /* Le menu : trois usages, un plateau. */
+  .onglets { display: flex; gap: .2rem; padding: .2rem; border: 1px solid var(--bord); border-radius: 10px; background: var(--carte); }
+  .onglet { font: inherit; border: 0; border-radius: 7px; padding: .3rem .8rem; background: transparent; color: var(--doux); cursor: pointer; }
+  .onglet:hover { color: var(--texte); }
+  .onglet[aria-current="page"] { background: var(--accent); color: #fff; }
+  @media (max-width: 640px) {
+    .onglets { order: 3; flex: 1 1 100%; }
+    .onglet { flex: 1; padding: .35rem .4rem; }
+    .statut { order: 4; flex-basis: 100%; }
+  }
+
+  /* Entraînement */
+  .titre-carte { margin: 0 0 .4rem; font-size: 1.1rem; }
+  .boutons.gauche { justify-content: flex-start; margin-top: .6rem; }
+  .badge.neutre { background: var(--doux); }
+  .question { font-size: 1.02rem; margin: .7rem 0; }
+  .etiquettes { display: flex; flex-wrap: wrap; gap: .3rem; margin: .5rem 0 0; }
+  .etiquette { border: 1px solid var(--bord); border-radius: 999px; padding: .02rem .5rem; font-size: .82rem; color: var(--doux); }
+  .champ-ligne { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+  .champ-ligne input { font: inherit; padding: .4rem .6rem; border: 1px solid var(--bord); border-radius: 8px; background: var(--fond); color: var(--texte); flex: 1 1 10rem; }
+  .resultat-ok { color: var(--v-meilleur); font-weight: 600; }
+  .resultat-ko { color: var(--v-gaffe); font-weight: 600; }
 </style>
 </head>
 <body>
 <header class="barre">
   <h1><img src="icon.svg" alt="" width="28" height="28"> Coup d'œil</h1>
+  <nav class="onglets" aria-label="Sections">
+    <button class="onglet" data-onglet="partie">Partie</button>
+    <button class="onglet" data-onglet="analyse">Analyse</button>
+    <button class="onglet" data-onglet="entrainement">Entraînement</button>
+  </nav>
   <p id="statut" class="statut" role="status" aria-live="polite">Chargement du moteur…</p>
   <div class="actions">
-    <button id="bouton-import" class="bouton discret">Mes parties</button>
     <button id="bouton-abandon" class="bouton discret" hidden>Abandonner</button>
     <button id="bouton-nouvelle" class="bouton">Nouvelle partie</button>
   </div>
@@ -174,6 +201,27 @@
   </section>
 
   <section class="colonne-retour">
+    <!-- Analyse : tes parties chess.com, à relire. Repliée une fois la partie choisie. -->
+    <article id="analyse-panneau" class="carte" hidden>
+      <form id="formulaire-import">
+        <div class="partie-tete">
+          <h2>Tes parties chess.com</h2>
+          <button type="button" id="bouton-autre" class="bouton discret" hidden>Autre partie</button>
+        </div>
+        <div id="import-choix">
+          <label class="champ">
+            <span>Ton pseudo chess.com</span>
+            <span class="champ-ligne">
+              <input type="text" name="pseudo" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+              <button type="submit" class="bouton">Charger</button>
+            </span>
+            <small>Rien à relier, rien à installer : l’API publique de chess.com ne publie que des parties <strong>terminées</strong>. ⚠️ Jamais à côté d’une partie en cours — ce serait de l’aide extérieure.</small>
+          </label>
+          <ul id="import-liste" class="lignes"></ul>
+        </div>
+        <p id="import-etat" class="doux"></p>
+      </form>
+    </article>
     <!-- L'analyse et les propositions d'abord, la liste des coups dessous. -->
     <article id="retour" class="carte" aria-live="polite">
       <p class="doux">Joue un coup : le retour s’affiche ici.</p>
@@ -188,6 +236,8 @@
       <ol id="coups" class="liste-coups"></ol>
     </article>
     <section id="revue" class="carte revue" hidden></section>
+    <!-- Entraînement : tableau de bord, exercice en cours, bilan de séance. Rempli par le script. -->
+    <div id="entrainement" class="colonne-retour" hidden></div>
   </section>
 </main>
 
@@ -215,23 +265,6 @@
   </form>
 </dialog>
 
-<dialog id="dialogue-import">
-  <form id="formulaire-import">
-    <h2>Relire tes parties chess.com</h2>
-    <label class="champ">
-      <span>Ton pseudo chess.com</span>
-      <input type="text" name="pseudo" autocomplete="username" autocapitalize="none" spellcheck="false" required>
-      <small>Rien à relier, rien à installer : l’API publique de chess.com ne publie que des parties <strong>terminées</strong>. ⚠️ Jamais à côté d’une partie en cours — ce serait de l’aide extérieure.</small>
-    </label>
-    <div class="boutons">
-      <button type="button" id="bouton-fermer-import" class="bouton discret">Fermer</button>
-      <button type="submit" class="bouton">Charger mes parties</button>
-    </div>
-    <p id="import-etat" class="doux"></p>
-    <ul id="import-liste" class="lignes"></ul>
-  </form>
-</dialog>
-
 <script type="module">
 import { Chess } from './vendor/chess.js';
 import { Chessboard, INPUT_EVENT_TYPE, BORDER_TYPE, FEN } from './vendor/cm-chessboard/src/Chessboard.js';
@@ -239,11 +272,16 @@ import { Markers, MARKER_TYPE } from './vendor/cm-chessboard/src/extensions/mark
 import { Arrows, ARROW_TYPE } from './vendor/cm-chessboard/src/extensions/arrows/Arrows.js';
 import { PromotionDialog, PROMOTION_DIALOG_RESULT_TYPE } from './vendor/cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js';
 import { Moteur } from './uci.js';
-import { LIBELLES, NOMS_SIGNAUX, doitIntercepter, indiceGardeFou, sanFr } from './coach.js';
-import { jugerCoup, analyserPartie, PROFONDEUR, PROFONDEUR_MIN, OPTIONS_ANALYSTE, OPTIONS_ADVERSAIRE, OPTIONS_FAIRY, ELO, niveau, eloChessCom } from './analyste.js';
-import { chargerParties, resumeFr } from './chesscom.js';
+import { LIBELLES, NOMS_SIGNAUX, doitIntercepter, indiceGardeFou, sanFr, lignesJouables } from './coach.js';
+import { jugerCoup, analyserPartie, PROFONDEUR, PROFONDEUR_MIN, PROFONDEUR_RAPIDE, OPTIONS_ANALYSTE, OPTIONS_ADVERSAIRE, OPTIONS_FAIRY, ELO, niveau, eloChessCom } from './analyste.js';
+import { chargerParties, partiesAAnalyser, resumeFr, normaliserPseudo } from './chesscom.js';
 import { creerFairy } from './fairy.js';
 import { formaterScore, formaterChances } from './explication.js';
+import {
+  TYPES, FAMILLES, TRAJECTOIRES, TAILLE_SEANCE, JOUR, exercicesDePartie, resumePartie, collectionVide, ajouter,
+  marquerPartie, fusionner, noter, etatDe, seance, revisionLibre, aRevoir, verifier, accepteParMoteur, derouler,
+  sanDe, phraseSurete, progresParSemaine, tableau,
+} from './exercices.js';
 
 // ── Outils ───────────────────────────────────────────────────────────────────────────────────
 
@@ -265,18 +303,25 @@ function el(balise, attributs = {}, ...enfants) {
     if (nom === 'onclick') noeud.addEventListener('click', valeur);
     else if (valeur != null && valeur !== false) noeud.setAttribute(nom, valeur === true ? '' : valeur);
   }
-  noeud.append(...enfants.flat().filter(e => e != null && e !== false));
+  noeud.append(...enfants.flat(Infinity).filter(e => e != null && e !== false));
   return noeud;
 }
 
 // ── Stockage local : réglages, partie en cours, historique ───────────────────────────────────
 
-const CLES = { reglages: 'coup-d-oeil:reglages', partie: 'coup-d-oeil:partie', historique: 'coup-d-oeil:historique' };
+// Chaque onglet de jeu a sa sauvegarde : la partie jouée ici dans « Partie », la partie relue — et ses
+// reprises — dans « Analyse ». Passer de l'un à l'autre ne perd rien.
+const CLES = {
+  reglages: 'coup-d-oeil:reglages', partie: 'coup-d-oeil:partie', analyse: 'coup-d-oeil:analyse',
+  historique: 'coup-d-oeil:historique', exercices: 'coup-d-oeil:exercices',
+};
 const lire = (cle, defaut) => { try { return JSON.parse(localStorage.getItem(cle)) ?? defaut; } catch { return defaut; } };
 const ecrire = (cle, valeur) => { try { localStorage.setItem(cle, JSON.stringify(valeur)); } catch { /* stockage indisponible */ } };
 const effacer = cle => { try { localStorage.removeItem(cle); } catch { /* stockage indisponible */ } };
 
-const reglages = { couleur: 'w', elo: ELO.defaut, gardeFou: true, pseudo: '', ...lire(CLES.reglages, {}) };
+const reglages = { couleur: 'w', elo: ELO.defaut, gardeFou: true, pseudo: '', onglet: 'partie', ...lire(CLES.reglages, {}) };
+let onglet = null;   // partie, analyse ou entrainement
+const cleOnglet = () => (onglet === 'analyse' ? CLES.analyse : CLES.partie);
 
 // ── État ─────────────────────────────────────────────────────────────────────────────────────
 
@@ -379,34 +424,41 @@ function activerSaisie() {
   plateau.enableMoveInput(saisie, etat.couleur);
 }
 
-function saisie(evenement) {
-  switch (evenement.type) {
-    case INPUT_EVENT_TYPE.moveInputStarted: {
-      const coups = etat.partie.moves({ square: evenement.squareFrom, verbose: true });
-      marqueurs.addLegalMovesMarkers(coups);
-      return coups.length > 0;
-    }
-    case INPUT_EVENT_TYPE.validateMoveInput: {
-      marqueurs.removeLegalMovesMarkers();
-      const coup = etat.partie.moves({ square: evenement.squareFrom, verbose: true }).find(c => c.to === evenement.squareTo);
-      if (!coup) return false;
-      if (coup.promotion) {
-        plateau.showPromotionDialog(evenement.squareTo, etat.couleur, choix => {
-          if (choix?.type === PROMOTION_DIALOG_RESULT_TYPE.pieceSelected) jouerCoupJoueur(coup.from + coup.to + choix.piece.slice(-1));
-          else dessinerPartie();
-        });
+// La saisie d'un coup sur le plateau : coups légaux marqués, promotion demandée. `position()` rend la
+// position chess.js où l'on joue, `jouer(uci)` reçoit le coup, `annuler()` redessine après une promotion
+// abandonnée. La partie et les exercices s'en servent.
+function saisieSur({ position, jouer, annuler }) {
+  return evenement => {
+    switch (evenement.type) {
+      case INPUT_EVENT_TYPE.moveInputStarted: {
+        const coups = position().moves({ square: evenement.squareFrom, verbose: true });
+        marqueurs.addLegalMovesMarkers(coups);
+        return coups.length > 0;
+      }
+      case INPUT_EVENT_TYPE.validateMoveInput: {
+        marqueurs.removeLegalMovesMarkers();
+        const coup = position().moves({ square: evenement.squareFrom, verbose: true }).find(c => c.to === evenement.squareTo);
+        if (!coup) return false;
+        if (coup.promotion) {
+          plateau.showPromotionDialog(evenement.squareTo, coup.color, choix => {
+            if (choix?.type === PROMOTION_DIALOG_RESULT_TYPE.pieceSelected) jouer(coup.from + coup.to + choix.piece.slice(-1));
+            else annuler();
+          });
+          return true;
+        }
+        setTimeout(() => jouer(coup.from + coup.to));   // le plateau termine d'abord son geste
         return true;
       }
-      setTimeout(() => jouerCoupJoueur(coup.from + coup.to));   // le plateau termine d'abord son geste
-      return true;
+      case INPUT_EVENT_TYPE.moveInputCanceled:
+        marqueurs.removeLegalMovesMarkers();
+        return undefined;
+      default:
+        return undefined;
     }
-    case INPUT_EVENT_TYPE.moveInputCanceled:
-      marqueurs.removeLegalMovesMarkers();
-      return undefined;
-    default:
-      return undefined;
-  }
+  };
 }
+
+const saisie = saisieSur({ position: () => etat.partie, jouer: uci => jouerCoupJoueur(uci), annuler: () => dessinerPartie() });
 
 // ── Le déroulé d'une partie ──────────────────────────────────────────────────────────────────
 
@@ -516,7 +568,9 @@ async function tourAdversaire() {
   tourJoueur();
 }
 
-async function nouvellePartie({ couleur, elo, gardeFou, pgn = null, retours = [], reprises = 0, debut = new Date().toISOString(), termine = null }) {
+// `termine` : une partie déjà finie, qu'on rouvre sur sa revue — relue depuis chess.com, ou jouée ici
+// (`jouee`) et gardée dans son onglet jusqu'à la suivante.
+async function nouvellePartie({ couleur, elo, gardeFou, pgn = null, retours = [], reprises = 0, debut = new Date().toISOString(), termine = null, jouee = false }) {
   etat.id += 1;
   const id = etat.id;
   analyste.arreter();
@@ -533,7 +587,7 @@ async function nouvellePartie({ couleur, elo, gardeFou, pgn = null, retours = []
     partie.setHeader('White', couleur === 'w' ? 'Toi' : adverse);
     partie.setHeader('Black', couleur === 'b' ? 'Toi' : adverse);
   }
-  Object.assign(etat, { partie, couleur, elo, gardeFou, retours, reprises, debut, preAnalyse: null, gaffeInterceptee: null, terminee: false, importee: Boolean(termine), adversaire: termine?.adversaire ?? null, resultat: null });
+  Object.assign(etat, { partie, couleur, elo, gardeFou, retours, reprises, debut, preAnalyse: null, gaffeInterceptee: null, terminee: false, importee: Boolean(termine) && !jouee, adversaire: termine?.adversaire ?? null, resultat: null });
 
   $('#garde-fou').hidden = true;
   $('#revue').hidden = true;
@@ -546,8 +600,12 @@ async function nouvellePartie({ couleur, elo, gardeFou, pgn = null, retours = []
   plateau.disableMoveInput();
   plateau.removeArrows();
   plateau.removeMarkers();
+  // Chaque attente sur le plateau peut durer — ses animations attendent que la page soit visible — et
+  // l'onglet peut avoir changé entre-temps : alors cette partie ne touche plus à rien.
   if (plateau.getOrientation() !== couleur) await plateau.setOrientation(couleur);
+  if (id !== etat.id) return;
   await plateau.setPosition(partie.fen(), false);
+  if (id !== etat.id) return;
   marquerDernierCoup(partie.history({ verbose: true }).at(-1) ?? null);
 
   statut('Préparation des moteurs…');
@@ -564,14 +622,14 @@ async function nouvellePartie({ couleur, elo, gardeFou, pgn = null, retours = []
   }
   if (id !== etat.id) return;
   sauvegarder();
-  // Une partie relue arrive avec son résultat : on montre la revue, sans laisser l'adversaire jouer.
-  if (termine) return terminer({ importee: termine });
+  // Une partie finie arrive avec son résultat : on montre la revue, sans laisser l'adversaire jouer.
+  if (termine) return terminer({ fini: termine });
   if (partie.isGameOver()) return terminer();
   if (partie.turn() === couleur) tourJoueur();
   else tourAdversaire();
 }
 
-function terminer({ abandon = false, importee = null } = {}) {
+function terminer({ abandon = false, fini = null } = {}) {
   etat.id += 1;
   analyste.arreter();
   arreterAdversaire();
@@ -581,10 +639,11 @@ function terminer({ abandon = false, importee = null } = {}) {
   $('#bouton-abandon').hidden = true;
   $('#profondeur').textContent = '';
 
-  // Une partie relue vient avec son résultat, et ne rejoint pas l'historique : elle n'a pas été jouée ici.
-  if (importee) {
-    etat.resultat = importee;
-    statut(importee.texte);
+  // Une partie rouverte vient avec son résultat, déjà archivée si elle a été jouée ici ; une partie relue
+  // ne rejoint pas l'historique : elle n'a pas été jouée ici.
+  if (fini) {
+    etat.resultat = fini;
+    statut(fini.texte);
     sauvegarder();
     afficherCoups();
     afficherRevue();
@@ -612,8 +671,15 @@ function terminer({ abandon = false, importee = null } = {}) {
   etat.resultat = { texte, score };
   p.setHeader('Result', score);
   statut(texte);
-  if (etat.retours.length) archiver();
-  effacer(CLES.partie);
+  if (etat.retours.length) {
+    archiver();
+    // Tes fautes de la partie rejoignent l'entraînement — les gaffes rattrapées par le garde-fou comprises.
+    alimenter({
+      partie: `coup-d-oeil:${etat.debut}`, origine: 'coup-d-oeil', fin: Date.now(), adversaire: niveau(etat.elo).nom,
+      couleur: etat.couleur, retours: etat.retours, pgn: p.pgn(),
+    });
+  }
+  sauvegarder();
   afficherCoups();
   afficherRevue();
 }
@@ -628,11 +694,12 @@ function commentairePgn(r) {
   ].filter(Boolean).join(' ');
 }
 
-// Une partie jouée ici et terminée part à l'historique, pas en sauvegarde. Une partie relue, si : elle
-// n'entre pas dans l'historique, et on veut la retrouver après un rechargement.
+// La partie de l'onglet, finie ou non : on la retrouve en revenant à l'onglet, ou après un rechargement.
+// Une partie jouée ici et terminée est aussi dans l'historique ; `jouee` le dit, pour ne pas la
+// confondre à la réouverture avec une partie relue.
 function sauvegarder() {
-  if (etat.terminee && !etat.importee) return;
-  ecrire(CLES.partie, { pgn: etat.partie.pgn(), couleur: etat.couleur, elo: etat.elo, gardeFou: etat.gardeFou, retours: etat.retours, reprises: etat.reprises, debut: etat.debut, termine: etat.terminee ? etat.resultat : null });
+  if (!etat.debut || onglet === 'entrainement') return;   // rien à garder, ou pas la partie de l'onglet
+  ecrire(cleOnglet(), { pgn: etat.partie.pgn(), couleur: etat.couleur, elo: etat.elo, gardeFou: etat.gardeFou, retours: etat.retours, reprises: etat.reprises, debut: etat.debut, termine: etat.terminee ? etat.resultat : null, jouee: !etat.importee });
 }
 
 // ── Le retour sur un coup ────────────────────────────────────────────────────────────────────
@@ -1097,16 +1164,15 @@ $('#bouton-abandon').addEventListener('click', () => {
   if (!etat.terminee && confirm('Abandonner la partie ?')) terminer({ abandon: true });
 });
 
-// ── Relire tes parties chess.com ─────────────────────────────────────────────────────────────
+// ── Analyse : relire tes parties chess.com ───────────────────────────────────────────────────
 
-const dialogueImport = $('#dialogue-import');
 const formulaireImport = $('#formulaire-import');
 
-function ouvrirImport() {
-  formulaireImport.elements.pseudo.value = reglages.pseudo;
-  $('#import-etat').textContent = '';
-  $('#import-liste').replaceChildren();
-  dialogueImport.showModal();
+// Le panneau de l'onglet Analyse : la liste pour choisir, repliée une fois la partie relue.
+function montrerChoixAnalyse(ouvert) {
+  $('#import-choix').hidden = !ouvert;
+  $('#bouton-autre').hidden = ouvert;
+  if (ouvert) formulaireImport.elements.pseudo.value = reglages.pseudo;
 }
 
 async function chargerMesParties() {
@@ -1147,18 +1213,20 @@ function commenterPgn(partie, retours) {
 }
 
 // Relire une partie : juger tes coups, puis la charger comme une partie finie. De là, toucher un coup de
-// la liste efface la suite et te remet dans la position — l'exercice, c'est la reprise.
+// la liste efface la suite et te remet dans la position — l'exercice, c'est la reprise. Ses fautes
+// rejoignent l'entraînement.
 async function importerPartie(partie) {
-  // Relire remplace ce qui est à l'écran : une partie commencée et non finie serait perdue sans retour.
+  // Relire remplace la partie de l'onglet : une reprise commencée et non finie serait perdue sans retour.
   if (!etat.terminee && etat.retours.length
-    && !confirm('Ta partie en cours sera perdue. Relire cette partie chess.com ?')) return;
-  dialogueImport.close();
+    && !confirm('Ta reprise en cours sera perdue. Relire cette partie chess.com ?')) return;
   etat.id += 1;
   const id = etat.id;
   analyste.arreter();
   arreterAdversaire();
   plateau.disableMoveInput();
   fermerApercu({ redessiner: false });
+  montrerChoixAnalyse(false);
+  $('#import-etat').textContent = '';
   statut('Analyse de ta partie…');
   let retours;
   try {
@@ -1177,9 +1245,16 @@ async function importerPartie(partie) {
     return;
   }
   if (id !== etat.id) return;
+  const ajoutes = await alimenter({
+    partie: partie.uuid, origine: 'chess.com', url: partie.url, fin: partie.fin.getTime(),
+    adversaire: `${partie.adversaire} (${partie.sonElo})`, couleur: partie.couleur, retours, pgn: partie.pgn, cadence: partie.cadence,
+  });
+  if (id !== etat.id) return;
+  if (ajoutes) $('#import-etat').textContent = `${ajoutes} position${s(ajoutes)} ajoutée${s(ajoutes)} à ton entraînement.`;
   const commente = new Chess();
   commente.loadPgn(partie.pgn);
   commenterPgn(commente, retours);
+  $('#retour').hidden = $('#partie').hidden = false;
   await nouvellePartie({
     couleur: partie.couleur, elo: reglages.elo, gardeFou: reglages.gardeFou, pgn: commente.pgn(), retours,
     termine: {
@@ -1190,32 +1265,605 @@ async function importerPartie(partie) {
   });
 }
 
-$('#bouton-import').addEventListener('click', ouvrirImport);
 $('#bouton-relire').addEventListener('click', () => {
   dialogue.close('relire');
-  ouvrirImport();
+  ouvrirOnglet('analyse');
 });
-$('#bouton-fermer-import').addEventListener('click', () => dialogueImport.close());
+$('#bouton-autre').addEventListener('click', () => {
+  montrerChoixAnalyse(true);
+  if (!$('#import-liste').children.length && reglages.pseudo) chargerMesParties();
+});
 formulaireImport.addEventListener('submit', evenement => {
   evenement.preventDefault();
   chargerMesParties();
 });
 
-moteursPrets.catch(panne);
-const sauvegarde = lire(CLES.partie, null);
-if (sauvegarde) {
-  nouvellePartie(sauvegarde).catch(erreur => {
-    console.error(erreur);
-    effacer(CLES.partie);
-    ouvrirDialogue();
-  });
-} else {
-  moteursPrets.then(() => { if (etat.terminee) statut('Prêt.'); });
-  ouvrirDialogue();
+// ── Les onglets ──────────────────────────────────────────────────────────────────────────────
+//
+// Un seul plateau, trois usages. Partie et Analyse ont chacune leur partie, sauvegardée en quittant
+// l'onglet et rouverte en y revenant — reprise comprise. L'entraînement prend le plateau pour lui.
+
+const s = n => (n > 1 ? 's' : '');
+
+// La partie de l'onglet quitté : sauvegardée, et plus rien ne tourne pour elle.
+function suspendre() {
+  sauvegarder();
+  etat.id += 1;
+  analyste.arreter();
+  arreterAdversaire();
+  fermerApercu({ redessiner: false });
+  plateau.disableMoveInput();
 }
 
+// Un onglet sans partie : plateau de départ, rien à reprendre ni à sauvegarder.
+function viderPartie() {
+  etat.id += 1;
+  Object.assign(etat, {
+    partie: new Chess(), retours: [], preAnalyse: null, gaffeInterceptee: null, dernierCoup: null, terminee: true,
+    importee: false, adversaire: null, resultat: null, reprises: 0, debut: null,
+  });
+  $('#retour').replaceChildren(el('p', { class: 'doux' }, 'Joue un coup : le retour s’affiche ici.'));
+  afficherCoups();
+  plateau.disableMoveInput();
+  plateau.removeArrows();
+  plateau.removeMarkers();
+  if (plateau.getOrientation() !== 'w') plateau.setOrientation('w');
+  plateau.setPosition(FEN.start, false);
+}
+
+async function ouvrirOnglet(nom) {
+  if (nom === onglet) return;
+  if (onglet === 'entrainement') quitterEntrainement();
+  else if (onglet) suspendre();
+  onglet = nom;
+  Object.assign(reglages, { onglet: nom });
+  ecrire(CLES.reglages, reglages);
+  for (const b of document.querySelectorAll('.onglet')) b.setAttribute('aria-current', b.dataset.onglet === nom ? 'page' : 'false');
+  const jeu = nom !== 'entrainement';
+  $('#retour').hidden = $('#partie').hidden = !jeu;
+  $('#revue').hidden = true;
+  $('#analyse-panneau').hidden = nom !== 'analyse';
+  $('#entrainement').hidden = jeu;
+  $('#bouton-nouvelle').hidden = nom !== 'partie';
+  $('#bouton-abandon').hidden = true;
+  $('#garde-fou').hidden = true;
+  $('#profondeur').textContent = '';
+  if (!jeu) return entrerEntrainement();
+
+  const sauvee = lire(cleOnglet(), null);
+  if (nom === 'analyse') montrerChoixAnalyse(!sauvee);
+  if (sauvee) {
+    try {
+      await nouvellePartie(sauvee);
+      return;
+    } catch (erreur) {
+      console.error(erreur);
+      effacer(cleOnglet());
+    }
+  }
+  viderPartie();
+  if (nom === 'analyse') {
+    $('#retour').hidden = $('#partie').hidden = true;
+    statut('Choisis une partie à relire.');
+    if (reglages.pseudo && !$('#import-liste').children.length) chargerMesParties();
+  } else {
+    moteursPrets.then(() => { if (onglet === 'partie' && !etat.debut) statut('Prêt.'); });
+    ouvrirDialogue();
+  }
+}
+
+for (const bouton of document.querySelectorAll('.onglet')) bouton.addEventListener('click', () => ouvrirOnglet(bouton.dataset.onglet));
+
+// ── Entraînement : tes gaffes, en exercices ──────────────────────────────────────────────────
+//
+// La collection vit dans le navigateur (CLES.exercices). Elle se remplit de trois façons : le paquet
+// préparé hors de l'app (exercices/<pseudo>.json, par outils/exercices.mjs), tes nouvelles parties
+// chess.com dépouillées ici, et chaque partie relue dans Analyse ou jouée dans Partie. Le calendrier et
+// les règles sont dans exercices.js ; ici, l'échiquier et les mots.
+
+const PROFONDEUR_VERIF = PROFONDEUR_RAPIDE;   // une autre réponse que celle attendue : le moteur tranche
+const SYNCHRO_TOUTES_LES = 6 * 3_600_000;     // on cherche tes nouvelles parties au plus toutes les six heures
+const MOIS_SYNCHRO = 2;
+const PARTIES_PAR_SYNCHRO = 20;
+
+// La collection grandit de quelques positions par partie : des milliers en un an, bien plus que les 5 Mo
+// de localStorage. Elle vit donc dans IndexedDB, d'un seul bloc ; localStorage ne sert qu'en secours,
+// si IndexedDB manque (certaines navigations privées).
+const BASE = { nom: 'coup-d-oeil', table: 'donnees' };
+let base = null;
+const laBase = () => (base ??= new Promise((resoudre, rejeter) => {
+  const demande = indexedDB.open(BASE.nom, 1);
+  demande.onupgradeneeded = () => demande.result.createObjectStore(BASE.table);
+  demande.onsuccess = () => resoudre(demande.result);
+  demande.onerror = () => rejeter(demande.error);
+}));
+
+async function lireBase(cle) {
+  const db = await laBase();
+  return new Promise((resoudre, rejeter) => {
+    const demande = db.transaction(BASE.table).objectStore(BASE.table).get(cle);
+    demande.onsuccess = () => resoudre(demande.result ?? null);
+    demande.onerror = () => rejeter(demande.error);
+  });
+}
+
+async function ecrireBase(cle, valeur) {
+  const db = await laBase();
+  return new Promise((resoudre, rejeter) => {
+    const transaction = db.transaction(BASE.table, 'readwrite');
+    transaction.objectStore(BASE.table).put(valeur, cle);
+    transaction.oncomplete = () => resoudre();
+    transaction.onerror = transaction.onabort = () => rejeter(transaction.error);
+  });
+}
+
+let collection = null;
+let chargement = null;
+const chargerCollection = () => (chargement ??= lireBase(CLES.exercices)
+  .catch(() => null)
+  .then(c => (collection = c ?? lire(CLES.exercices, null) ?? collectionVide())));
+const maCollection = () => collection;   // une fois chargerCollection() résolue
+
+function enregistrerCollection() {
+  ecrireBase(CLES.exercices, collection).catch(() => {
+    try {
+      localStorage.setItem(CLES.exercices, JSON.stringify(collection));
+    } catch {
+      statut('Stockage plein : ta collection d’exercices n’a pas pu être enregistrée.');
+    }
+  });
+}
+
+// Les fautes d'une partie finie rejoignent la collection. Rend le nombre de positions ajoutées. Un
+// échec ici ne doit jamais casser la fin d'une partie : l'entraînement est un plus.
+async function alimenter({ partie, origine, url = null, fin, adversaire = null, couleur, retours, pgn = null, cadence = null }) {
+  try {
+    const c = await chargerCollection();
+    const n = ajouter(c, exercicesDePartie({ partie, origine, url, fin, adversaire, couleur, retours, pgn }), Date.now());
+    if (origine === 'chess.com') marquerPartie(c, partie, resumePartie({ retours, fin, origine, cadence }));
+    enregistrerCollection();
+    return n;
+  } catch (erreur) {
+    console.error('exercices impossibles à tirer de cette partie', erreur);
+    return 0;
+  }
+}
+
+const ent = {
+  vue: 'tableau',                 // tableau, exercice ou bilan
+  file: [], index: 0,             // la séance : des identifiants d'exercices
+  libre: false,                   // révision choisie : hors calendrier
+  seconde: new Set(),             // ratés, repassés une fois en fin de séance
+  resultats: [],                  // premier essai de chaque exercice
+  courant: null, pret: false, debut: 0, repondu: null, suite: null,   // pret : la position est posée, on peut répondre
+  synchro: null, etatSynchro: '', paquetLu: false, message: '',
+};
+
+async function entrerEntrainement() {
+  plateau.disableMoveInput();
+  await chargerCollection();
+  if (onglet !== 'entrainement') return;
+  afficherTableau();
+  if (reglages.pseudo && !ent.paquetLu) await lirePaquet(reglages.pseudo);
+  const derniere = maCollection().synchro ?? 0;
+  if (reglages.pseudo && onglet === 'entrainement' && Date.now() - derniere > SYNCHRO_TOUTES_LES) synchroniser(reglages.pseudo);
+}
+
+function quitterEntrainement() {
+  if (ent.synchro) arreterSynchro();
+  Object.assign(ent, { vue: 'tableau', courant: null, repondu: null, suite: null });
+  plateau.disableMoveInput();
+  plateau.removeArrows();
+  plateau.removeMarkers();
+}
+
+// Le paquet préparé hors de l'app, s'il y en a un pour ce pseudo. Ton suivi local n'est jamais touché.
+async function lirePaquet(pseudo) {
+  ent.paquetLu = true;
+  await chargerCollection();
+  let paquet;
+  try {
+    const reponse = await fetch(`exercices/${encodeURIComponent(normaliserPseudo(pseudo))}.json`, { cache: 'no-cache' });
+    if (!reponse.ok) return;
+    paquet = await reponse.json();
+  } catch {
+    return;   // hors ligne, ou pas de paquet : la collection suffit
+  }
+  const n = fusionner(maCollection(), paquet, Date.now());
+  enregistrerCollection();   // même sans nouveauté : le contenu des positions connues a pu s'enrichir
+  if (!n) return;
+  ent.message = `${n} position${s(n)} ajoutée${s(n)} depuis tes parties chess.com.`;
+  if (onglet === 'entrainement' && ent.vue === 'tableau') afficherTableau();
+}
+
+// Tes nouvelles parties chess.com, relues ici par l'analyste — vingt au plus par passage, les plus
+// récentes d'abord. Elle tourne en fond : une séance peut commencer pendant ce temps, le moteur fait
+// passer la vérification d'une réponse entre deux coups relus.
+async function synchroniser(saisi) {
+  const pseudo = saisi.trim();
+  if (!pseudo || ent.synchro) return;
+  if (pseudo !== reglages.pseudo) {
+    Object.assign(reglages, { pseudo });
+    ecrire(CLES.reglages, reglages);
+    ent.paquetLu = false;
+  }
+  const tache = (ent.synchro = { arret: false });
+  const dire = texte => {
+    ent.etatSynchro = texte;
+    const p = document.getElementById('synchro-etat');
+    if (p) p.textContent = texte;
+  };
+  if (ent.vue === 'tableau') afficherTableau();
+  try {
+    if (!ent.paquetLu) await lirePaquet(pseudo);
+    dire('Recherche de tes nouvelles parties…');
+    const c = await chargerCollection();
+    const parties = await partiesAAnalyser(pseudo, { deja: new Set(Object.keys(c.parties)), mois: MOIS_SYNCHRO, max: PARTIES_PAR_SYNCHRO });
+    if (!parties.length) {
+      c.synchro = Date.now();
+      enregistrerCollection();
+      dire('Rien de nouveau : tes parties récentes sont déjà dans ta collection.');
+      return;
+    }
+    await moteursPrets;
+    let relues = 0;
+    let ajoutes = 0;
+    for (const [i, p] of parties.entries()) {
+      if (tache.arret) break;
+      dire(`Relecture de tes nouvelles parties : ${i + 1} sur ${parties.length}…`);
+      await analyste.nouvellePartie();
+      const retours = await analyserPartie(analyste, { pgn: p.pgn, couleur: p.couleur, arrete: () => tache.arret });
+      if (tache.arret) break;   // une partie à moitié relue ne compte pas : elle sera reprise la prochaine fois
+      ajoutes += await alimenter({
+        partie: p.uuid, origine: 'chess.com', url: p.url, fin: p.fin.getTime(), adversaire: `${p.adversaire} (${p.sonElo})`,
+        couleur: p.couleur, retours, pgn: p.pgn, cadence: p.cadence,
+      });
+      relues++;
+    }
+    if (relues === parties.length) c.synchro = Date.now();
+    enregistrerCollection();
+    dire(`${relues} partie${s(relues)} relue${s(relues)}, ${ajoutes} position${s(ajoutes)} ajoutée${s(ajoutes)}.`
+      + (relues < parties.length ? ' La suite à la prochaine recherche.' : ''));
+  } catch (erreur) {
+    dire(erreur.message);
+  } finally {
+    if (ent.synchro === tache) ent.synchro = null;
+    if (onglet === 'entrainement' && ent.vue === 'tableau') afficherTableau();
+  }
+}
+
+function arreterSynchro() {
+  if (!ent.synchro) return;
+  ent.synchro.arret = true;
+  analyste.arreter();
+}
+
+const dateCourte = t => new Date(t).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+
+function quand(t) {
+  const jours = Math.round((t - new Date().setHours(0, 0, 0, 0)) / JOUR);
+  return jours <= 0 ? 'aujourd’hui' : jours === 1 ? 'demain' : `dans ${jours} jours`;
+}
+
+function origineDe(ex) {
+  const { origine, fin, adversaire, gardeFou } = ex.source;
+  const ou = origine === 'chess.com' ? 'sur chess.com' : 'ici';
+  return [`Partie ${fin ? `du ${dateCourte(fin)} ` : ''}${ou}${adversaire ? `, contre ${adversaire}` : ''}`, gardeFou ? 'gaffe rattrapée par le garde-fou' : null]
+    .filter(Boolean).join(' · ');
+}
+
+// ── Le tableau de bord ───────────────────────────────────────────────────────────────────────
+
+function afficherTableau() {
+  Object.assign(ent, { vue: 'tableau', courant: null, repondu: null, suite: null });
+  plateau.disableMoveInput();
+  plateau.removeArrows();
+  plateau.removeMarkers();
+  plateau.setPosition(FEN.start, false);
+  statut('Entraînement');
+  const c = maCollection();
+  const maintenant = Date.now();
+  const tous = Object.values(c.exercices);
+  const dus = aRevoir(c, maintenant).length;
+  const nouveaux = tous.filter(ex => etatDe(ex) === 'nouveau').length;
+  const lignes = tableau(c);
+  const maitrises = lignes.reduce((n, l) => n + l.maitrise, 0);
+
+  const accueil = el('article', { class: 'carte' },
+    el('h2', { class: 'titre-carte' }, 'Tes gaffes, en exercices'),
+    tous.length
+      ? el('p', {}, `${dus ? `${dus} à revoir aujourd’hui` : 'Rien à revoir aujourd’hui'} · ${nouveaux} nouvelle${s(nouveaux)} · ${tous.length} en tout.`)
+      : el('p', {}, 'Ta collection est vide : donne ton pseudo chess.com ci-dessous, ou relis une partie dans Analyse.'),
+    ent.message ? el('p', { class: 'signal discret' }, ent.message) : null,
+    el('div', { class: 'boutons gauche' },
+      dus + nouveaux
+        ? el('button', { class: 'bouton', onclick: () => commencer({ liste: seance(c, { maintenant }) }) }, `Commencer (${Math.min(TAILLE_SEANCE, dus + nouveaux)})`)
+        : tous.length ? el('button', { class: 'bouton', onclick: () => commencer({ liste: revisionLibre(c), libre: true }) }, 'Réviser quand même') : null,
+      maitrises
+        ? el('button', { class: 'bouton discret', onclick: () => commencer({ liste: revisionLibre(c, { filtre: ex => etatDe(ex) === 'maitrise' }), libre: true }) }, `Rejouer les maîtrisées (${maitrises})`)
+        : null,
+    ),
+    el('details', { class: 'details' }, el('summary', {}, 'Comment ça marche'),
+      el('p', {}, el('strong', {}, TYPES.punition), ' Tu viens de jouer ton coup : joue sur l’échiquier la réponse de l’adversaire qui te punit, ou réponds « Rien à craindre » — environ une fois sur quatre, ton coup était sûr.'),
+      el('p', {}, el('strong', {}, TYPES.cadeau), ' Ton adversaire vient de se tromper : joue le coup qui en profite.'),
+      el('p', {}, 'Juste, la position revient dans 1, 3, 7, 16, 35 puis 60 jours. Faux, elle revient demain, et une seconde fois en fin de séance. Maîtrisée à la quatrième réussite d’affilée : elle revient quand même, et se rejoue quand tu veux.')),
+  );
+
+  const collectionCarte = lignes.length ? el('article', { class: 'carte' },
+    el('h3', {}, 'Ta collection'),
+    el('div', { class: 'historique-conteneur' }, el('table', { class: 'historique' },
+      el('thead', {}, el('tr', {}, ['', 'Nouvelles', 'En cours', 'Maîtrisées', ''].map(t => el('th', {}, t)))),
+      el('tbody', {}, lignes.map(l => el('tr', {},
+        el('td', {}, FAMILLES[l.famille]),
+        el('td', {}, l.nouveau), el('td', {}, l['en-cours']), el('td', {}, l.maitrise),
+        el('td', {}, el('button', { class: 'voir', onclick: () => commencer({ liste: revisionLibre(c, { filtre: ex => ex.famille === l.famille }), libre: true }) }, 'S’entraîner')),
+      ))),
+    )),
+  ) : null;
+
+  const semaines = progresParSemaine(c).filter(w => w.semaine > maintenant - 12 * 7 * JOUR);   // les trois derniers mois
+  const progres = semaines.length ? el('article', { class: 'carte' },
+    el('h3', {}, 'Gaffes par partie chess.com'),
+    el('div', { class: 'historique-conteneur' }, el('table', { class: 'historique' },
+      el('thead', {}, el('tr', {}, ['Semaine du', 'Parties', 'Gaffes / partie'].map(t => el('th', {}, t)))),
+      el('tbody', {}, semaines.map(w => el('tr', {},
+        el('td', {}, dateCourte(w.semaine)), el('td', {}, w.parties), el('td', {}, w.parPartie.toFixed(1).replace('.', ',')),
+      ))),
+    )),
+    el('small', {}, 'L’indicateur qui compte : il baisse avant que le classement monte.'),
+  ) : null;
+
+  const champ = el('input', { type: 'text', value: reglages.pseudo, placeholder: 'ton pseudo', autocapitalize: 'none', spellcheck: 'false', 'aria-label': 'Ton pseudo chess.com' });
+  champ.addEventListener('keydown', e => { if (e.key === 'Enter') synchroniser(champ.value); });
+  const synchro = el('article', { class: 'carte' },
+    el('h3', {}, 'Tes nouvelles parties chess.com'),
+    el('div', { class: 'champ-ligne' }, champ,
+      ent.synchro
+        ? el('button', { class: 'bouton discret', onclick: arreterSynchro }, 'Arrêter')
+        : el('button', { class: 'bouton discret', onclick: () => synchroniser(champ.value) }, 'Chercher')),
+    el('p', { id: 'synchro-etat', class: 'doux' }, ent.etatSynchro),
+    el('small', {}, `Cherchées toutes seules en ouvrant l’entraînement, au plus toutes les six heures. Chaque partie terminée des ${MOIS_SYNCHRO} derniers mois est relue une fois ; les parties relues dans Analyse et celles jouées ici comptent aussi.`),
+  );
+
+  $('#entrainement').replaceChildren(...[accueil, collectionCarte, progres, synchro].filter(Boolean));
+}
+
+// ── Une séance ───────────────────────────────────────────────────────────────────────────────
+
+function commencer({ liste, libre = false }) {
+  if (!liste.length) return;
+  Object.assign(ent, { file: liste.map(ex => ex.id), index: 0, libre, seconde: new Set(), resultats: [], message: '' });
+  montrerExercice();
+}
+
+async function montrerExercice() {
+  const id = ent.file[ent.index];
+  if (!id) return afficherBilan();
+  const ex = maCollection().exercices[id];
+  if (!ex) {
+    ent.index++;
+    return montrerExercice();
+  }
+  Object.assign(ent, { vue: 'exercice', courant: ex, repondu: null, suite: null, pret: false });
+  plateau.disableMoveInput();
+  plateau.removeArrows();
+  plateau.removeMarkers();
+  // La question d'abord, mais on ne répond qu'une fois la position posée sur le plateau.
+  afficherQuestion(ex, 'Mise en place de la position…');
+  if (plateau.getOrientation() !== ex.couleur) await plateau.setOrientation(ex.couleur);
+  if (ent.courant !== ex) return;
+  await plateau.setPosition(ex.fen, false);
+  if (ent.courant !== ex) return;
+  ent.pret = true;
+  afficherQuestion(ex);
+  // Le dernier coup joué, surligné comme en partie : le tien pour une punition, le sien pour un cadeau.
+  const dernier = ex.type === 'punition' ? ex.coup : ex.precedent?.uci;
+  if (dernier) for (const sq of [dernier.slice(0, 2), dernier.slice(2, 4)]) plateau.addMarker(MARQUE_DERNIER, sq);
+  const qui = ex.type === 'punition' ? (ex.couleur === 'w' ? 'b' : 'w') : ex.couleur;
+  plateau.enableMoveInput(saisieExercice, qui);
+  ent.debut = performance.now();
+  statut(`Entraînement · ${ent.index + 1} sur ${ent.file.length}`);
+}
+
+const saisieExercice = saisieSur({
+  position: () => new Chess(ent.courant.fen),
+  jouer: uci => repondre(uci),
+  annuler: () => plateau.setPosition(ent.courant.fen),
+});
+
+function afficherQuestion(ex, attente = null) {
+  const question = ex.type === 'punition'
+    ? ['Tu viens de jouer ', el('b', {}, `${ex.numero} ${ex.san}`), '. À l’adversaire : joue le coup qui te punit, ou réponds « rien à craindre ».']
+    : [ex.precedent ? ['Ton adversaire vient de jouer ', el('b', {}, `${ex.precedent.numero} ${ex.precedent.san}`), '. '] : 'Ton adversaire vient de se tromper. ', 'À toi : joue le coup qui en profite.'];
+  $('#entrainement').replaceChildren(el('article', { class: 'carte' },
+    el('div', { class: 'entete' },
+      el('span', { class: 'badge neutre' }, `${ent.index + 1} / ${ent.file.length}`),
+      el('strong', {}, TYPES[ex.type]),
+      ent.seconde.has(ex.id) ? el('span', { class: 'doux' }, 'seconde chance') : null,
+      ent.libre ? el('span', { class: 'doux' }, 'révision libre') : null),
+    el('p', { class: 'question' }, question),
+    ex.type === 'punition'
+      ? el('div', { class: 'boutons gauche' }, el('button', { class: 'bouton discret', onclick: () => repondre('rien'), disabled: Boolean(attente) }, 'Rien à craindre'))
+      : null,
+    attente ? el('p', { class: 'doux' }, attente) : null,
+    el('p', {}, el('small', {}, origineDe(ex))),
+    el('div', { class: 'boutons' }, el('button', { class: 'bouton discret', onclick: afficherTableau }, 'Arrêter la séance')),
+  ));
+}
+
+// Ta réponse : jugée d'office si elle est attendue, sinon par le moteur — un autre coup peut punir aussi
+// bien. Le premier essai compte pour le calendrier ; un raté revient une fois en fin de séance.
+async function repondre(reponse) {
+  const ex = ent.courant;
+  if (!ex || !ent.pret || ent.repondu) return;
+  ent.repondu = { reponse, ok: null, ms: Math.round(performance.now() - ent.debut) };
+  plateau.disableMoveInput();
+  let { ok } = verifier(ex, reponse);
+  if (ok === null) {
+    afficherQuestion(ex, 'Stockfish vérifie ta réponse…');
+    try {
+      await moteursPrets;
+      const { lignes } = await analyste.analyser(ex.fen, { depth: PROFONDEUR_VERIF, searchmoves: [reponse] });
+      const [ligne] = lignesJouables(ex.fen, lignes);
+      ok = ligne ? accepteParMoteur(ex, ligne.score) : false;
+    } catch (erreur) {
+      console.error(erreur);
+      ok = false;
+    }
+    if (ent.courant !== ex) return;
+  }
+  const seconde = ent.seconde.has(ex.id);
+  ex.suivi = noter(ex.suivi, { ok, ms: ent.repondu.ms, maintenant: Date.now(), libre: ent.libre || seconde });
+  enregistrerCollection();
+  if (!seconde) {
+    ent.resultats.push({ id: ex.id, ok });
+    if (!ok) {
+      ent.file.push(ex.id);
+      ent.seconde.add(ex.id);
+    }
+  }
+  ent.repondu.ok = ok;
+  afficherCorrection(ex);
+}
+
+function afficherCorrection(ex) {
+  const { reponse, ok, ms } = ent.repondu;
+  const sienne = reponse === 'rien' ? null : reponse;
+  const attendu = ex.attendus[0] ?? null;
+  const san = uci => sanDe(ex.fen, uci);
+  let verdict;
+  if (ex.famille === 'sur') {
+    verdict = ok ? 'Juste : rien à craindre.' : `Non : ${san(sienne)} ne te punit pas, ton coup était sûr.`;
+  } else if (ok) {
+    verdict = !sienne || ex.attendus.includes(sienne) ? `Juste : ${san(sienne)}.` : `Juste : ${san(sienne)} marche aussi. Stockfish préfère ${san(attendu)}.`;
+  } else if (ex.type === 'punition') {
+    verdict = `${sienne ? `Non : ${san(sienne)} ne te punit pas assez.` : 'Si, il y avait quelque chose.'} Ce qui te punit : ${san(attendu)}.`;
+  } else {
+    verdict = `Non. Le coup qui en profitait : ${san(attendu)}.`;
+  }
+
+  const etiquettes = [
+    FAMILLES[ex.famille],
+    ex.trajectoire ? `${ex.type === 'punition' ? 'la punition' : 'le gain'} arrive ${TRAJECTOIRES[ex.trajectoire]}` : null,
+    `répondu en ${Math.max(1, Math.round(ms / 1000))} s`,
+    etatDe(ex) === 'maitrise' ? 'maîtrisée' : null,
+    ex.suivi.prochaine ? `revient ${quand(ex.suivi.prochaine)}` : null,
+  ].filter(Boolean);
+
+  const liste = textes => el('ul', { class: 'constats' }, textes.map(t => el('li', { class: 'constat' }, t)));
+  // Le mécanisme nommé d'abord (« l'adversaire menaçait …Dh4+ »), puis ce qu'en dit l'explication.
+  const pourquoi = [...(ex.signaux ?? []), ...ex.raisons];
+  const punition = ex.type === 'punition' && ex.famille !== 'sur';
+  const boutons = [
+    ex.suite.length ? el('button', { class: 'bouton discret', onclick: () => montrerSuite(ex.fen, ex.suite, punition ? ARROW_TYPE.danger : ARROW_TYPE.success) }, punition ? 'Voir la punition ▶' : 'Voir la suite ▶') : null,
+    punition && ex.meilleur ? el('button', { class: 'bouton discret', onclick: () => montrerSuite(ex.fenAvant, [ex.meilleur], ARROW_TYPE.success, [{ uci: ex.coup, type: FLECHE_ROLE.joue }]) }, 'Ce qu’il fallait jouer') : null,
+    ex.type === 'cadeau' ? el('button', { class: 'bouton discret', onclick: () => montrerSuite(ex.fenAvant, [ex.coup], FLECHE_ROLE.joue) }, 'Ce que tu as joué') : null,
+  ];
+
+  $('#entrainement').replaceChildren(el('article', { class: 'carte' },
+    el('div', { class: 'entete' },
+      el('span', { class: 'badge neutre' }, `${ent.index + 1} / ${ent.file.length}`),
+      el('strong', {}, TYPES[ex.type])),
+    el('p', { class: ok ? 'signal discret' : 'signal' }, el('strong', {}, verdict)),
+    el('div', { class: 'etiquettes' }, etiquettes.map(t => el('span', { class: 'etiquette' }, t))),
+    ex.famille === 'sur' ? el('p', {}, phraseSurete(ex)) : null,
+    ex.famille !== 'sur' && pourquoi.length ? [el('h3', {}, `Pourquoi ${ex.numero} ${ex.san} était une faute`), liste(pourquoi)] : null,
+    ex.alternative ? [el('h3', {}, ex.alternative.titre), liste(ex.alternative.raisons)] : null,
+    el('div', { class: 'boutons gauche' }, boutons),
+    el('div', { id: 'suite-coups', class: 'apercu-coups' }),
+    el('p', {}, el('small', {}, origineDe(ex), ex.source.url ? [' · ', el('a', { href: ex.source.url, target: '_blank', rel: 'noopener' }, 'la partie')] : null)),
+    el('div', { class: 'boutons' },
+      el('button', { class: 'bouton discret', onclick: afficherTableau }, 'Arrêter'),
+      el('button', { class: 'bouton', id: 'bouton-suivant', onclick: suivant }, ent.index + 1 < ent.file.length ? 'Suivant' : 'Terminer')),
+  ));
+
+  // Sur le plateau : ce qui te punissait (ou gagnait) en flèche, ta réponse en orange si elle diffère.
+  plateau.removeArrows();
+  plateau.setPosition(ex.fen, true);
+  if (attendu) plateau.addArrow(ex.type === 'punition' ? ARROW_TYPE.danger : ARROW_TYPE.success, attendu.slice(0, 2), attendu.slice(2, 4));
+  if (sienne && sienne !== attendu) plateau.addArrow(FLECHE_ROLE.joue, sienne.slice(0, 2), sienne.slice(2, 4));
+  $('#bouton-suivant').focus({ preventScroll: true });
+}
+
+function suivant() {
+  ent.index++;
+  montrerExercice();
+}
+
+// Dérouler une suite sur le plateau : Départ, puis un bouton par coup. `autres` : des flèches de plus au
+// départ — ton coup, en orange, à côté de celui qu'il fallait jouer.
+function montrerSuite(fenDepart, ucis, fleche, autres = []) {
+  const coups = derouler(fenDepart, ucis);
+  ent.suite = { fenDepart, coups, fleche, autres, index: -1 };
+  $('#suite-coups').replaceChildren(
+    el('button', { class: 'pas', 'data-index': -1, onclick: () => etapeSuite(-1) }, 'Départ'),
+    ...coups.map((c, i) => el('button', { class: 'pas', 'data-index': i, onclick: () => etapeSuite(i) }, c.san)),
+  );
+  etapeSuite(-1);
+}
+
+function etapeSuite(index) {
+  const suite = ent.suite;
+  if (!suite) return;
+  suite.index = Math.max(-1, Math.min(index, suite.coups.length - 1));
+  plateau.removeArrows();
+  plateau.removeMarkers();
+  plateau.setPosition(suite.index < 0 ? suite.fenDepart : suite.coups[suite.index].fen, true);
+  const prochain = suite.coups[suite.index + 1];
+  if (prochain) plateau.addArrow(suite.index < 0 ? suite.fleche : ARROW_TYPE.secondary, prochain.uci.slice(0, 2), prochain.uci.slice(2, 4));
+  if (suite.index < 0) for (const a of suite.autres) plateau.addArrow(a.type, a.uci.slice(0, 2), a.uci.slice(2, 4));
+  for (const b of $('#suite-coups').children) b.classList.toggle('actif', Number(b.dataset.index) === suite.index);
+}
+
+function afficherBilan() {
+  Object.assign(ent, { vue: 'bilan', courant: null, repondu: null, suite: null });
+  plateau.disableMoveInput();
+  plateau.removeArrows();
+  plateau.removeMarkers();
+  const c = maCollection();
+  const justes = ent.resultats.filter(r => r.ok).length;
+  const encore = () => {
+    const suite = seance(c, { maintenant: Date.now() });
+    commencer(suite.length ? { liste: suite } : { liste: revisionLibre(c), libre: true });
+  };
+  statut('Séance terminée.');
+  $('#entrainement').replaceChildren(el('article', { class: 'carte' },
+    el('h2', { class: 'titre-carte' }, 'Séance terminée'),
+    el('p', {}, `${justes} sur ${ent.resultats.length} du premier coup.`),
+    el('ol', { class: 'coups-revue' }, ent.resultats.map(({ id, ok }) => {
+      const ex = c.exercices[id];
+      return el('li', {}, el('button', { class: 'ligne', title: 'Rejouer cette position', onclick: () => commencer({ liste: [ex], libre: true }) },
+        el('b', {}, `${ex.numero} ${ex.san}`),
+        el('span', { class: ok ? 'resultat-ok' : 'resultat-ko' }, ok ? '✓' : '✗'),
+        el('span', { class: 'variante' }, FAMILLES[ex.famille])));
+    })),
+    el('div', { class: 'boutons' },
+      el('button', { class: 'bouton discret', onclick: afficherTableau }, 'Tableau de bord'),
+      el('button', { class: 'bouton', onclick: encore }, `Encore ${TAILLE_SEANCE}`)),
+  ));
+}
+
+document.addEventListener('keydown', e => {
+  if (onglet !== 'entrainement' || e.target.closest?.('input') || $('#dialogue-nouvelle').open) return;
+  if (ent.suite && e.key === 'ArrowRight') etapeSuite(ent.suite.index + 1);
+  else if (ent.suite && e.key === 'ArrowLeft') etapeSuite(ent.suite.index - 1);
+  else return;
+  e.preventDefault();
+});
+
+// ── Démarrage ────────────────────────────────────────────────────────────────────────────────
+
+moteursPrets.catch(panne);
+// Avant les onglets, une partie relue vivait dans la sauvegarde de la partie : elle rejoint Analyse.
+const ancienne = lire(CLES.partie, null);
+if (ancienne?.termine && !('jouee' in ancienne)) {
+  ecrire(CLES.analyse, ancienne);
+  effacer(CLES.partie);
+}
+ouvrirOnglet(['partie', 'analyse', 'entrainement'].includes(reglages.onglet) ? reglages.onglet : 'partie');
+
 // Pour piloter l'app depuis la console pendant une vérification.
-window.coupDoeil = { etat, plateau, jouerCoupJoueur };
+window.coupDoeil = { etat, plateau, jouerCoupJoueur, ent, collection: () => collection, ouvrirOnglet, repondre };
 
 // Fairy-Stockfish veut une page isolée, et ce sont les en-têtes du service worker qui l'isolent : une page
 // ouverte avant lui (première visite, mise à jour) se recharge une fois, quand il en prend le contrôle.

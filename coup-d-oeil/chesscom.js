@@ -54,11 +54,25 @@ export function resumeFr(partie) {
 
 export const trier = parties => [...parties].sort((a, b) => b.fin - a.fin);
 
-/**
- * Les dernières parties jouables de `pseudo`. Deux requêtes au moins : la liste des archives, puis un
- * fichier par mois — en série, parce que l'API demande de ne pas paralléliser.
- */
+// Les dernières parties jouables de `pseudo`, `max` au plus : la liste de « Mes parties ».
 export async function chargerParties(pseudo, { mois = MOIS_LUS, max = PARTIES_MAX, recuperer = (...a) => fetch(...a) } = {}) {
+  return trier(await lireParties(pseudo, { mois, recuperer, assez: parties => parties.length >= max })).slice(0, max);
+}
+
+/**
+ * Les parties à dépouiller pour les exercices : celles des `mois` derniers mois qui ne sont pas encore
+ * dans `deja` (leurs uuid), de la plus récente à la plus ancienne, `max` au plus — les suivantes
+ * attendront la prochaine mise à jour. `mois: Infinity` remonte toutes les archives.
+ */
+export async function partiesAAnalyser(pseudo, { deja = new Set(), mois = 2, max = Infinity, recuperer = (...a) => fetch(...a) } = {}) {
+  const nouvelles = parties => parties.filter(p => !deja.has(p.uuid));
+  const parties = await lireParties(pseudo, { mois, recuperer, assez: parties => nouvelles(parties).length >= max });
+  return trier(nouvelles(parties)).slice(0, max);
+}
+
+// Deux requêtes au moins : la liste des archives, puis un fichier par mois, du plus récent au plus
+// ancien — en série, parce que l'API demande de ne pas paralléliser. `assez` arrête la remontée.
+async function lireParties(pseudo, { mois, recuperer, assez }) {
   const toi = normaliserPseudo(pseudo);
   const lire = async url => {
     let reponse;
@@ -77,10 +91,10 @@ export async function chargerParties(pseudo, { mois = MOIS_LUS, max = PARTIES_MA
   };
   const { archives = [] } = await lire(`${RACINE}/${encodeURIComponent(toi)}/games/archives`);
   const parties = [];
-  for (const url of archives.slice(-mois).reverse()) {
+  for (const url of (mois === Infinity ? archives : archives.slice(-mois)).reverse()) {
     const { games = [] } = await lire(url);
     parties.push(...games.map(g => partieJouable(g, toi)).filter(Boolean));
-    if (parties.length >= max) break;
+    if (assez(parties)) break;
   }
-  return trier(parties).slice(0, max);
+  return parties;
 }
