@@ -439,9 +439,10 @@ export function dernierKm(depuis, spot, nbJours, b = BAREMES) {
   const taxi = 2 * Math.max(b.taxiMin, b.taxiPriseEnCharge + b.taxiEurKm * km);
   const location = b.locationEurJour * Math.max(1, nbJours);
   const minutes = km / b.localKmh * 60 + 5;
+  // Les deux montants sont gardés : la fiche dit pourquoi l'un l'emporte.
   return taxi <= location
-    ? { mode: 'taxi', km, minutes, cout: taxi }
-    : { mode: 'location', km, minutes, cout: location };
+    ? { mode: 'taxi', km, minutes, cout: taxi, taxi, location }
+    : { mode: 'location', km, minutes, cout: location, taxi, location };
 }
 
 export function aeroportProche(spot, aeroports, b = BAREMES) {
@@ -467,7 +468,7 @@ export function optionsTrajet(spot, reglages, contexte, b = BAREMES) {
     const peage = km > b.peageDesKm ? 2 * km * b.partAutoroute * b.peageEurKm : 0;
     options.push({
       mode: 'voiture', possible: true, minutes, cout: carburant + peage, coutMin: null, coutMax: null,
-      detail: { km, carburant, peage, estime }
+      detail: { km, carburant, peage, estime, prixLitre: prixCarburant, conso: reglages.consoL100 }
     });
   }
 
@@ -488,7 +489,13 @@ export function optionsTrajet(spot, reglages, contexte, b = BAREMES) {
       options.push({
         mode: 'train', possible: true, minutes: minutesTrain + fin.minutes,
         cout: (bas + haut) / 2 + fin.cout, coutMin: bas + fin.cout, coutMax: haut + fin.cout,
-        detail: { gare: gare.nom, minutesTrain, dureeConnue: Boolean(depuisParis), fin }
+        detail: {
+          depart: depuisParis ? gare.depuisParis : `${ville.nom} (gare principale)`,
+          gare: gare.nom, minutesTrain, dureeConnue: Boolean(depuisParis),
+          // Une gare sans TGV demande presque toujours une correspondance (TER) : on le dit, sans
+          // pouvoir dire où — aucune API d'horaires n'est ouverte.
+          correspondance: !gare.tgv, fin, gareLieu: { lat: gare.lat, lon: gare.lon }
+        }
       });
     }
   }
@@ -507,7 +514,11 @@ export function optionsTrajet(spot, reglages, contexte, b = BAREMES) {
         mode: 'avion', possible: true,
         minutes: b.avionAccesMin + b.avionAvantMin + aero.volMin + b.avionApresMin + fin.minutes,
         cout: reglages.billetAvion + sac + fin.cout, coutMin: null, coutMax: null,
-        detail: { aeroport: aero.nom, code: aero.code, billet: reglages.billetAvion, sac, compagnie: compagnie.nom, fin }
+        detail: {
+          aeroport: aero.nom, code: aero.code, billet: reglages.billetAvion, sac, compagnie: compagnie.nom, fin,
+          vol: aero.volMin, acces: b.avionAccesMin, avant: b.avionAvantMin, apres: b.avionApresMin,
+          aeroLieu: { lat: aero.lat, lon: aero.lon }
+        }
       });
     }
   }

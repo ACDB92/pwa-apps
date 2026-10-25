@@ -57,37 +57,37 @@ export const SPOTS = [
 ];
 
 // `parisMin` : durée habituelle depuis Paris, en minutes, au jugé d'après les horaires usuels — elle
-// remplace le modèle quand on part de Paris. `tgv` : desservie par un TGV, ce qui change la vitesse
+// remplace le modèle quand on part de Paris. `depuisParis` : la gare parisienne d'où partent ces trains. `tgv` : desservie par un TGV, ce qui change la vitesse
 // du modèle pour une autre ville de départ.
 export const GARES = {
-  'dunkerque': { nom: 'Dunkerque', lat: 51.031, lon: 2.369, tgv: true, parisMin: 115 },
-  'calais': { nom: 'Calais-Fréthun', lat: 50.901, lon: 1.811, tgv: true, parisMin: 110 },
-  'boulogne': { nom: 'Boulogne-sur-Mer', lat: 50.716, lon: 1.611, tgv: true, parisMin: 140 },
-  'etaples': { nom: 'Étaples – Le Touquet', lat: 50.514, lon: 1.640, tgv: true, parisMin: 150 },
-  'rang': { nom: 'Rang-du-Fliers – Verton', lat: 50.418, lon: 1.646, tgv: true, parisMin: 150 },
-  'noyelles': { nom: 'Noyelles-sur-Mer', lat: 50.185, lon: 1.708, tgv: false, parisMin: 140 },
-  'caen': { nom: 'Caen', lat: 49.176, lon: -0.348, tgv: false, parisMin: 130 },
-  'coutances': { nom: 'Coutances', lat: 49.047, lon: -1.437, tgv: false, parisMin: 190 },
-  'cherbourg': { nom: 'Cherbourg', lat: 49.634, lon: -1.623, tgv: false, parisMin: 190 },
-  'saint-malo': { nom: 'Saint-Malo', lat: 48.647, lon: -2.006, tgv: true, parisMin: 150 },
-  'lamballe': { nom: 'Lamballe', lat: 48.468, lon: -2.517, tgv: true, parisMin: 150 },
-  'morlaix': { nom: 'Morlaix', lat: 48.578, lon: -3.832, tgv: true, parisMin: 205 },
-  'brest': { nom: 'Brest', lat: 48.388, lon: -4.479, tgv: true, parisMin: 215 },
-  'quimper': { nom: 'Quimper', lat: 47.995, lon: -4.095, tgv: true, parisMin: 220 },
-  'auray': { nom: 'Auray', lat: 47.680, lon: -2.999, tgv: true, parisMin: 175 },
-  'la-baule': { nom: 'La Baule-Escoublac', lat: 47.287, lon: -2.390, tgv: true, parisMin: 175 },
-  'saint-nazaire': { nom: 'Saint-Nazaire', lat: 47.286, lon: -2.212, tgv: true, parisMin: 160 },
-  'challans': { nom: 'Challans', lat: 46.846, lon: -1.877, tgv: false, parisMin: 200 },
-  'la-rochelle': { nom: 'La Rochelle', lat: 46.153, lon: -1.145, tgv: true, parisMin: 175 },
-  'chatelaillon': { nom: 'Châtelaillon-Plage', lat: 46.075, lon: -1.088, tgv: false, parisMin: 190 },
-  'rochefort': { nom: 'Rochefort', lat: 45.946, lon: -0.962, tgv: false, parisMin: 195 },
-  'bordeaux': { nom: 'Bordeaux Saint-Jean', lat: 44.826, lon: -0.556, tgv: true, parisMin: 125 },
-  'leucate': { nom: 'Leucate – La Franqui', lat: 42.915, lon: 3.031, tgv: false, parisMin: 300 },
-  'narbonne': { nom: 'Narbonne', lat: 43.190, lon: 3.006, tgv: true, parisMin: 265 },
-  'montpellier': { nom: 'Montpellier Saint-Roch', lat: 43.605, lon: 3.880, tgv: true, parisMin: 200 },
-  'grau-du-roi': { nom: 'Le Grau-du-Roi', lat: 43.538, lon: 4.137, tgv: false, parisMin: 250 },
-  'arles': { nom: 'Arles', lat: 43.684, lon: 4.632, tgv: false, parisMin: 240 },
-  'hyeres': { nom: 'Hyères', lat: 43.117, lon: 6.124, tgv: true, parisMin: 270 }
+  'dunkerque': { nom: 'Dunkerque', lat: 51.031, lon: 2.369, tgv: true, parisMin: 115, depuisParis: 'Paris Nord' },
+  'calais': { nom: 'Calais-Fréthun', lat: 50.901, lon: 1.811, tgv: true, parisMin: 110, depuisParis: 'Paris Nord' },
+  'boulogne': { nom: 'Boulogne-sur-Mer', lat: 50.716, lon: 1.611, tgv: true, parisMin: 140, depuisParis: 'Paris Nord' },
+  'etaples': { nom: 'Étaples – Le Touquet', lat: 50.514, lon: 1.640, tgv: true, parisMin: 150, depuisParis: 'Paris Nord' },
+  'rang': { nom: 'Rang-du-Fliers – Verton', lat: 50.418, lon: 1.646, tgv: true, parisMin: 150, depuisParis: 'Paris Nord' },
+  'noyelles': { nom: 'Noyelles-sur-Mer', lat: 50.185, lon: 1.708, tgv: false, parisMin: 140, depuisParis: 'Paris Nord' },
+  'caen': { nom: 'Caen', lat: 49.176, lon: -0.348, tgv: false, parisMin: 130, depuisParis: 'Paris Saint-Lazare' },
+  'coutances': { nom: 'Coutances', lat: 49.047, lon: -1.437, tgv: false, parisMin: 190, depuisParis: 'Paris Saint-Lazare' },
+  'cherbourg': { nom: 'Cherbourg', lat: 49.634, lon: -1.623, tgv: false, parisMin: 190, depuisParis: 'Paris Saint-Lazare' },
+  'saint-malo': { nom: 'Saint-Malo', lat: 48.647, lon: -2.006, tgv: true, parisMin: 150, depuisParis: 'Paris Montparnasse' },
+  'lamballe': { nom: 'Lamballe', lat: 48.468, lon: -2.517, tgv: true, parisMin: 150, depuisParis: 'Paris Montparnasse' },
+  'morlaix': { nom: 'Morlaix', lat: 48.578, lon: -3.832, tgv: true, parisMin: 205, depuisParis: 'Paris Montparnasse' },
+  'brest': { nom: 'Brest', lat: 48.388, lon: -4.479, tgv: true, parisMin: 215, depuisParis: 'Paris Montparnasse' },
+  'quimper': { nom: 'Quimper', lat: 47.995, lon: -4.095, tgv: true, parisMin: 220, depuisParis: 'Paris Montparnasse' },
+  'auray': { nom: 'Auray', lat: 47.680, lon: -2.999, tgv: true, parisMin: 175, depuisParis: 'Paris Montparnasse' },
+  'la-baule': { nom: 'La Baule-Escoublac', lat: 47.287, lon: -2.390, tgv: true, parisMin: 175, depuisParis: 'Paris Montparnasse' },
+  'saint-nazaire': { nom: 'Saint-Nazaire', lat: 47.286, lon: -2.212, tgv: true, parisMin: 160, depuisParis: 'Paris Montparnasse' },
+  'challans': { nom: 'Challans', lat: 46.846, lon: -1.877, tgv: false, parisMin: 200, depuisParis: 'Paris Montparnasse' },
+  'la-rochelle': { nom: 'La Rochelle', lat: 46.153, lon: -1.145, tgv: true, parisMin: 175, depuisParis: 'Paris Montparnasse' },
+  'chatelaillon': { nom: 'Châtelaillon-Plage', lat: 46.075, lon: -1.088, tgv: false, parisMin: 190, depuisParis: 'Paris Montparnasse' },
+  'rochefort': { nom: 'Rochefort', lat: 45.946, lon: -0.962, tgv: false, parisMin: 195, depuisParis: 'Paris Montparnasse' },
+  'bordeaux': { nom: 'Bordeaux Saint-Jean', lat: 44.826, lon: -0.556, tgv: true, parisMin: 125, depuisParis: 'Paris Montparnasse' },
+  'leucate': { nom: 'Leucate – La Franqui', lat: 42.915, lon: 3.031, tgv: false, parisMin: 300, depuisParis: 'Paris Gare de Lyon' },
+  'narbonne': { nom: 'Narbonne', lat: 43.190, lon: 3.006, tgv: true, parisMin: 265, depuisParis: 'Paris Gare de Lyon' },
+  'montpellier': { nom: 'Montpellier Saint-Roch', lat: 43.605, lon: 3.880, tgv: true, parisMin: 200, depuisParis: 'Paris Gare de Lyon' },
+  'grau-du-roi': { nom: 'Le Grau-du-Roi', lat: 43.538, lon: 4.137, tgv: false, parisMin: 250, depuisParis: 'Paris Gare de Lyon' },
+  'arles': { nom: 'Arles', lat: 43.684, lon: 4.632, tgv: false, parisMin: 240, depuisParis: 'Paris Gare de Lyon' },
+  'hyeres': { nom: 'Hyères', lat: 43.117, lon: 6.124, tgv: true, parisMin: 270, depuisParis: 'Paris Gare de Lyon' }
 };
 
 // Aéroports desservis depuis Paris-Orly en vol intérieur. `volMin` : durée du vol seul. L'avion n'est
@@ -127,29 +127,3 @@ export const VILLES = {
   grenoble: { nom: 'Grenoble', lat: 45.191, lon: 5.715, tgv: true },
   strasbourg: { nom: 'Strasbourg', lat: 48.585, lon: 7.734, tgv: true }
 };
-
-// Contour simplifié de la France métropolitaine, [lon, lat], tracé à la main : il sert de décor à la
-// carte, pas de référence géographique. La Corse à part.
-export const CONTOUR_FRANCE = [
-  [2.37, 51.05], [2.55, 51.09], [2.9, 50.70], [3.2, 50.72], [3.7, 50.32], [4.2, 50.28], [4.85, 50.15],
-  [4.83, 49.95], [5.4, 49.62], [5.82, 49.55], [6.36, 49.47], [7.05, 49.12], [7.63, 49.05], [8.22, 48.97],
-  [7.80, 48.50], [7.55, 47.95], [7.59, 47.58], [7.0, 47.45], [6.9, 47.35], [6.45, 47.0], [6.1, 46.6],
-  [6.12, 46.23], [6.8, 46.40], [6.86, 45.83], [7.15, 45.25], [6.62, 45.10], [7.0, 44.85], [6.85, 44.50],
-  [7.0, 44.20], [7.50, 43.78], [7.25, 43.68], [7.0, 43.55], [6.65, 43.27], [6.2, 43.10], [5.9, 43.08],
-  [5.4, 43.20], [5.0, 43.33], [4.85, 43.35], [4.55, 43.37], [4.2, 43.47], [3.9, 43.52], [3.5, 43.28],
-  [3.2, 43.18], [3.05, 42.95], [3.04, 42.75], [3.17, 42.43], [2.7, 42.40], [1.75, 42.50], [0.7, 42.85],
-  [0.0, 42.70], [-0.75, 42.95], [-1.45, 43.05], [-1.78, 43.37], [-1.55, 43.50], [-1.43, 43.85],
-  [-1.25, 44.50], [-1.25, 44.65], [-1.15, 45.55], [-1.25, 45.75], [-1.15, 46.0], [-1.15, 46.16],
-  [-1.45, 46.35], [-1.80, 46.50], [-2.15, 46.85], [-2.0, 47.05], [-2.2, 47.15], [-2.55, 47.30],
-  [-2.85, 47.50], [-3.10, 47.50], [-3.50, 47.70], [-3.90, 47.85], [-4.37, 47.80], [-4.55, 48.0],
-  [-4.73, 48.04], [-4.30, 48.10], [-4.55, 48.25], [-4.78, 48.35], [-4.75, 48.55], [-4.55, 48.63],
-  [-4.0, 48.72], [-3.45, 48.82], [-3.0, 48.80], [-2.75, 48.55], [-2.32, 48.68], [-2.0, 48.65],
-  [-1.51, 48.64], [-1.57, 48.85], [-1.60, 49.20], [-1.85, 49.65], [-1.94, 49.72], [-1.60, 49.65],
-  [-1.27, 49.68], [-1.15, 49.35], [-0.60, 49.35], [-0.25, 49.30], [0.23, 49.42], [0.10, 49.50],
-  [0.20, 49.70], [0.65, 49.87], [1.10, 49.93], [1.40, 50.07], [1.55, 50.25], [1.60, 50.50],
-  [1.58, 50.72], [1.60, 50.87], [1.85, 50.95]
-];
-
-export const CONTOUR_CORSE = [
-  [9.40, 43.0], [9.55, 42.70], [9.40, 42.0], [9.25, 41.40], [8.85, 41.60], [8.60, 42.0], [8.60, 42.40], [9.10, 42.70]
-];

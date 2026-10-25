@@ -3,10 +3,10 @@
 
 import {
   REGLAGES_DEFAUT, lireHeures, resumeHeures, optionsTrajet, classer, weekendsPourSpot, samedisDisponibles,
-  joursDuWeekend, fiabilite, confiance, joursEntre, combi, cardinal, liens, distanceKm, choisirMode, enSaison, NIVEAUX, ventA, resumeJour, extremesMaree, heureMinute
+  joursDuWeekend, fiabilite, confiance, joursEntre, combi, cardinal, liens, distanceKm, choisirMode, enSaison, NIVEAUX, ventA, resumeJour, extremesMaree, heureMinute, ajouterJours
 } from './engine.js';
 import { SPOTS, GARES, AEROPORTS, COMPAGNIES, VILLES, SOURCE_SPOTS } from './spots.js';
-import { chargerPrevisions, chargerRoutes, chargerCarburant } from './meteo.js';
+import { chargerPrevisions, chargerRoutes, chargerCarburant, chargerItineraire } from './meteo.js';
 import { Carte, couleurVent } from './carte.js';
 
 const $ = s => document.querySelector(s);
@@ -77,9 +77,9 @@ function plageDates(jours) {
 }
 const pointsFiab = n => `<span class="points-fiab" title="Fiabilité de la prévision">${[1, 2, 3, 4].map(k => `<i class="${k <= n ? 'on' : ''}"></i>`).join('')}</span>`;
 // Un seul indicateur de confiance, en positif. Pas de rouge : une prévision lointaine n'est pas une
-// alerte, c'est une tendance — on dit quand la reconfirmer.
+// alerte, c'est une tendance — on dit quand la reconfirmer. Vert, ambre ou violet selon le niveau.
 const confianceDe = (resume, samedi) => confiance(joursEntre(aujourdhui(), samedi), resume?.accord, samedi, aujourdhui());
-const badgeConfiance = c => `<span class="badge ${c.niveau === 3 ? '' : 'gris'}">${pointsFiab(c.niveau + 1)} ${c.libelle}${c.conseil ? ' · ' + c.conseil : ''}</span>`;
+const badgeConfiance = c => `<span class="badge ${c.niveau === 3 ? '' : c.niveau === 2 ? 'ambre' : 'violet'}">${pointsFiab(c.niveau + 1)} ${c.libelle}${c.conseil ? ' · ' + c.conseil : ''}</span>`;
 const detailAccord = a => (a.ecart != null ? `${a.libelle} : ${a.ecart.toFixed(1)} nœuds d'écart moyen autour de la médiane (${a.n} modèles)` : a.libelle);
 const coefDe = date => etat.coef?.[date];
 const libCoef = c => (c == null ? '' : `coef. ~${c}${c >= 95 ? ' · vives-eaux' : c <= 45 ? ' · mortes-eaux' : ''}`);
@@ -202,6 +202,12 @@ function majCarte() {
   });
   carte.poserVents(vents);
   carte.poserSpots(points);
+  // Fiche ouverte : la rose du spot suit le vent de l'heure choisie.
+  const ouvert = etat.ouvert && spotParId(etat.ouvert);
+  if (ouvert) {
+    const k = tousLesSpots().indexOf(ouvert);
+    carte.poserOrientation(ouvert, { dir: vents[k]?.dir, kn: vents[k]?.kn });
+  } else carte.poserOrientation(null);
   $('#lib-heure').textContent = instant
     ? `${dateCourte(instant.t.slice(0, 10)).replace('.', '')} ${+instant.t.slice(11, 13)} h` : '—';
 }
@@ -394,30 +400,77 @@ function graphJour(lignes, r) {
     ${barres}</svg>`;
 }
 
+// Le dernier kilomètre en une étape lisible, avec la raison du choix taxi / location.
+function etapeFin(fin, depuis, spot) {
+  if (fin.mode === 'à pied') return `<li>${echapper(depuis)} → ${echapper(spot.nom)} à pied<small>${Math.round(fin.km * 1000 / 50) * 50} m, ~${Math.round(fin.minutes)} min</small></li>`;
+  const pourquoi = fin.mode === 'taxi'
+    ? `deux trajets en taxi ~${euros(fin.taxi)}, moins qu'une location (${euros(fin.location)})`
+    : `une location ${euros(fin.location)}, moins que deux trajets en taxi (~${euros(fin.taxi)})`;
+  return `<li>${echapper(depuis)} → ${echapper(spot.nom)} en ${fin.mode}, ${Math.round(fin.km)} km, ~${duree(fin.minutes)}<small>${pourquoi}</small></li>`;
+}
+
 function blocOption(o, retenu) {
   if (!o.possible) {
     return `<div class="option impossible"><span class="rond-mode">${ICONES[o.mode]}</span><span class="t">${NOM_MODE[o.mode]}</span><span></span><span class="d">${echapper(o.raison)}</span></div>`;
   }
   const d = o.detail;
-  let detail = '', prix = `~${euros(o.cout)}<small>aller-retour</small>`;
+  const spot = spotParId(etat.ouvert);
+  const ville = VILLES[etat.r.ville];
+  const vendredi = dateCourte(ajouterJours(etat.samedi, -1));
+  let etapes = '', prix = `~${euros(o.cout)}<small>aller-retour</small>`;
   if (o.mode === 'voiture') {
-    detail = `${Math.round(d.km)} km${d.estime ? ' (estimés à vol d\'oiseau)' : ''} · carburant ${euros(d.carburant)}${d.peage ? ` · péages ~${euros(d.peage)}` : ''}`;
+    etapes = `<li>${echapper(ville.nom)} → ${echapper(spot.nom)}, ${Math.round(d.km)} km, ~${duree(o.minutes)}
+        <small>${d.estime ? 'distance estimée à vol d\'oiseau (itinéraire indisponible)' : 'par la route (OSRM), circulation comprise à +10 %'}</small></li>
+      <li>Carburant ${euros(d.carburant)}<small>${String(d.conso).replace('.', ',')} L/100 km à ${d.prixLitre.toFixed(2).replace('.', ',')} €/L, aller et retour</small></li>
+      ${d.peage ? `<li>Péages ~${euros(d.peage)}<small>estimés à 0,10 €/km sur les trois quarts du trajet</small></li>` : '<li>Pas d\'autoroute supposée sous 80 km</li>'}`;
   } else if (o.mode === 'train') {
     prix = `${euros(o.coutMin)} – ${euros(o.coutMax)}<small>aller-retour</small>`;
-    detail = `Jusqu'à ${echapper(d.gare)} (${duree(d.minutesTrain)}${d.dureeConnue ? '' : ', estimé'}), puis ${d.fin.mode}${d.fin.mode === 'à pied' ? '' : ` ${Math.round(d.fin.km)} km, ~${euros(d.fin.cout)}`}`;
+    etapes = `<li>${echapper(d.depart)} → ${echapper(d.gare)}, ~${duree(d.minutesTrain)}
+        <small>${d.dureeConnue ? 'durée habituelle' : 'durée estimée à la distance'}${d.correspondance ? ' · correspondance probable (gare sans TGV)' : ''} · départ ${vendredi} soir</small></li>
+      ${etapeFin(d.fin, d.gare, spot)}`;
   } else {
-    detail = `Orly → ${echapper(d.aeroport)} · billet ${euros(d.billet)} · sac ${echapper(d.compagnie)} ${d.sac ? euros(d.sac) : 'inclus'} · puis ${d.fin.mode} ${Math.round(d.fin.km)} km${d.fin.cout ? `, ~${euros(d.fin.cout)}` : ''}`;
+    etapes = `<li>${echapper(ville.nom)} → Orly, ~${duree(d.acces)}</li>
+      <li>Orly → ${echapper(d.aeroport)}, ${duree(d.vol)} de vol<small>enregistrement du sac ~${duree(d.avant)}, sortie ~${duree(d.apres)} · billet ${euros(d.billet)}, sac ${echapper(d.compagnie)} ${d.sac ? euros(d.sac) : 'inclus'}</small></li>
+      ${etapeFin(d.fin, d.aeroport, spot)}`;
   }
-  const spot = spotParId(etat.ouvert);
-  const l = liens(spot, o, VILLES[etat.r.ville], etat.samedi);
+  const l = liens(spot, o, ville, etat.samedi);
   const dehors = o.minutes > etat.r.trajetMaxH * 60 ? 'au-delà de ton temps max' : o.cout > etat.r.budgetMax ? 'au-delà de ton budget' : '';
   return `<div class="option ${retenu ? 'retenu' : ''}">
     <span class="rond-mode">${ICONES[o.mode]}</span>
     <span class="t">${NOM_MODE[o.mode]} · ${duree(o.minutes)}${retenu ? ' <span class="badge">retenu</span>' : dehors ? ` <span class="badge gris">${dehors}</span>` : ''}</span>
     <span class="prix">${prix}</span>
-    <span class="d">${detail}</span>
-    ${l.reserver ? `<a href="${l.reserver}" target="_blank" rel="noopener">${o.mode === 'voiture' ? 'Itinéraire' : 'Voir les vrais prix'} ↗</a>` : ''}
+    <ol class="etapes">${etapes}</ol>
+    <span class="actions"><button data-action="voir-trajet" data-mode="${o.mode}">Voir sur la carte</button>
+      ${l.reserver ? `<a href="${l.reserver}" target="_blank" rel="noopener">${o.mode === 'voiture' ? 'Itinéraire Google Maps' : 'Voir les vrais prix'} ↗</a>` : ''}</span>
   </div>`;
+}
+
+// Montre un trajet sur la carte : le tracé routier pour la voiture, la gare ou l'aéroport et le
+// dernier kilomètre pour les autres. La carte se cadre sur tout le trajet.
+async function voirTrajet(mode) {
+  const spot = spotParId(etat.ouvert);
+  const ev = evaluer(spot, etat.jours);
+  const o = ev.options.find(x => x.mode === mode && x.possible);
+  if (!o) return;
+  const ville = VILLES[etat.r.ville];
+  carte.poserItineraire(null);
+  if (mode === 'voiture') {
+    carte.poserLieux(spot, [{ ...ville, nom: ville.nom, type: 'ville' }]);
+    try {
+      const { valeur } = await chargerItineraire(ville, spot);
+      carte.poserItineraire(valeur);
+      carte.zoomer(valeur.filter((_, i) => i % 10 === 0).map(([lon, lat]) => ({ lon, lat })).concat([spot]), 25);
+    } catch {
+      toast('Itinéraire indisponible : ligne droite affichée.');
+      carte.poserItineraire([[ville.lon, ville.lat], [spot.lon, spot.lat]]);
+      carte.zoomer([ville, spot], 25);
+    }
+  } else {
+    const lieu = mode === 'train' ? { ...o.detail.gareLieu, nom: o.detail.gare, type: 'train' } : { ...o.detail.aeroLieu, nom: o.detail.aeroport, type: 'avion' };
+    carte.poserLieux(spot, [lieu]);
+    carte.zoomer([spot, lieu], 12);
+  }
+  $('#carte').scrollIntoView?.({ block: 'nearest', behavior: calme() ? 'auto' : 'smooth' });
 }
 
 function rendreFiche(id) {
@@ -531,53 +584,10 @@ function rendre() {
 }
 
 // ------------------------------------------------------------------------------------------------
-// Feuille : trois crans sur téléphone (aperçu, moitié, plein écran), tirée au doigt.
+// Mise en page : sur très grand écran, les réglages restent ouverts dans la colonne de droite.
 
-const feuille = $('#feuille');
-const grandEcran = () => matchMedia('(min-width: 900px)').matches;
-let cran = 'bas';
-
-function positions() {
-  const h = feuille.offsetHeight;
-  return { bas: Math.max(0, h - 200), milieu: Math.round(h * 0.42), haut: 0 };
-}
-function poserCran(c) {
-  cran = c;
-  feuille.style.setProperty('--y', positions()[c] + 'px');
-}
-
-(function gestes() {
-  const tete = $('#tete');
-  let y0 = null, depart = 0, t0 = 0, bouge = false;
-  tete.addEventListener('pointerdown', e => {
-    if (grandEcran() || e.target.closest('button, a')) return;
-    y0 = e.clientY; depart = positions()[cran]; t0 = performance.now(); bouge = false;
-    feuille.classList.add('glisse');
-    tete.setPointerCapture(e.pointerId);
-  });
-  tete.addEventListener('pointermove', e => {
-    if (y0 == null) return;
-    const dy = e.clientY - y0;
-    if (Math.abs(dy) > 4) bouge = true;
-    const y = Math.max(0, depart + dy);
-    feuille.style.setProperty('--y', y + 'px');
-  });
-  const fin = e => {
-    if (y0 == null) return;
-    feuille.classList.remove('glisse');
-    const dy = e.clientY - y0, v = dy / Math.max(1, performance.now() - t0);
-    y0 = null;
-    if (!bouge) { poserCran(cran === 'bas' ? 'milieu' : cran === 'milieu' ? 'haut' : 'bas'); return; }
-    const p = positions(), y = Math.max(0, depart + dy);
-    // Un geste rapide va au cran suivant ; sinon, le cran le plus proche.
-    let c = Object.entries(p).sort((a, b) => Math.abs(a[1] - y) - Math.abs(b[1] - y))[0][0];
-    if (Math.abs(v) > 0.6) c = v > 0 ? (cran === 'haut' ? 'milieu' : 'bas') : (cran === 'bas' ? 'milieu' : 'haut');
-    poserCran(c);
-  };
-  tete.addEventListener('pointerup', fin);
-  tete.addEventListener('pointercancel', fin);
-  addEventListener('resize', () => poserCran(cran));
-})();
+const reglagesFixes = () => matchMedia('(min-width: 1200px)').matches;
+matchMedia('(min-width: 1200px)').addEventListener?.('change', e => { if (e.matches) rendreReglages(); });
 
 // ------------------------------------------------------------------------------------------------
 // Réglages
@@ -590,7 +600,6 @@ function rendreReglages() {
       ${aide ? `<div class="aide">${aide}</div>` : ''}</div>`;
   const bascule = (groupe, valeur, lib, actif) => `<button class="bascule" data-groupe="${groupe}" data-valeur="${valeur}" aria-pressed="${actif}">${lib}</button>`;
   const prix = etat.carburant?.[r.carburant];
-  const theme = document.documentElement.dataset.theme || 'auto';
   $('#reglages .panneau').innerHTML = `
     <div class="fiche-tete"><h3 class="grow" style="margin-left:6px">Réglages</h3><button class="rond" data-action="fermer-reglages" aria-label="Fermer">${ICONES.fermer}</button></div>
     <div class="champ"><label for="r-ville">Départ</label>
@@ -622,8 +631,6 @@ function rendreReglages() {
       <input type="number" data-reglage="billetAvion" min="30" max="900" step="10" value="${r.billetAvion}" aria-label="Billet aller-retour en euros">
       <select data-reglage="compagnie">${Object.entries(COMPAGNIES).map(([k, c]) => `<option value="${k}" ${k === r.compagnie ? 'selected' : ''}>${c.nom} — sac ${c.sac ? c.sac + ' €' : 'inclus'}</option>`).join('')}</select></div>
       <div class="aide">Billet aller-retour estimé. ${echapper(COMPAGNIES[r.compagnie]?.note || '')}</div></div>
-    <div class="champ"><span class="lab">Thème</span><div class="bascules">
-      ${bascule('theme', 'auto', 'Auto', theme === 'auto')}${bascule('theme', 'light', 'Clair', theme === 'light')}${bascule('theme', 'dark', 'Sombre', theme === 'dark')}</div></div>
     <div class="champ"><span class="lab">Favoris</span><div class="bascules">
       ${tousLesSpots().map(s => `<button class="bascule" data-groupe="favori" data-valeur="${s.id}" aria-pressed="${r.favoris.includes(s.id)}">${echapper(s.nom)}</button>`).join('')}</div></div>
     <div class="champ"><span class="lab">Ajouter un spot</span>
@@ -652,13 +659,6 @@ function reglageChange(recharger = false) {
     if (recharger) await chargerTout(false);
     else rendre();
   }, 120);
-}
-
-function appliquerTheme(t) {
-  if (t === 'auto') delete document.documentElement.dataset.theme;
-  else document.documentElement.dataset.theme = t;
-  try { localStorage.setItem('coup-de-vent:theme', t); } catch { /* rien */ }
-  carte?.relancer();
 }
 
 function ajouterSpot() {
@@ -695,12 +695,12 @@ document.addEventListener('click', e => {
     if (groupe === 'niveau') etat.r.niveau = valeur;
     if (groupe === 'mode') etat.r.modes[valeur] = !etat.r.modes[valeur];
     if (groupe === 'favori') etat.r.favoris = etat.r.favoris.includes(valeur) ? etat.r.favoris.filter(x => x !== valeur) : [...etat.r.favoris, valeur];
-    if (groupe === 'theme') appliquerTheme(valeur);
     rendreReglages();
-    if (groupe !== 'theme') reglageChange();
+    reglageChange();
   } else {
     const a = el.dataset.action;
-    if (a === 'retour') { etat.ouvert = null; $('#corps').innerHTML = ''; rendre(); }
+    if (a === 'retour') { etat.ouvert = null; $('#corps').innerHTML = ''; carte.zoomer(null); carte.poserLieux(null); carte.poserItineraire(null); rendre(); }
+    if (a === 'voir-trajet') voirTrajet(el.dataset.mode);
     if (a === 'favori') {
       const id = etat.ouvert;
       etat.r.favoris = etat.r.favoris.includes(id) ? etat.r.favoris.filter(x => x !== id) : [...etat.r.favoris, id];
@@ -715,9 +715,10 @@ document.addEventListener('click', e => {
 });
 
 function ouvrirSpot(id) {
+  const zoomer = etat.ouvert !== id;
   etat.ouvert = id;
+  if (zoomer) { carte.poserLieux(null); carte.poserItineraire(null); carte.zoomer([spotParId(id)]); }
   rendre();
-  if (!grandEcran() && cran !== 'haut') poserCran('milieu');
 }
 
 document.addEventListener('input', e => {
@@ -762,11 +763,11 @@ async function chargerTout(premiere) {
   if (routes.status !== 'fulfilled' && !premiere) toast('Routes indisponibles : distances estimées à vol d\'oiseau.');
   etat.carburant = carbu.status === 'fulfilled' ? carbu.value.valeur : null;
   rendre();
+  if (reglagesFixes() && !$('#reglages').contains(document.activeElement)) rendreReglages();
 }
 
-try { const t = localStorage.getItem('coup-de-vent:theme'); if (t && t !== 'auto') document.documentElement.dataset.theme = t; } catch { /* rien */ }
 carte = new Carte($('#carte'), { surSpot: ouvrirSpot });
 $('#lecture').innerHTML = ICONES.lecture;
 chargement();
-poserCran('bas');
+if (reglagesFixes()) rendreReglages();
 chargerTout(true);

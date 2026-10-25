@@ -1,9 +1,10 @@
-// La carte : contour de la France en SVG, spots, et un champ de vent animé dessiné dans un canvas.
+// La carte : côte de la France en SVG, spots, et un champ de vent animé dessiné dans un canvas.
+// Toucher un spot zoome dessus et y dessine l'orientation de la plage : d'où le vent doit venir.
 // Le mouvement porte la donnée : chaque particule suit le vent prévu à l'heure choisie, interpolé
 // entre les spots (pondération inverse du carré de la distance). Sa vitesse suit la force du vent,
 // sa couleur aussi. Avec « réduire les animations », le champ devient une grille de flèches fixes.
 
-import { CONTOUR_FRANCE, CONTOUR_CORSE } from './spots.js';
+import { COTE } from './cote.js';
 
 const BORNES = { ouest: -5.6, est: 9.9, sud: 41.1, nord: 51.4 };
 const COS = Math.cos(46.5 * Math.PI / 180);
@@ -14,6 +15,8 @@ export function projeter(lon, lat) {
 }
 const LARGEUR = (BORNES.est - BORNES.ouest) * COS * 100;
 const HAUTEUR = (BORNES.nord - BORNES.sud) * 100;
+
+const FRANCE = { x: 0, y: 0, w: LARGEUR, h: HAUTEUR };
 
 function chemin(points) {
   return points.map(([lon, lat], i) => (i ? 'L' : 'M') + projeter(lon, lat).map(v => v.toFixed(1)).join(' ')).join('') + 'Z';
@@ -54,11 +57,16 @@ export class Carte {
         </filter>
       </defs>
       <g class="terre">
-        <path class="contour-lueur" d="${chemin(CONTOUR_FRANCE)} ${chemin(CONTOUR_CORSE)}"/>
-        <path class="contour" d="${chemin(CONTOUR_FRANCE)} ${chemin(CONTOUR_CORSE)}"/>
+        <path class="contour-lueur" d="${COTE.map(chemin).join(' ')}"/>
+        <path class="contour" d="${COTE.map(chemin).join(' ')}"/>
       </g>
+      <g class="itineraire"></g>
+      <g class="lieux"></g>
+      <g class="rose"></g>
       <g class="spots"></g>`;
     this.groupeSpots = this.svg.querySelector('.spots');
+    this.groupeRose = this.svg.querySelector('.rose');
+    this.vue = { ...FRANCE };
 
     this.canvas = document.createElement('canvas');
     this.canvas.className = 'carte-vent';
@@ -82,19 +90,117 @@ export class Carte {
     this.canvas.height = r.height * dpr;
     this.canvas.style.width = r.width + 'px';
     this.canvas.style.height = r.height + 'px';
-    const echelle = Math.min(r.width / LARGEUR, r.height / HAUTEUR);
-    this.cadre = {
-      echelle: echelle * dpr,
-      dx: (r.width - LARGEUR * echelle) / 2 * dpr,
-      dy: (r.height - HAUTEUR * echelle) / 2 * dpr,
-      l: this.canvas.width, h: this.canvas.height, dpr
-    };
-    // Les spots se dessinent en pixels d'écran, quelle que soit la taille de la carte.
-    this.k = 1 / echelle;
-    this.groupeSpots.querySelectorAll('.spot').forEach(n => n.setAttribute('transform', `translate(${n.dataset.xy}) scale(${this.k})`));
+    this.taille = { l: r.width, h: r.height, dpr };
+    this.appliquerVue();
     const n = Math.round(Math.min(1600, (r.width * r.height) / 520));
     this.particules = Array.from({ length: n }, () => this.naitre({}, true));
     this.relancer();
+  }
+
+  // La vue est un rectangle en coordonnées carte ; le SVG est en « meet » : on recalcule où il tombe
+  // dans le conteneur pour caler le canvas, et l'échelle qui garde spots et rose en pixels d'écran.
+  appliquerVue() {
+    if (!this.taille) return;
+    const { l, h, dpr } = this.taille, v = this.vue;
+    this.svg.setAttribute('viewBox', `${v.x.toFixed(2)} ${v.y.toFixed(2)} ${v.w.toFixed(2)} ${v.h.toFixed(2)}`);
+    const echelle = Math.min(l / v.w, h / v.h);
+    this.cadre = {
+      echelle: echelle * dpr,
+      dx: ((l - v.w * echelle) / 2 - v.x * echelle) * dpr,
+      dy: ((h - v.h * echelle) / 2 - v.y * echelle) * dpr,
+      l: this.canvas.width, h: this.canvas.height, dpr
+    };
+    this.k = 1 / echelle;
+    this.groupeSpots.querySelectorAll('.spot').forEach(n => n.setAttribute('transform', `translate(${n.dataset.xy}) scale(${this.k})`));
+    this.svg.querySelectorAll('.lieu').forEach(n => n.setAttribute('transform', `translate(${n.dataset.xy}) scale(${this.k})`));
+    if (this.groupeRose.dataset.xy) this.groupeRose.setAttribute('transform', `translate(${this.groupeRose.dataset.xy}) scale(${this.k})`);
+  }
+
+  // Zoome sur une liste de points [{ lon, lat }] (le spot, sa gare…), avec une marge ; `null` revient
+  // à la France entière. Animé, sauf si le téléphone demande moins de mouvement.
+  zoomer(points, margeKm = 18) {
+    let cible = { ...FRANCE };
+    if (points?.length) {
+      const xy = points.map(p => projeter(p.lon, p.lat));
+      const m = margeKm / 111 * 100;
+      const x0 = Math.min(...xy.map(p => p[0])) - m, x1 = Math.max(...xy.map(p => p[0])) + m;
+      const y0 = Math.min(...xy.map(p => p[1])) - m, y1 = Math.max(...xy.map(p => p[1])) + m;
+      cible = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+    }
+    this.zoome = Boolean(points?.length);
+    cancelAnimationFrame(this.animZoom);
+    const depart = { ...this.vue }, t0 = performance.now(), duree = this.calmes.matches ? 0 : 750;
+    const pas = t => {
+      const k = duree ? Math.min(1, (t - t0) / duree) : 1;
+      const e = k < 0.5 ? 4 * k ** 3 : 1 - (-2 * k + 2) ** 3 / 2;
+      // Interpolation en logarithme de la taille : le zoom paraît régulier, pas brutal à la fin.
+      const w = Math.exp(Math.log(depart.w) + (Math.log(cible.w) - Math.log(depart.w)) * e);
+      const h = Math.exp(Math.log(depart.h) + (Math.log(cible.h) - Math.log(depart.h)) * e);
+      const cx = depart.x + depart.w / 2 + ((cible.x + cible.w / 2) - (depart.x + depart.w / 2)) * e;
+      const cy = depart.y + depart.h / 2 + ((cible.y + cible.h / 2) - (depart.y + depart.h / 2)) * e;
+      this.vue = { x: cx - w / 2, y: cy - h / 2, w, h };
+      this.appliquerVue();
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      if (k < 1) this.animZoom = requestAnimationFrame(pas);
+      else { if (this.derniersSpots) this.poserSpots(this.derniersSpots); if (this.calmes.matches) this.dessinerFige(); }
+    };
+    this.animZoom = requestAnimationFrame(pas);
+  }
+
+  // L'orientation d'un spot, dessinée sur lui : en vert les directions d'où le vent peut venir,
+  // en rouge celles qui l'éloignent du bord (side-off, offshore), et la flèche du vent prévu.
+  poserOrientation(spot, vent) {
+    const g = this.groupeRose;
+    if (!spot) { g.innerHTML = ''; delete g.dataset.xy; return; }
+    const [x, y] = projeter(spot.lon, spot.lat);
+    g.dataset.xy = `${x.toFixed(2)} ${y.toFixed(2)}`;
+    g.setAttribute('transform', `translate(${g.dataset.xy}) scale(${this.k ?? 1})`);
+    const R = 74;
+    const pt = (cap, r) => [Math.sin(cap * Math.PI / 180) * r, -Math.cos(cap * Math.PI / 180) * r];
+    const secteur = (de, a, cls) => {
+      const ouverture = ((a - de) % 360 + 360) % 360 || 360;
+      if (ouverture >= 359.9) return `<circle r="${R}" class="${cls}"/>`;
+      const [x1, y1] = pt(de, R), [x2, y2] = pt(a, R);
+      return `<path class="${cls}" d="M0 0 L${x1.toFixed(1)} ${y1.toFixed(1)} A${R} ${R} 0 ${ouverture > 180 ? 1 : 0} 1 ${x2.toFixed(1)} ${y2.toFixed(1)} Z"/>`;
+    };
+    let html = `<circle r="${R}" class="rose-non"/>`;
+    if (spot.secteurs) html += spot.secteurs.map(([de, a]) => secteur(de, a, 'rose-ok')).join('');
+    else {
+      html += secteur(spot.face - 100, spot.face + 100, 'rose-ok');
+      const [lx, ly] = pt(spot.face, R + 14);
+      html += `<line class="rose-large" x1="0" y1="0" x2="${(lx * 0.86).toFixed(1)}" y2="${(ly * 0.86).toFixed(1)}"/>
+        <text class="rose-lib" x="${lx.toFixed(1)}" y="${(ly + 4).toFixed(1)}">large</text>`;
+    }
+    if (vent?.dir != null) {
+      // Le vent vient de `dir` : la flèche part de ce côté et pointe vers le spot.
+      const [ax, ay] = pt(vent.dir, R + 6), [bx, by] = pt(vent.dir, 16);
+      html += `<line class="rose-vent" x1="${ax.toFixed(1)}" y1="${ay.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="${couleurVent(vent.kn ?? 0, 1, this.clair)}"/>
+        <path class="rose-pointe" fill="${couleurVent(vent.kn ?? 0, 1, this.clair)}" transform="translate(${bx.toFixed(1)} ${by.toFixed(1)}) rotate(${vent.dir + 180})" d="M0 6 L-6 -6 L6 -6 Z"/>`;
+    }
+    g.innerHTML = html;
+  }
+
+  // Les lieux du trajet sur la carte zoomée : gare, aéroport, ville de départ — [{ lon, lat, nom, type }].
+  // Un trait pointillé relie chacun au spot : c'est le dernier kilomètre.
+  poserLieux(spot, lieux) {
+    const g = this.svg.querySelector('.lieux');
+    if (!spot || !lieux?.length) { g.innerHTML = ''; return; }
+    const [sx, sy] = projeter(spot.lon, spot.lat);
+    g.innerHTML = lieux.map(l => {
+      const [x, y] = projeter(l.lon, l.lat);
+      // La ville de départ a déjà son tracé routier : pas de pointillé par-dessus.
+      return `${l.type === 'ville' ? '' : `<line class="liaison" x1="${x.toFixed(2)}" y1="${y.toFixed(2)}" x2="${sx.toFixed(2)}" y2="${sy.toFixed(2)}"/>`}
+        <g class="lieu ${l.type}" transform="translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(${this.k ?? 1})" data-xy="${x.toFixed(2)} ${y.toFixed(2)}">
+          <rect x="-7" y="-7" width="14" height="14" rx="4"/><text y="-12">${l.nom.replace(/[<&]/g, '')}</text></g>`;
+    }).join('');
+  }
+
+  // L'itinéraire en voiture, [[lon, lat], …], ou rien.
+  poserItineraire(points) {
+    const g = this.svg.querySelector('.itineraire');
+    g.innerHTML = points?.length > 1
+      ? `<path class="trace" d="${points.map(([lon, lat], i) => (i ? 'L' : 'M') + projeter(lon, lat).map(v => v.toFixed(2)).join(' ')).join('')}"/>`
+      : '';
   }
 
   naitre(p, ageAleatoire = false) {
@@ -197,6 +303,7 @@ export class Carte {
 
   // spots : [{ id, nom, lon, lat, etat: 'top' | 'ok' | 'ecarte', rang, kn, dir, choisi }]
   poserSpots(spots) {
+    this.derniersSpots = spots;
     const g = this.groupeSpots;
     const existants = new Map([...g.children].map(n => [n.dataset.id, n]));
     spots.forEach(s => {
@@ -228,7 +335,7 @@ export class Carte {
     // nom déjà posé est omis — sur la Côte d'Opale, cinq spots tiennent dans un centimètre.
     const poses = [];
     const ecart = 40 * (this.k ?? 1);
-    spots.filter(s => s.etat === 'top' || s.choisi)
+    spots.filter(s => this.zoome || s.etat === 'top' || s.choisi)
       .sort((a, b) => (b.choisi - a.choisi) || ((a.rang ?? 99) - (b.rang ?? 99)))
       .forEach(s => {
         const [x, y] = projeter(s.lon, s.lat);

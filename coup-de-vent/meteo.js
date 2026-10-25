@@ -136,3 +136,14 @@ export async function chargerCarburant() {
     return p;
   });
 }
+
+// Le tracé de l'itinéraire en voiture, de la ville de départ au spot : [[lon, lat], …], simplifié
+// par OSRM (quelques centaines de points). Gardé un mois : une route ne bouge pas d'un week-end à l'autre.
+export async function chargerItineraire(ville, spot) {
+  const cle = `trace:${ville.lat},${ville.lon}:${spot.lat},${spot.lon}`;
+  return avecCache(cle, 30 * 24 * UNE_HEURE, async () => {
+    const r = await json(`https://router.project-osrm.org/route/v1/driving/${ville.lon},${ville.lat};${spot.lon},${spot.lat}?overview=simplified&geometries=geojson`);
+    if (r.code !== 'Ok' || !r.routes?.[0]) throw new Error('OSRM : ' + r.code);
+    return r.routes[0].geometry.coordinates.map(([lon, lat]) => [Math.round(lon * 1e4) / 1e4, Math.round(lat * 1e4) / 1e4]);
+  });
+}

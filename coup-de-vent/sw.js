@@ -1,4 +1,4 @@
-const CACHE = 'coup-de-vent-v5';
+const CACHE = 'coup-de-vent-v6';
 const ASSETS = [
   './',
   './index.html',
@@ -7,6 +7,7 @@ const ASSETS = [
   './meteo.js',
   './carte.js',
   './spots.js',
+  './cote.js',
   './manifest.json',
   './icon.svg'
 ];
