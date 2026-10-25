@@ -3,9 +3,10 @@
 
 import {
   REGLAGES_DEFAUT, lireHeures, resumeHeures, optionsTrajet, classer, weekendsPourSpot, samedisDisponibles,
-  joursDuWeekend, fiabilite, confiance, joursEntre, combi, cardinal, liens, distanceKm, choisirMode, enSaison, NIVEAUX, ventA, resumeJour, extremesMaree, heureMinute, ajouterJours
+  joursDuWeekend, fiabilite, confiance, joursEntre, combi, cardinal, liens, distanceKm, choisirMode, enSaison, NIVEAUX, ventA, resumeJour, extremesMaree, heureMinute, ajouterJours,
+  meilleurSejour, coutSejour, tailleAile
 } from './engine.js';
-import { SPOTS, GARES, AEROPORTS, COMPAGNIES, VILLES, SOURCE_SPOTS } from './spots.js';
+import { SPOTS, GARES, AEROPORTS, COMPAGNIES, VILLES, DEPARTS, SOURCE_SPOTS } from './spots.js';
 import { chargerPrevisions, chargerRoutes, chargerCarburant, chargerItineraire } from './meteo.js';
 import { Carte, couleurVent } from './carte.js';
 
@@ -20,6 +21,11 @@ const calme = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 function chargerReglages() {
   try {
     const r = JSON.parse(localStorage.getItem(CLE_REGLAGES) || '{}');
+    // Réglages enregistrés avant la v8 : « Paris » devient le 15e, et une ancienne valeur par défaut
+    // laisse place au profil de François. Une valeur choisie à la main est gardée.
+    if (r.ville === 'paris') r.ville = 'paris-15';
+    const anciens = { ventMin: 15, sessionMin: 2, trajetMaxH: 5, budgetMax: 250 };
+    Object.entries(anciens).forEach(([k, v]) => { if (r[k] === v) delete r[k]; });
     return { ...REGLAGES_DEFAUT, ...r, modes: { ...REGLAGES_DEFAUT.modes, ...(r.modes || {}) } };
   } catch { return structuredClone(REGLAGES_DEFAUT); }
 }
@@ -39,6 +45,9 @@ const etat = {
   lecture: null
 };
 
+// Le départ : un départ parisien (15e, Antony : temps d'accès aux gares et à Orly) ou une ville.
+const depart = () => DEPARTS[etat.r.ville] || VILLES[etat.r.ville] || DEPARTS['paris-15'];
+const LIB_TRI = { heures: 'classés par heures navigables', acces: 'classés par temps de trajet, puis prix', prix: 'classés par prix, puis temps de trajet' };
 const tousLesSpots = () => [...SPOTS, ...etat.r.spotsPerso];
 const spotParId = id => tousLesSpots().find(s => s.id === id);
 const aujourdhui = () => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Paris' }).format(new Date());
@@ -141,16 +150,17 @@ function toast(texte) {
 
 function contexte(nbJours) {
   return {
-    villeId: etat.r.ville, ville: VILLES[etat.r.ville], gares: GARES, aeroports: AEROPORTS, compagnies: COMPAGNIES,
+    villeId: etat.r.ville, ville: depart(), gares: GARES, aeroports: AEROPORTS, compagnies: COMPAGNIES,
     prixCarburant: prixCarburant(), nbJours, route: null
   };
 }
 
-function evaluer(spot, jours) {
-  const prev = etat.prev?.[spot.id];
-  const lignes = prev ? lireHeures(spot, prev, jours, etat.r) : [];
-  const options = optionsTrajet(spot, etat.r, { ...contexte(jours.length), route: etat.routes[spot.id] || null });
-  return { spot, lignes, options };
+// Un spot pour un week-end : son meilleur séjour selon la durée voulue (en 1 ou 3 jours, il varie d'un
+// spot à l'autre), ses heures, ses trajets. `r` permet de comparer d'autres durées dans la fiche.
+function evaluer(spot, r = etat.r) {
+  const { jours, lignes } = meilleurSejour(spot, etat.prev?.[spot.id], etat.samedi, r);
+  const options = optionsTrajet(spot, r, { ...contexte(jours.length), route: etat.routes[spot.id] || null });
+  return { spot, jours, lignes, options };
 }
 
 function calculer() {
@@ -158,9 +168,9 @@ function calculer() {
   const premier = Object.values(etat.prev)[0];
   const samedis = samedisDisponibles(premier.jours.date);
   if (!samedis.includes(etat.samedi)) etat.samedi = samedis[0];
-  const jours = joursDuWeekend(etat.samedi, etat.r.pont);
+  const jours = joursDuWeekend(etat.samedi, etat.r.duree);
   etat.jours = jours;
-  etat.resultat = classer(tousLesSpots().map(s => evaluer(s, jours)), etat.r);
+  etat.resultat = classer(tousLesSpots().map(s => evaluer(s)), etat.r);
 
   // Les instants du curseur : les heures de jour du week-end, de 8 h à 19 h.
   const ancien = etat.instants[etat.idx]?.t;
@@ -237,7 +247,7 @@ function rendreWeekends() {
   const auj = aujourdhui();
   $('#weekends').innerHTML = samedisDisponibles(premier.jours.date).map(s => {
     const f = fiabilite(joursEntre(auj, s));
-    const jours = joursDuWeekend(s, etat.r.pont);
+    const jours = joursDuWeekend(s, etat.r.duree);
     return `<button class="puce verre" data-samedi="${s}" aria-pressed="${s === etat.samedi}">${plageDates(jours)} ${pointsFiab(f.niveau)}</button>`;
   }).join('');
 }
@@ -273,7 +283,8 @@ function ligneJour(spot, lignes, date) {
   if (!r) return `<div class="jour-ligne">${jour} hors prévision</div>`;
   if (!r.meilleure) return `<div class="jour-ligne non">${jour} ${echapper(r.raison)}</div>`;
   const pm = mareesDuJour(spot, date).find(e => e.type === 'haute');
-  return `<div class="jour-ligne">${jour} ${r.meilleure.debut} h → ${r.meilleure.fin} h · ${plageVent(r)} nœuds ${cardinal(r.dir)}${pm ? ` · PM ${heureMinute(pm.minutes)}` : ''}</div>`;
+  const aile = tailleAile(etat.r.poids, (r.ventMin + r.ventMax) / 2);
+  return `<div class="jour-ligne">${jour} ${r.meilleure.debut} h → ${r.meilleure.fin} h · ${plageVent(r)} nœuds ${cardinal(r.dir)}${aile ? ` · aile ${aile} m²` : ''}${pm ? ` · PM ${heureMinute(pm.minutes)}` : ''}</div>`;
 }
 
 // Le résumé en clair d'un jour dans la fiche, au-dessus du graphique.
@@ -291,6 +302,7 @@ function resumeJourFiche(spot, lignes, date) {
       ? marees.map(e => `${e.type === 'haute' ? 'pleine mer' : 'basse mer'} ${heureMinute(e.minutes)}`).join(' · ') + (coef != null ? ` · coef. ~${coef}` : '')
         + ` <span class="pale">(spot bon ${spot.maree.length === 3 ? 'à toutes marées' : 'à marée ' + spot.maree.join(', ')})</span>`
       : 'inconnue au-delà de 8 jours'] : null,
+    r.meilleure ? ['Aile', `${tailleAile(etat.r.poids, (r.ventMin + r.ventMax) / 2)} m² <span class="pale">(${etat.r.poids} kg, twin-tip, règle courante)</span>`] : null,
     ['Températures', `air ${nd(r.air)}° · eau ${nd(r.eau)}°${combi(r.eau) ? ` → ${combi(r.eau)}` : ''}`],
     !spot.secteurs && r.vagues != null ? ['Houle', `${r.vagues.toFixed(1).replace('.', ',')} m · ${Math.round(r.periode ?? 0)} s <span class="pale">(au large)</span>`] : null
   ].filter(Boolean);
@@ -343,19 +355,19 @@ function rendreOu() {
       <span class="num">${k + 1}</span>
       <span class="nomspot"><span>${echapper(r.spot.nom)}</span>${r.favori ? `<span class="etoile">${ICONES.etoile}</span>` : ''}</span>
       <span class="droite"><span class="h" data-cle="carte-${r.spot.id}" data-compte="${r.resume.navigables}">0</span><span class="h"><small> h</small></span>
-        <div class="trajet">${libelleTrajet(r.trajet)}</div></span>
+        <div class="trajet">${libelleTrajet(r.trajet)}</div>${r.sejour && r.sejour.total !== r.sejour.trajet ? `<div class="trajet">séjour ~${euros(r.sejour.total)}</div>` : ''}</span>
       <span class="zone">${echapper(r.spot.zone || r.spot.lieu || '')} · ${Math.round(r.resume.ventMoyen)} nœuds ${cardinal(r.resume.dirMoyenne ?? 0)} · session ${r.resume.fenetre} h${r.resume.mareeInconnue ? ' · marée inconnue' : ''}</span>
       <span class="etiquettes">${r.spot.niveau === 'confirmé' ? '<span class="badge corail">confirmés</span>' : ''}${r.resume.orage ? '<span class="badge corail">orage</span>' : ''}${r.spot.dangers?.length ? `<span class="badge gris">⚠ ${r.spot.dangers.length}</span>` : ''}</span>
-      <span class="barres">${etat.jours.map(j => ligneJour(r.spot, r.lignes, j)).join('')}</span>
+      <span class="barres">${r.jours.map(j => ligneJour(r.spot, r.lignes, j)).join('')}</span>
     </button>`).join('');
 
   const entete = retenus.length
-    ? `<div class="titre-section">${retenus.length} spot${retenus.length > 1 ? 's' : ''} retenu${retenus.length > 1 ? 's' : ''} · classés par heures navigables</div>` : '';
+    ? `<div class="titre-section">${retenus.length} spot${retenus.length > 1 ? 's' : ''} retenu${retenus.length > 1 ? 's' : ''} · ${LIB_TRI[etat.r.tri] || LIB_TRI.heures}</div>` : '';
   const ouvert = $('#corps details.ecartes')?.open;
   const bas = `
     ${aVerifier.length ? `<div class="titre-section">À vérifier · prix estimé au-dessus de ton budget</div>
       ${aVerifier.map(v => {
-        const l = liens(v.spot, v.trajet, VILLES[etat.r.ville], etat.samedi);
+        const l = liens(v.spot, v.trajet, depart(), v.jours);
         return `<div class="a-verifier"><button class="ligne-ecart" data-spot="${v.spot.id}"><span>${echapper(v.spot.nom)} · ${v.resume.navigables} h</span><span>${libelleTrajet(v.trajet)}</span></button>
           ${l.reserver ? `<a class="lien-prix" href="${l.reserver}" target="_blank" rel="noopener">${v.trajet.mode === 'voiture' ? 'Voir l\'itinéraire' : 'Voir le vrai prix'} ↗</a>` : ''}</div>`;
       }).join('')}` : ''}
@@ -415,8 +427,8 @@ function blocOption(o, retenu) {
   }
   const d = o.detail;
   const spot = spotParId(etat.ouvert);
-  const ville = VILLES[etat.r.ville];
-  const vendredi = dateCourte(ajouterJours(etat.samedi, -1));
+  const ville = depart();
+  const premierJour = dateCourte(etat.joursFiche?.[0] || etat.samedi);
   let etapes = '', prix = `~${euros(o.cout)}<small>aller-retour</small>`;
   if (o.mode === 'voiture') {
     etapes = `<li>${echapper(ville.nom)} → ${echapper(spot.nom)}, ${Math.round(d.km)} km, ~${duree(o.minutes)}
@@ -425,15 +437,16 @@ function blocOption(o, retenu) {
       ${d.peage ? `<li>Péages ~${euros(d.peage)}<small>estimés à 0,10 €/km sur les trois quarts du trajet</small></li>` : '<li>Pas d\'autoroute supposée sous 80 km</li>'}`;
   } else if (o.mode === 'train') {
     prix = `${euros(o.coutMin)} – ${euros(o.coutMax)}<small>aller-retour</small>`;
-    etapes = `<li>${echapper(d.depart)} → ${echapper(d.gare)}, ${d.dureeConnue ? `${duree(d.minutesTrain)} au plus rapide` : `~${duree(d.minutesTrain)}`}
-        <small>${d.dureeConnue ? `${duree(d.minutesMoy)} en moyenne sur les trains du jour · dès ${d.prixDes} € l'aller (SNCF Connect, relevé le 25/10)` : 'durée estimée à la distance'}${d.correspondance ? ' · correspondance probable (gare sans TGV)' : ''} · départ ${vendredi} soir</small></li>
+    etapes = `${d.acces ? `<li>${echapper(d.acces.de)} → ${echapper(d.depart)}, ~${duree(d.acces.minutes)}<small>transports en commun, durée estimée</small></li>` : ''}
+      <li>${echapper(d.depart)} → ${echapper(d.gare)}, ${d.dureeConnue ? `${duree(d.minutesTrain)} au plus rapide` : `~${duree(d.minutesTrain)}`}
+        <small>${d.dureeConnue ? `${duree(d.minutesMoy)} en moyenne sur les trains du jour · dès ${d.prixDes} € l'aller (SNCF Connect, relevé le 25/10)` : 'durée estimée à la distance'}${d.correspondance ? ' · correspondance probable (gare sans TGV)' : ''} · départ ${premierJour} matin</small></li>
       ${etapeFin(d.fin, d.gare, spot)}`;
   } else {
     etapes = `<li>${echapper(ville.nom)} → Orly, ~${duree(d.acces)}</li>
-      <li>Orly → ${echapper(d.aeroport)}, ${duree(d.vol)} de vol<small>enregistrement du sac ~${duree(d.avant)}, sortie ~${duree(d.apres)} · billet ${euros(d.billet)}, sac ${echapper(d.compagnie)} ${d.sac ? euros(d.sac) : 'inclus'}</small></li>
+      <li>Orly → ${echapper(d.aeroport)}, ${duree(d.vol)} de vol<small>enregistrement du sac ~${duree(d.avant)}, sortie ~${duree(d.apres)} · billet ${euros(d.billet)}, ${etat.r.sansMateriel ? 'pas de sac de kite (location sur place)' : `sac ${echapper(d.compagnie)} ${d.sac ? euros(d.sac) : 'inclus'}`}</small></li>
       ${etapeFin(d.fin, d.aeroport, spot)}`;
   }
-  const l = liens(spot, o, ville, etat.samedi);
+  const l = liens(spot, o, ville, etat.joursFiche);
   const dehors = o.minutes > etat.r.trajetMaxH * 60 ? 'au-delà de ton temps max' : o.cout > etat.r.budgetMax ? 'au-delà de ton budget' : '';
   return `<div class="option ${retenu ? 'retenu' : ''}">
     <span class="rond-mode">${ICONES[o.mode]}</span>
@@ -449,10 +462,10 @@ function blocOption(o, retenu) {
 // dernier kilomètre pour les autres. La carte se cadre sur tout le trajet.
 async function voirTrajet(mode) {
   const spot = spotParId(etat.ouvert);
-  const ev = evaluer(spot, etat.jours);
+  const ev = evaluer(spot);
   const o = ev.options.find(x => x.mode === mode && x.possible);
   if (!o) return;
-  const ville = VILLES[etat.r.ville];
+  const ville = depart();
   carte.poserItineraire(null);
   if (mode === 'voiture') {
     carte.poserLieux(spot, [{ ...ville, nom: ville.nom, type: 'ville' }]);
@@ -473,9 +486,47 @@ async function voirTrajet(mode) {
   $('#carte').scrollIntoView?.({ block: 'nearest', behavior: calme() ? 'auto' : 'smooth' });
 }
 
+// Le séjour retenu, chiffré : trajet + nuits + location éventuelle, et le lien Booking.
+function blocSejour(spot, ev, choix) {
+  if (!choix) return '';
+  const c = coutSejour(choix, ev.jours, etat.r);
+  const l = liens(spot, null, depart(), ev.jours);
+  const lignesCout = [`Trajet (${NOM_MODE[choix.mode].toLowerCase()}) ~${euros(c.trajet)}`];
+  if (c.nuits) lignesCout.push(`${c.nuits} nuit${c.nuits > 1 ? 's' : ''} × ${etat.r.prixNuit} € (estimé) = ${euros(c.logement)}`);
+  if (c.location) lignesCout.push(`Location du matériel ${ev.jours.length} j × ${etat.r.locationJour} € = ${euros(c.location)}`);
+  return `<div class="option sejour">
+    <span class="rond-mode">${ev.jours.length} j</span>
+    <span class="t">Séjour · ${ev.jours.map(j => dateCourte(j)).join(', ')}</span>
+    <span class="prix">~${euros(c.total)}<small>en tout</small></span>
+    <ol class="etapes">${lignesCout.map(x => `<li>${x}</li>`).join('')}</ol>
+    <span class="actions">${l.booking ? `<a href="${l.booking}" target="_blank" rel="noopener">Hôtels sur Booking ↗</a>` : ''}${etat.r.sansMateriel ? `<a href="${l.ecoles}" target="_blank" rel="noopener">Écoles et loueurs près du spot ↗</a>` : ''}</span>
+  </div>`;
+}
+
+// « Partir 1, 2 ou 3 jours ? » : pour chaque durée, le meilleur séjour du spot, ses heures et son coût.
+// La plus rentable (heures navigables par euro) est mise en avant.
+function blocDurees(spot) {
+  const lignes = [1, 2, 3].map(d => {
+    const r = { ...etat.r, duree: d };
+    const e = evaluer(spot, r);
+    const heures = resumeHeures(e.lignes).navigables;
+    const ch = choisirMode(e.options, r);
+    const t = ch.mode || ch.option;
+    return { d, jours: e.jours, heures, cout: t ? coutSejour(t, e.jours, r).total : null };
+  });
+  const candidats = lignes.filter(x => x.heures > 0 && x.cout);
+  const best = candidats.reduce((a, x) => (!a || x.heures / x.cout > a.heures / a.cout ? x : a), null);
+  return `<div class="titre-section">Partir 1, 2 ou 3 jours ?</div>
+    <div class="durees">${lignes.map(x => `<button class="duree ${x.d === etat.r.duree ? 'actuelle' : ''}" data-groupe="duree" data-valeur="${x.d}">
+      <b>${x.d} jour${x.d > 1 ? 's' : ''}</b><span>${x.jours.map(j => dateCourte(j, false)).join(', ')}</span>
+      <span>${x.heures} h navigables</span><span>${x.cout ? `~${euros(x.cout)}` : 'pas de trajet'}</span>
+      ${best === x ? '<span class="badge">le plus rentable</span>' : ''}</button>`).join('')}</div>`;
+}
+
 function rendreFiche(id) {
   const spot = spotParId(id);
-  const ev = evaluer(spot, etat.jours);
+  const ev = evaluer(spot);
+  ev.joursFiche = ev.jours;
   const resume = resumeHeures(ev.lignes);
   const choix = choisirMode(ev.options, etat.r).mode;
   const favori = etat.r.favoris.includes(id);
@@ -492,17 +543,17 @@ function rendreFiche(id) {
     <div class="heros apparait" style="--k:1">
       <div class="sur">${echapper(spot.lieu || '')} · ${echapper(spot.zone || '')}</div>
       <h2>${echapper(spot.nom)}</h2>
-      <div class="ligne"><span class="badge gris">${plageDates(etat.jours)}</span>${badgeConfiance(conf)}</div>
+      <div class="ligne"><span class="badge gris">${plageDates(ev.jours)}</span>${badgeConfiance(conf)}</div>
     </div>`;
 
-  const parJour = etat.jours.map(j => {
+  const parJour = ev.jours.map(j => {
     const lj = ev.lignes.filter(l => l.date === j);
     if (!lj.length) return `<div class="graph"><div class="jour">${dateCourte(j)}<span>hors prévision</span></div></div>`;
     return `<div class="graph apparait">${resumeJourFiche(spot, ev.lignes, j)}${graphJour(lj, etat.r)}</div>`;
   }).join('');
 
   const options = ev.options.map(o => blocOption(o, choix && o.mode === choix.mode)).join('');
-  const l = liens(spot, null);
+  const l = liens(spot, null, depart(), ev.jours);
   const weekends = etat.prev[id] ? weekendsPourSpot(spot, etat.prev[id], etat.r, aujourdhui()) : [];
 
   $('#corps').innerHTML = `
@@ -528,8 +579,8 @@ function rendreFiche(id) {
       ${(spot.dangers || []).length ? `<ul>${spot.dangers.map(d => `<li>${echapper(d)}</li>`).join('')}</ul>` : '<p>Aucun danger particulier noté — ce qui ne veut pas dire qu\'il n\'y en a pas.</p>'}
       ${resume.orage ? '<p class="alerte">⚡ Orage prévu sur le week-end : les heures concernées sont refusées.</p>' : ''}
       ${resume.averses ? '<p>Averses prévues : grains possibles, le vent peut forcir d\'un coup.</p>' : ''}
-      ${etat.jours.some(enSaison) ? '<p class="alerte">En saison, la pratique est souvent limitée à une zone ou à des horaires fixés par arrêté municipal : vérifier en mairie ou au club.</p>' : ''}
-      ${etat.jours.some(j => coefDe(j) >= 95) && spot.maree ? '<p>Vives-eaux : courants plus forts et plage réduite à marée haute.</p>' : ''}
+      ${ev.jours.some(enSaison) ? '<p class="alerte">En saison, la pratique est souvent limitée à une zone ou à des horaires fixés par arrêté municipal : vérifier en mairie ou au club.</p>' : ''}
+      ${ev.jours.some(j => coefDe(j) >= 95) && spot.maree ? '<p>Vives-eaux : courants plus forts et plage réduite à marée haute.</p>' : ''}
       <p class="note" style="margin:6px 0 0">Indications générales, à vérifier auprès d'un club local.</p>
     </div>
     <div class="titre-section">Jour par jour</div>
@@ -537,10 +588,12 @@ function rendreFiche(id) {
     <div class="legende"><span><i style="background:#2EE6C5"></i>navigable</span><span><i style="background:var(--barre-non)"></i>hors critères</span><span>— rafales</span><span>↑ sens du vent</span><span><i style="background:var(--encre);border-radius:50%;width:6px;height:6px"></i>chaque modèle (barre = médiane)</span>${spot.maree ? '<span><i style="background:var(--bleu)"></i>marée haute</span>' : ''}</div>
     <div class="titre-section">Y aller</div>
     ${options}
+    ${blocSejour(spot, ev, choix)}
+    ${blocDurees(spot)}
     <div class="titre-section">Quand partir ?</div>
     ${weekends.map(w => blocWeekend(w)).join('')}
     <div class="titre-section">Vérifier ailleurs</div>
-    <div class="liens">${l.windguru ? `<a class="lien" href="${l.windguru}" target="_blank" rel="noopener">Windguru ↗</a>` : ''}<a class="lien" href="${l.windy}" target="_blank" rel="noopener">Windy ↗</a><a class="lien" href="${l.carte}" target="_blank" rel="noopener">Carte ↗</a>${l.maree ? `<a class="lien" href="${l.maree}" target="_blank" rel="noopener">Marées SHOM ↗</a>` : ''}</div>
+    <div class="liens">${l.windguru ? `<a class="lien" href="${l.windguru}" target="_blank" rel="noopener">Windguru ↗</a>` : ''}<a class="lien" href="${l.windy}" target="_blank" rel="noopener">Windy ↗</a><a class="lien" href="${l.ecoles}" target="_blank" rel="noopener">Écoles et loueurs ↗</a>${l.booking ? `<a class="lien" href="${l.booking}" target="_blank" rel="noopener">Hôtels sur Booking ↗</a>` : ''}<a class="lien" href="${l.carte}" target="_blank" rel="noopener">Carte ↗</a>${l.maree ? `<a class="lien" href="${l.maree}" target="_blank" rel="noopener">Marées SHOM ↗</a>` : ''}</div>
     <p class="note">${spot.face != null ? `Plage orientée ${cardinal(spot.face)} (${spot.face}°) : un vent de ${cardinal(spot.face + 180)} y est offshore. ` : 'Plan d\'eau fermé : directions acceptées fixées par secteurs. '}${spot.perso ? 'Spot ajouté par toi.' : echapper(SOURCE_SPOTS)}</p>
     </div>`;
   $('#corps').scrollTop = 0;
@@ -603,8 +656,14 @@ function rendreReglages() {
   $('#reglages .panneau').innerHTML = `
     <div class="fiche-tete"><h3 class="grow" style="margin-left:6px">Réglages</h3><button class="rond" data-action="fermer-reglages" aria-label="Fermer">${ICONES.fermer}</button></div>
     <div class="champ"><label for="r-ville">Départ</label>
-      <select id="r-ville" data-reglage="ville">${Object.entries(VILLES).map(([k, v]) => `<option value="${k}" ${k === r.ville ? 'selected' : ''}>${v.nom}</option>`).join('')}</select>
-      <div class="aide">L'avion n'est proposé qu'au départ de Paris.</div></div>
+      <select id="r-ville" data-reglage="ville">
+        <optgroup label="Porte à porte">${Object.entries(DEPARTS).map(([k, v]) => `<option value="${k}" ${k === r.ville ? 'selected' : ''}>${v.nom}</option>`).join('')}</optgroup>
+        <optgroup label="Autres villes (depuis la gare)">${Object.entries(VILLES).map(([k, v]) => `<option value="${k}" ${k === r.ville ? 'selected' : ''}>${v.nom}</option>`).join('')}</optgroup>
+      </select>
+      <div class="aide">Depuis le 15e ou Antony, le trajet compte l'accès à la gare et à Orly (estimé) ; l'avion n'est proposé que depuis ces deux départs.</div></div>
+    <div class="champ"><span class="lab">Classer les spots retenus par</span><div class="bascules">
+      ${bascule('tri', 'heures', 'Heures navigables', (r.tri || 'heures') === 'heures')}${bascule('tri', 'acces', 'Temps de trajet', r.tri === 'acces')}${bascule('tri', 'prix', 'Prix', r.tri === 'prix')}</div>
+      <div class="aide">Le filtre ne change pas : seuls les spots où ça souffle assez longtemps sont classés.</div></div>
     ${champNum('ventMin', 'Vent minimum', 8, 25, 1, 'nœuds')}
     ${champNum('ventMax', 'Vent maximum', 18, 45, 1, 'nœuds')}
     ${champNum('rafalesMax', 'Rafales maximum', 20, 55, 1, 'nœuds')}
@@ -616,10 +675,17 @@ function rendreReglages() {
       <div class="aide">Les spots notés pour un niveau au-dessus du tien sont écartés.</div></div>
     ${champNum('trajetMaxH', 'Trajet maximum (aller)', 1, 9, 0.5, 'h')}
     ${champNum('budgetMax', 'Budget trajet (aller-retour)', 40, 600, 10, '€', 'Logement non compté.')}
-    <div class="champ"><span class="lab">Week-end</span><div class="bascules">
-      ${bascule('pont', 'aucun', 'Samedi-dimanche', r.pont === 'aucun')}${bascule('pont', 'vendredi', '+ vendredi', r.pont === 'vendredi')}${bascule('pont', 'lundi', '+ lundi', r.pont === 'lundi')}</div></div>
+    <div class="champ"><span class="lab">Durée du séjour</span><div class="bascules">
+      ${bascule('duree', '1', '1 jour', r.duree === 1)}${bascule('duree', '2', '2 jours', r.duree === 2)}${bascule('duree', '3', '3 jours', r.duree === 3)}</div>
+      <div class="aide">1 jour : le meilleur du samedi ou du dimanche, aller-retour dans la journée. 3 jours : avec le vendredi ou le lundi, selon le vent.</div></div>
+    ${champNum('prixNuit', 'Logement par nuit', 30, 250, 10, '€', 'Estimation ; le vrai prix est sur Booking, depuis la fiche du spot.')}
     <div class="champ"><span class="lab">Modes de transport</span><div class="bascules">
       ${['voiture', 'train', 'avion'].map(m => bascule('mode', m, NOM_MODE[m], r.modes[m])).join('')}</div></div>
+    <div class="champ"><span class="lab">Matériel</span><div class="bascules">
+      ${bascule('materiel', 'avec', 'J\'emporte le mien', !r.sansMateriel)}${bascule('materiel', 'sans', 'Je loue sur place', Boolean(r.sansMateriel))}</div>
+      <div class="aide">Sans matériel : plus de supplément sac en avion ni de housse en train ; la location s'ajoute au séjour, et chaque fiche renvoie vers les écoles et loueurs proches.</div></div>
+    ${champNum('locationJour', 'Location par jour', 30, 150, 5, '€', 'Aile, planche et harnais : estimation.')}
+    ${champNum('poids', 'Ton poids', 45, 110, 1, 'kg', 'Pour la taille d\'aile conseillée : poids × 2,2 ÷ vent, en twin-tip.')}
     <div class="champ"><span class="lab">Planche</span><div class="bascules">
       ${bascule('planche', 'twin-tip', 'Twin-tip', r.planche === 'twin-tip')}${bascule('planche', 'directionnelle', 'Directionnelle (> 130 cm)', r.planche === 'directionnelle')}</div>
       <div class="aide">TGV et Intercités acceptent une housse de 130 × 90 cm au plus, sans supplément ; OUIGO facture 5 € en ligne.</div></div>
@@ -690,9 +756,11 @@ document.addEventListener('click', e => {
     ouvrirSpot(el.dataset.spot);
   } else if (el.dataset.groupe) {
     const { groupe, valeur } = el.dataset;
-    if (groupe === 'pont') etat.r.pont = valeur;
+    if (groupe === 'duree') etat.r.duree = +valeur;
+    if (groupe === 'materiel') etat.r.sansMateriel = valeur === 'sans';
     if (groupe === 'planche') etat.r.planche = valeur;
     if (groupe === 'niveau') etat.r.niveau = valeur;
+    if (groupe === 'tri') etat.r.tri = valeur;
     if (groupe === 'mode') etat.r.modes[valeur] = !etat.r.modes[valeur];
     if (groupe === 'favori') etat.r.favoris = etat.r.favoris.includes(valeur) ? etat.r.favoris.filter(x => x !== valeur) : [...etat.r.favoris, valeur];
     rendreReglages();
@@ -748,7 +816,7 @@ addEventListener('keydown', e => { if (e.key === 'Escape') ouvrirReglages(false)
 
 async function chargerTout(premiere) {
   const spots = tousLesSpots();
-  const ville = VILLES[etat.r.ville];
+  const ville = depart();
   const [prev, routes, carbu] = await Promise.allSettled([chargerPrevisions(spots), chargerRoutes(ville, spots), chargerCarburant()]);
   if (prev.status === 'fulfilled') {
     const { __coefficients, ...parSpot } = prev.value.valeur;

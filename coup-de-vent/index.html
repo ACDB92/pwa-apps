@@ -83,6 +83,12 @@
   .etapes li small { display: block; color: var(--doux); font-size: 12.5px; }
   .option .actions { grid-column: 2 / 4; display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 4px; font-size: 13px; font-weight: 650; }
   .option .actions button { color: var(--accent); font-weight: 650; }
+  .option.sejour .rond-mode { font: 800 14px var(--police); color: var(--violet); background: color-mix(in srgb, var(--violet) 12%, transparent); }
+  .durees { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .duree { display: grid; gap: 2px; text-align: left; padding: 12px; border-radius: 16px; background: var(--verre); border: 1px solid var(--verre-bord); font-size: 13px; color: var(--doux); }
+  .duree b { font-size: 15px; color: var(--encre); }
+  .duree.actuelle { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-doux); }
+  .duree .badge { justify-self: start; margin-top: 4px; }
   .trace { fill: none; stroke: var(--ambre); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
   .spot { cursor: pointer; transition: opacity .4s; }
   .spot .point { fill: var(--c); stroke: var(--fond1); stroke-width: 2.5; transition: r .3s var(--ressort); }

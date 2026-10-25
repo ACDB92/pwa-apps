@@ -9,6 +9,8 @@
 // Marée (`maree`) : les phases où le spot fonctionne, parmi 'basse', 'mi', 'haute'. `null` en
 // Méditerranée, où la marée ne compte pas.
 //
+// Commune (`commune`) : où chercher un hébergement (lien Booking) — le nom du spot est parfois une plage.
+//
 // Windguru (`windguru`) : identifiant du spot Windguru le plus proche (≤ 4 km), pour le lien de la fiche.
 // Relevés le 25/10/2026 ; le Pilou renvoie vers Palavas-les-Flots (2,9 km), seul spot Windguru voisin.
 //
@@ -21,39 +23,39 @@ export const SOURCE_SPOTS =
 
 export const SPOTS = [
   // Côte d'Opale et Somme
-  { id: 'dunkerque', nom: 'Malo-les-Bains', lieu: 'Dunkerque', zone: 'Côte d\'Opale', lat: 51.054, lon: 2.405, face: 345, maree: ['basse', 'mi', 'haute'], gare: 'dunkerque', niveau: 'tous', dangers: ["Digues et brise-lames à l'est, vers le port"], windguru: 85184 },
-  { id: 'wissant', nom: 'Wissant', lieu: 'Baie de Wissant', zone: 'Côte d\'Opale', lat: 50.887, lon: 1.660, face: 315, maree: ['basse', 'mi', 'haute'], gare: 'calais', niveau: 'intermédiaire', dangers: ["Pratique réglementée en saison (zone dédiée)", "Courants de marée au large du cap"], windguru: 110 },
-  { id: 'hardelot', nom: 'Hardelot', lieu: 'Neufchâtel-Hardelot', zone: 'Côte d\'Opale', lat: 50.635, lon: 1.578, face: 275, maree: ['basse', 'mi', 'haute'], gare: 'boulogne', niveau: 'tous', dangers: [], windguru: 1906 },
-  { id: 'touquet', nom: 'Le Touquet', lieu: 'Le Touquet-Paris-Plage', zone: 'Côte d\'Opale', lat: 50.525, lon: 1.582, face: 280, maree: ['basse', 'mi', 'haute'], gare: 'etaples', niveau: 'intermédiaire', dangers: ["Courants à l'embouchure de la Canche, au nord"], windguru: 48359 },
-  { id: 'berck', nom: 'Berck', lieu: 'Berck-sur-Mer', zone: 'Côte d\'Opale', lat: 50.405, lon: 1.560, face: 270, maree: ['basse', 'mi', 'haute'], gare: 'rang', niveau: 'tous', dangers: ["Courants à l'embouchure de l'Authie, au sud"], windguru: 1061 },
-  { id: 'crotoy', nom: 'Le Crotoy', lieu: 'Baie de Somme', zone: 'Picardie', lat: 50.216, lon: 1.625, face: 220, maree: ['haute'], gare: 'noyelles', niveau: 'intermédiaire', dangers: ["Baie : courant de marée fort au flot", "Bancs de sable et vasières à marée basse"], windguru: 162 },
-  { id: 'cayeux', nom: 'Cayeux-sur-Mer', lieu: 'Baie de Somme', zone: 'Picardie', lat: 50.182, lon: 1.493, face: 280, maree: ['mi', 'haute'], gare: 'noyelles', niveau: 'intermédiaire', dangers: ["Plage de galets et épis"], windguru: 87904 },
+  { id: 'dunkerque', nom: 'Malo-les-Bains', lieu: 'Dunkerque', zone: 'Côte d\'Opale', lat: 51.054, lon: 2.405, face: 345, maree: ['basse', 'mi', 'haute'], gare: 'dunkerque', niveau: 'tous', dangers: ["Digues et brise-lames à l'est, vers le port"], windguru: 85184, commune: 'Dunkerque' },
+  { id: 'wissant', nom: 'Wissant', lieu: 'Baie de Wissant', zone: 'Côte d\'Opale', lat: 50.887, lon: 1.660, face: 315, maree: ['basse', 'mi', 'haute'], gare: 'calais', niveau: 'intermédiaire', dangers: ["Pratique réglementée en saison (zone dédiée)", "Courants de marée au large du cap"], windguru: 110, commune: 'Wissant' },
+  { id: 'hardelot', nom: 'Hardelot', lieu: 'Neufchâtel-Hardelot', zone: 'Côte d\'Opale', lat: 50.635, lon: 1.578, face: 275, maree: ['basse', 'mi', 'haute'], gare: 'boulogne', niveau: 'tous', dangers: [], windguru: 1906, commune: 'Neufchâtel-Hardelot' },
+  { id: 'touquet', nom: 'Le Touquet', lieu: 'Le Touquet-Paris-Plage', zone: 'Côte d\'Opale', lat: 50.525, lon: 1.582, face: 280, maree: ['basse', 'mi', 'haute'], gare: 'etaples', niveau: 'intermédiaire', dangers: ["Courants à l'embouchure de la Canche, au nord"], windguru: 48359, commune: 'Le Touquet-Paris-Plage' },
+  { id: 'berck', nom: 'Berck', lieu: 'Berck-sur-Mer', zone: 'Côte d\'Opale', lat: 50.405, lon: 1.560, face: 270, maree: ['basse', 'mi', 'haute'], gare: 'rang', niveau: 'tous', dangers: ["Courants à l'embouchure de l'Authie, au sud"], windguru: 1061, commune: 'Berck' },
+  { id: 'crotoy', nom: 'Le Crotoy', lieu: 'Baie de Somme', zone: 'Picardie', lat: 50.216, lon: 1.625, face: 220, maree: ['haute'], gare: 'noyelles', niveau: 'intermédiaire', dangers: ["Baie : courant de marée fort au flot", "Bancs de sable et vasières à marée basse"], windguru: 162, commune: 'Le Crotoy' },
+  { id: 'cayeux', nom: 'Cayeux-sur-Mer', lieu: 'Baie de Somme', zone: 'Picardie', lat: 50.182, lon: 1.493, face: 280, maree: ['mi', 'haute'], gare: 'noyelles', niveau: 'intermédiaire', dangers: ["Plage de galets et épis"], windguru: 87904, commune: 'Cayeux-sur-Mer' },
   // Normandie
-  { id: 'ouistreham', nom: 'Riva-Bella', lieu: 'Ouistreham', zone: 'Normandie', lat: 49.290, lon: -0.256, face: 0, maree: ['mi', 'haute'], gare: 'caen', niveau: 'tous', dangers: ["Chenal du port à proximité : navigation interdite dedans"], windguru: 163 },
-  { id: 'agon', nom: 'Agon-Coutainville', lieu: 'Cotentin', zone: 'Normandie', lat: 49.043, lon: -1.598, face: 265, maree: ['mi', 'haute'], gare: 'coutances', niveau: 'intermédiaire', dangers: ["Courant fort à la pointe d'Agon (havre de Regnéville)"], windguru: 48404 },
-  { id: 'siouville', nom: 'Siouville', lieu: 'La Hague', zone: 'Normandie', lat: 49.560, lon: -1.845, face: 270, maree: ['basse', 'mi', 'haute'], gare: 'cherbourg', niveau: 'confirmé', dangers: ["Shorebreak et vagues par vent d'ouest", "Rochers aux extrémités de la plage"], windguru: 186 },
+  { id: 'ouistreham', nom: 'Riva-Bella', lieu: 'Ouistreham', zone: 'Normandie', lat: 49.290, lon: -0.256, face: 0, maree: ['mi', 'haute'], gare: 'caen', niveau: 'tous', dangers: ["Chenal du port à proximité : navigation interdite dedans"], windguru: 163, commune: 'Ouistreham' },
+  { id: 'agon', nom: 'Agon-Coutainville', lieu: 'Cotentin', zone: 'Normandie', lat: 49.043, lon: -1.598, face: 265, maree: ['mi', 'haute'], gare: 'coutances', niveau: 'intermédiaire', dangers: ["Courant fort à la pointe d'Agon (havre de Regnéville)"], windguru: 48404, commune: 'Agon-Coutainville' },
+  { id: 'siouville', nom: 'Siouville', lieu: 'La Hague', zone: 'Normandie', lat: 49.560, lon: -1.845, face: 270, maree: ['basse', 'mi', 'haute'], gare: 'cherbourg', niveau: 'confirmé', dangers: ["Shorebreak et vagues par vent d'ouest", "Rochers aux extrémités de la plage"], windguru: 186, commune: 'Siouville-Hague' },
   // Bretagne
-  { id: 'saint-lunaire', nom: 'Longchamp', lieu: 'Saint-Lunaire', zone: 'Bretagne nord', lat: 48.636, lon: -2.120, face: 340, maree: ['mi'], gare: 'saint-malo', niveau: 'intermédiaire', dangers: ["Rochers", "Plage étroite à marée haute"], windguru: 48410 },
-  { id: 'sables-dor', nom: 'Sables-d\'Or-les-Pins', lieu: 'Fréhel', zone: 'Bretagne nord', lat: 48.640, lon: -2.405, face: 0, maree: ['mi', 'haute'], gare: 'lamballe', niveau: 'intermédiaire', dangers: [], windguru: 48414 },
-  { id: 'santec', nom: 'Le Dossen', lieu: 'Santec', zone: 'Bretagne nord', lat: 48.705, lon: -4.040, face: 330, maree: ['basse', 'mi', 'haute'], gare: 'morlaix', niveau: 'intermédiaire', dangers: ["Rochers", "Courants dans le chenal de l'île de Sieck"], windguru: 9417 },
-  { id: 'blancs-sablons', nom: 'Les Blancs Sablons', lieu: 'Le Conquet', zone: 'Finistère', lat: 48.370, lon: -4.760, face: 290, maree: ['basse', 'mi', 'haute'], gare: 'brest', niveau: 'intermédiaire', dangers: ["Rochers aux extrémités"], windguru: 48445 },
-  { id: 'la-torche', nom: 'La Torche', lieu: 'Plomeur', zone: 'Finistère', lat: 47.840, lon: -4.350, face: 255, maree: ['basse', 'mi', 'haute'], gare: 'quimper', niveau: 'confirmé', dangers: ["Vagues puissantes", "Rochers de la pointe", "Courants"], windguru: 218 },
-  { id: 'penthievre', nom: 'Penthièvre', lieu: 'Presqu\'île de Quiberon', zone: 'Bretagne sud', lat: 47.545, lon: -3.130, face: 245, maree: ['basse', 'mi', 'haute'], gare: 'auray', niveau: 'confirmé', dangers: ["Shorebreak", "Baïnes et courants de baïne côté océan"], windguru: 48484 },
-  { id: 'la-baule', nom: 'La Baule', lieu: 'Baie de La Baule', zone: 'Loire-Atlantique', lat: 47.281, lon: -2.392, face: 185, maree: ['mi', 'haute'], gare: 'la-baule', niveau: 'tous', dangers: ["Pratique restreinte en saison : plage très fréquentée"], windguru: 579 },
-  { id: 'saint-brevin', nom: 'Saint-Brevin', lieu: 'Saint-Brevin-les-Pins', zone: 'Loire-Atlantique', lat: 47.240, lon: -2.172, face: 255, maree: ['mi', 'haute'], gare: 'saint-nazaire', niveau: 'intermédiaire', dangers: ["Courants de l'estuaire de la Loire", "Trafic maritime dans le chenal"], windguru: 198 },
+  { id: 'saint-lunaire', nom: 'Longchamp', lieu: 'Saint-Lunaire', zone: 'Bretagne nord', lat: 48.636, lon: -2.120, face: 340, maree: ['mi'], gare: 'saint-malo', niveau: 'intermédiaire', dangers: ["Rochers", "Plage étroite à marée haute"], windguru: 48410, commune: 'Saint-Lunaire' },
+  { id: 'sables-dor', nom: 'Sables-d\'Or-les-Pins', lieu: 'Fréhel', zone: 'Bretagne nord', lat: 48.640, lon: -2.405, face: 0, maree: ['mi', 'haute'], gare: 'lamballe', niveau: 'intermédiaire', dangers: [], windguru: 48414, commune: 'Fréhel' },
+  { id: 'santec', nom: 'Le Dossen', lieu: 'Santec', zone: 'Bretagne nord', lat: 48.705, lon: -4.040, face: 330, maree: ['basse', 'mi', 'haute'], gare: 'morlaix', niveau: 'intermédiaire', dangers: ["Rochers", "Courants dans le chenal de l'île de Sieck"], windguru: 9417, commune: 'Santec' },
+  { id: 'blancs-sablons', nom: 'Les Blancs Sablons', lieu: 'Le Conquet', zone: 'Finistère', lat: 48.370, lon: -4.760, face: 290, maree: ['basse', 'mi', 'haute'], gare: 'brest', niveau: 'intermédiaire', dangers: ["Rochers aux extrémités"], windguru: 48445, commune: 'Le Conquet' },
+  { id: 'la-torche', nom: 'La Torche', lieu: 'Plomeur', zone: 'Finistère', lat: 47.840, lon: -4.350, face: 255, maree: ['basse', 'mi', 'haute'], gare: 'quimper', niveau: 'confirmé', dangers: ["Vagues puissantes", "Rochers de la pointe", "Courants"], windguru: 218, commune: 'Plomeur' },
+  { id: 'penthievre', nom: 'Penthièvre', lieu: 'Presqu\'île de Quiberon', zone: 'Bretagne sud', lat: 47.545, lon: -3.130, face: 245, maree: ['basse', 'mi', 'haute'], gare: 'auray', niveau: 'confirmé', dangers: ["Shorebreak", "Baïnes et courants de baïne côté océan"], windguru: 48484, commune: 'Saint-Pierre-Quiberon' },
+  { id: 'la-baule', nom: 'La Baule', lieu: 'Baie de La Baule', zone: 'Loire-Atlantique', lat: 47.281, lon: -2.392, face: 185, maree: ['mi', 'haute'], gare: 'la-baule', niveau: 'tous', dangers: ["Pratique restreinte en saison : plage très fréquentée"], windguru: 579, commune: 'La Baule-Escoublac' },
+  { id: 'saint-brevin', nom: 'Saint-Brevin', lieu: 'Saint-Brevin-les-Pins', zone: 'Loire-Atlantique', lat: 47.240, lon: -2.172, face: 255, maree: ['mi', 'haute'], gare: 'saint-nazaire', niveau: 'intermédiaire', dangers: ["Courants de l'estuaire de la Loire", "Trafic maritime dans le chenal"], windguru: 198, commune: 'Saint-Brevin-les-Pins' },
   // Atlantique
-  { id: 'saint-jean-de-monts', nom: 'Saint-Jean-de-Monts', lieu: 'Vendée', zone: 'Vendée', lat: 46.785, lon: -2.090, face: 250, maree: ['basse', 'mi', 'haute'], gare: 'challans', niveau: 'tous', dangers: [], windguru: 190 },
-  { id: 'la-tranche', nom: 'La Tranche-sur-Mer', lieu: 'Vendée', zone: 'Vendée', lat: 46.343, lon: -1.430, face: 200, maree: ['basse', 'mi', 'haute'], gare: 'la-rochelle', niveau: 'intermédiaire', dangers: ["Vagues par vent d'ouest"], windguru: 721 },
-  { id: 'chatelaillon', nom: 'Châtelaillon-Plage', lieu: 'Charente-Maritime', zone: 'Charente-Maritime', lat: 46.073, lon: -1.093, face: 270, maree: ['mi', 'haute'], gare: 'chatelaillon', niveau: 'tous', dangers: ["Vase à marée basse"], windguru: 48530 },
-  { id: 'oleron', nom: 'Vert-Bois', lieu: 'Île d\'Oléron', zone: 'Charente-Maritime', lat: 45.855, lon: -1.250, face: 250, maree: ['basse', 'mi', 'haute'], gare: 'rochefort', niveau: 'confirmé', dangers: ["Baïnes", "Shorebreak"], windguru: 1018251 },
-  { id: 'lacanau', nom: 'Lacanau-Océan', lieu: 'Gironde', zone: 'Gironde', lat: 45.000, lon: -1.204, face: 275, maree: ['basse', 'mi', 'haute'], gare: 'bordeaux', niveau: 'confirmé', dangers: ["Baïnes", "Shorebreak"], windguru: 48561 },
+  { id: 'saint-jean-de-monts', nom: 'Saint-Jean-de-Monts', lieu: 'Vendée', zone: 'Vendée', lat: 46.785, lon: -2.090, face: 250, maree: ['basse', 'mi', 'haute'], gare: 'challans', niveau: 'tous', dangers: [], windguru: 190, commune: 'Saint-Jean-de-Monts' },
+  { id: 'la-tranche', nom: 'La Tranche-sur-Mer', lieu: 'Vendée', zone: 'Vendée', lat: 46.343, lon: -1.430, face: 200, maree: ['basse', 'mi', 'haute'], gare: 'la-rochelle', niveau: 'intermédiaire', dangers: ["Vagues par vent d'ouest"], windguru: 721, commune: 'La Tranche-sur-Mer' },
+  { id: 'chatelaillon', nom: 'Châtelaillon-Plage', lieu: 'Charente-Maritime', zone: 'Charente-Maritime', lat: 46.073, lon: -1.093, face: 270, maree: ['mi', 'haute'], gare: 'chatelaillon', niveau: 'tous', dangers: ["Vase à marée basse"], windguru: 48530, commune: 'Châtelaillon-Plage' },
+  { id: 'oleron', nom: 'Vert-Bois', lieu: 'Île d\'Oléron', zone: 'Charente-Maritime', lat: 45.855, lon: -1.250, face: 250, maree: ['basse', 'mi', 'haute'], gare: 'rochefort', niveau: 'confirmé', dangers: ["Baïnes", "Shorebreak"], windguru: 1018251, commune: 'Le Grand-Village-Plage' },
+  { id: 'lacanau', nom: 'Lacanau-Océan', lieu: 'Gironde', zone: 'Gironde', lat: 45.000, lon: -1.204, face: 275, maree: ['basse', 'mi', 'haute'], gare: 'bordeaux', niveau: 'confirmé', dangers: ["Baïnes", "Shorebreak"], windguru: 48561, commune: 'Lacanau' },
   // Méditerranée
-  { id: 'leucate', nom: 'Leucate — étang', lieu: 'La Franqui', zone: 'Languedoc', lat: 42.905, lon: 3.020, secteurs: [[270, 360], [90, 180]], maree: null, gare: 'leucate', niveau: 'tous', dangers: ["Tramontane rafaleuse, souvent au-delà de 30 nœuds"], windguru: 500987 },
-  { id: 'gruissan', nom: 'Gruissan', lieu: 'Étang et plage du Chalet', zone: 'Languedoc', lat: 43.100, lon: 3.105, secteurs: [[270, 360], [90, 180]], maree: null, gare: 'narbonne', niveau: 'tous', dangers: [], windguru: 500975 },
-  { id: 'pilou', nom: 'Le Pilou', lieu: 'Villeneuve-lès-Maguelone', zone: 'Languedoc', lat: 43.515, lon: 3.900, face: 160, maree: null, gare: 'montpellier', niveau: 'intermédiaire', dangers: [], windguru: 48598 },
-  { id: 'espiguette', nom: 'L\'Espiguette', lieu: 'Le Grau-du-Roi', zone: 'Camargue', lat: 43.485, lon: 4.140, face: 200, maree: null, gare: 'grau-du-roi', niveau: 'intermédiaire', dangers: ["Plage immense : secours éloignés"], windguru: 48604 },
-  { id: 'beauduc', nom: 'Beauduc', lieu: 'Camargue', zone: 'Camargue', lat: 43.370, lon: 4.580, face: 190, maree: null, gare: 'arles', niveau: 'confirmé', dangers: ["Site isolé, accès par piste", "Secours éloignés"], windguru: 230 },
-  { id: 'almanarre', nom: 'L\'Almanarre', lieu: 'Hyères', zone: 'Var', lat: 43.060, lon: 6.130, face: 235, maree: null, gare: 'hyeres', niveau: 'intermédiaire', dangers: ["Zone de pratique balisée, restreinte l'été", "Mistral rafaleux"], windguru: 48627 }
+  { id: 'leucate', nom: 'Leucate — étang', lieu: 'La Franqui', zone: 'Languedoc', lat: 42.905, lon: 3.020, secteurs: [[270, 360], [90, 180]], maree: null, gare: 'leucate', niveau: 'tous', dangers: ["Tramontane rafaleuse, souvent au-delà de 30 nœuds"], windguru: 500987, commune: 'Leucate' },
+  { id: 'gruissan', nom: 'Gruissan', lieu: 'Étang et plage du Chalet', zone: 'Languedoc', lat: 43.100, lon: 3.105, secteurs: [[270, 360], [90, 180]], maree: null, gare: 'narbonne', niveau: 'tous', dangers: [], windguru: 500975, commune: 'Gruissan' },
+  { id: 'pilou', nom: 'Le Pilou', lieu: 'Villeneuve-lès-Maguelone', zone: 'Languedoc', lat: 43.515, lon: 3.900, face: 160, maree: null, gare: 'montpellier', niveau: 'intermédiaire', dangers: [], windguru: 48598, commune: 'Villeneuve-lès-Maguelone' },
+  { id: 'espiguette', nom: 'L\'Espiguette', lieu: 'Le Grau-du-Roi', zone: 'Camargue', lat: 43.485, lon: 4.140, face: 200, maree: null, gare: 'grau-du-roi', niveau: 'intermédiaire', dangers: ["Plage immense : secours éloignés"], windguru: 48604, commune: 'Le Grau-du-Roi' },
+  { id: 'beauduc', nom: 'Beauduc', lieu: 'Camargue', zone: 'Camargue', lat: 43.370, lon: 4.580, face: 190, maree: null, gare: 'arles', niveau: 'confirmé', dangers: ["Site isolé, accès par piste", "Secours éloignés"], windguru: 230, commune: 'Salin-de-Giraud' },
+  { id: 'almanarre', nom: 'L\'Almanarre', lieu: 'Hyères', zone: 'Var', lat: 43.060, lon: 6.130, face: 235, maree: null, gare: 'hyeres', niveau: 'intermédiaire', dangers: ["Zone de pratique balisée, restreinte l'été", "Mistral rafaleux"], windguru: 48627, commune: 'Hyères' }
 ];
 
 // Depuis Paris, relevé sur les pages trajet de SNCF Connect le 25/10/2026 : `parisMin` = trajet le plus
@@ -113,8 +115,17 @@ export const COMPAGNIES = {
   'easyjet': { nom: 'easyJet', sac: 52, note: 'Environ 45 £ en ligne (source tierce, page officielle illisible).' }
 };
 
+// Départs parisiens : le temps porte à porte commence chez soi. `acces` : minutes jusqu'à chaque gare
+// parisienne et jusqu'à Orly, en transports en commun — estimées au jugé le 25/10/2026, à vérifier sur
+// Citymapper ou IDF Mobilités. Seuls ces départs ouvrent l'avion et les durées relevées sur SNCF Connect.
+export const DEPARTS = {
+  'paris-15': { nom: 'Paris 15e', lat: 48.8417, lon: 2.2995, tgv: true,
+    acces: { 'Paris Montparnasse': 15, 'Paris Saint-Lazare': 30, 'Paris Nord': 35, 'Paris Gare de Lyon': 30, Orly: 40 } },
+  antony: { nom: 'Antony', lat: 48.7543, lon: 2.2977, tgv: true,
+    acces: { 'Paris Montparnasse': 35, 'Paris Saint-Lazare': 45, 'Paris Nord': 30, 'Paris Gare de Lyon': 40, Orly: 15 } }
+};
+
 export const VILLES = {
-  paris: { nom: 'Paris', lat: 48.853, lon: 2.348, tgv: true },
   lille: { nom: 'Lille', lat: 50.637, lon: 3.071, tgv: true },
   rouen: { nom: 'Rouen', lat: 49.449, lon: 1.094, tgv: false },
   rennes: { nom: 'Rennes', lat: 48.103, lon: -1.672, tgv: true },

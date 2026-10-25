@@ -7,23 +7,28 @@
 // navigables, et le coût s'affiche à côté — jamais mélangé au vent dans un score.
 
 export const REGLAGES_DEFAUT = {
-  ville: 'paris',
-  ventMin: 15,          // nœuds
+  ville: 'paris-15',    // un départ de DEPARTS (spots.js), ou une ville de VILLES
+  ventMin: 14,          // nœuds — profil de François : 3 h d'affilée au-dessus de 14 nœuds
   ventMax: 30,
   rafalesMax: 35,
   ecartRafalesMax: 12,  // rafale − vent moyen : au-delà, le vent est trop irrégulier pour naviguer
-  sessionMin: 2,        // heures d'affilée : une heure isolée ne vaut pas le déplacement
+  sessionMin: 3,        // heures d'affilée : une heure isolée ne vaut pas le déplacement
   vaguesMax: 2.5,       // mètres, hauteur significative au large ; ignorée sur un plan d'eau fermé
   niveau: 'confirmé',   // 'tous' | 'intermédiaire' | 'confirmé' : écarte les spots au-dessus
-  trajetMaxH: 5,        // aller, en heures
-  budgetMax: 250,       // aller-retour, en euros
+  trajetMaxH: 4,        // aller, porte à porte, en heures
+  budgetMax: 400,       // trajet aller-retour, bagages compris, en euros
+  tri: 'heures',        // 'heures' | 'acces' (temps de trajet, puis prix) | 'prix'
   planche: 'twin-tip',  // 'twin-tip' | 'directionnelle' (plus de 130 cm : pas de train)
   modes: { voiture: true, train: true, avion: true },
   carburant: 'gazole',
   consoL100: 6.5,
   billetAvion: 160,     // aller-retour
   compagnie: 'transavia',
-  pont: 'aucun',        // 'aucun' | 'vendredi' | 'lundi'
+  duree: 2,             // jours de kite : 1 (aller-retour dans la journée), 2 (week-end), 3 (avec un pont)
+  prixNuit: 90,         // logement estimé par nuit, en euros
+  sansMateriel: false,  // on loue sur place : plus de sac en avion ni de housse en train
+  locationJour: 70,     // location aile + planche (+ harnais), estimée par jour
+  poids: 75,            // kg, pour la taille d'aile conseillée
   favoris: [],
   spotsPerso: []
 };
@@ -42,7 +47,7 @@ export const BAREMES = {
   trainMinFixe: 30,
   trainEurKmBas: 0.05, trainEurBasMin: 15,     // prix bas : Ouigo, Prem's, réservé tôt
   trainEurKmHaut: 0.17, trainEurHautFixe: 25,   // prix haut : plein tarif de dernière minute
-  avionAccesMin: 45,         // Paris → Orly
+  avionAccesMin: 45,         // jusqu'à Orly, quand le départ n'a pas son propre temps d'accès
   avionAvantMin: 60,         // enregistrement du sac de sport, contrôle
   avionApresMin: 25,         // débarquement, bagage hors format
   avionRayonKm: 90,          // un aéroport plus loin du spot n'est pas proposé
@@ -144,11 +149,36 @@ export function samedisDisponibles(dates) {
   return dates.filter(d => jourSemaine(d) === 6);
 }
 
-export function joursDuWeekend(samedi, pont = 'aucun') {
-  const jours = [samedi, ajouterJours(samedi, 1)];
-  if (pont === 'vendredi') jours.unshift(ajouterJours(samedi, -1));
-  if (pont === 'lundi') jours.push(ajouterJours(samedi, 2));
-  return jours;
+// Les séjours possibles pour un week-end, selon la durée voulue : 1 jour = samedi ou dimanche ;
+// 2 jours = samedi et dimanche ; 3 jours = vendredi + week-end ou week-end + lundi. Départ le matin du
+// premier jour, retour le soir du dernier : N jours, N − 1 nuits.
+export function sejoursPossibles(samedi, duree = 2) {
+  const [ven, dim, lun] = [ajouterJours(samedi, -1), ajouterJours(samedi, 1), ajouterJours(samedi, 2)];
+  if (duree === 1) return [[samedi], [dim]];
+  if (duree === 3) return [[ven, samedi, dim], [samedi, dim, lun]];
+  return [[samedi, dim]];
+}
+
+// Tous les jours que le week-end peut toucher, pour le curseur et les pastilles.
+export function joursDuWeekend(samedi, duree = 2) {
+  return [...new Set(sejoursPossibles(samedi, duree).flat())].sort();
+}
+
+// Pour un spot, le séjour qui navigue le plus parmi les possibles (à égalité, le premier).
+export function meilleurSejour(spot, prevision, samedi, reglages) {
+  const candidats = sejoursPossibles(samedi, reglages.duree);
+  if (!prevision) return { jours: candidats[0], lignes: [] };
+  return candidats
+    .map(jours => ({ jours, lignes: lireHeures(spot, prevision, jours, reglages) }))
+    .reduce((a, c) => (c.lignes.filter(l => l.ok).length > a.lignes.filter(l => l.ok).length ? c : a));
+}
+
+// Le coût du séjour : le trajet, les nuits sur place, et la location de matériel si on part sans.
+export function coutSejour(trajet, jours, reglages) {
+  const nuits = Math.max(0, jours.length - 1);
+  const logement = nuits * (reglages.prixNuit ?? 0);
+  const location = reglages.sansMateriel ? jours.length * (reglages.locationJour ?? 0) : 0;
+  return { trajet: trajet.cout, nuits, logement, location, total: trajet.cout + logement + location };
 }
 
 // La fiabilité d'une prévision de vent tombe vite : bonne à 2 jours (AROME, 1,5 km), utile à 5,
@@ -423,6 +453,15 @@ export function directionMoyenne(dirs) {
   return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
 }
 
+// Taille d'aile conseillée : la règle courante en twin-tip, poids (kg) × 2,2 ÷ vent (nœuds), ramenée à la
+// taille du commerce la plus proche. Un ordre de grandeur pour préparer le sac, pas une mesure.
+export const TAILLES_AILE = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17];
+export function tailleAile(poids, vent) {
+  if (!poids || !vent) return null;
+  const brute = poids * 2.2 / vent;
+  return TAILLES_AILE.reduce((a, t) => (Math.abs(t - brute) < Math.abs(a - brute) ? t : a));
+}
+
 // Épaisseur de combinaison, d'après la température de l'eau — conseil courant des écoles, pas une règle.
 export function combi(eau) {
   if (eau == null) return null;
@@ -482,21 +521,25 @@ export function optionsTrajet(spot, reglages, contexte, b = BAREMES) {
     const gare = gares[spot.gare];
     if (!gare) {
       options.push({ mode: 'train', possible: false, raison: 'pas de gare de référence' });
-    } else if (reglages.planche === 'directionnelle') {
+    } else if (reglages.planche === 'directionnelle' && !reglages.sansMateriel) {
       options.push({ mode: 'train', possible: false, raison: 'planche de plus de 130 cm : refusée en TGV et en OUIGO' });
     } else {
       const railKm = distanceKm(ville, gare) * b.railDetour;
-      const depuisParis = contexte.villeId === 'paris' && gare.parisMin;
+      // Un départ parisien (DEPARTS) porte ses temps d'accès aux gares : c'est lui qui ouvre les
+      // durées relevées sur SNCF Connect, et le temps porte à porte commence chez soi.
+      const depuisParis = Boolean(ville.acces) && gare.parisMin;
+      const acces = depuisParis ? (ville.acces[gare.depuisParis] ?? 0) : 0;
       const vitesse = gare.tgv && ville.tgv ? b.trainKmhTgv : b.trainKmhTer;
       const minutesTrain = depuisParis ? gare.parisMin : b.trainMinFixe + railKm / vitesse * 60;
       const fin = dernierKm(gare, spot, nbJours, b);
       const bas = 2 * Math.max(b.trainEurBasMin, b.trainEurKmBas * railKm);
       const haut = 2 * (b.trainEurHautFixe + b.trainEurKmHaut * railKm);
       options.push({
-        mode: 'train', possible: true, minutes: minutesTrain + fin.minutes,
+        mode: 'train', possible: true, minutes: acces + minutesTrain + fin.minutes,
         cout: (bas + haut) / 2 + fin.cout, coutMin: bas + fin.cout, coutMax: haut + fin.cout,
         detail: {
           depart: depuisParis ? gare.depuisParis : `${ville.nom} (gare principale)`,
+          acces: acces ? { de: ville.nom, minutes: acces } : null,
           gare: gare.nom, minutesTrain, dureeConnue: Boolean(depuisParis),
           minutesMoy: depuisParis ? gare.parisMoy : null, prixDes: depuisParis ? gare.prixDes : null,
           sncf: depuisParis ? gare.sncf : null,
@@ -510,21 +553,22 @@ export function optionsTrajet(spot, reglages, contexte, b = BAREMES) {
 
   if (reglages.modes.avion) {
     const aero = aeroportProche(spot, aeroports, b);
-    if (contexte.villeId !== 'paris') {
-      options.push({ mode: 'avion', possible: false, raison: 'proposé seulement au départ de Paris' });
+    if (!ville.acces) {
+      options.push({ mode: 'avion', possible: false, raison: 'proposé seulement au départ de Paris 15e ou d\'Antony' });
     } else if (!aero) {
       options.push({ mode: 'avion', possible: false, raison: 'aucun aéroport desservi à moins de ' + b.avionRayonKm + ' km' });
     } else {
       const compagnie = compagnies[reglages.compagnie] || { nom: 'Autre', sac: 0 };
       const fin = dernierKm(aero, spot, nbJours, b);
-      const sac = 2 * compagnie.sac;
+      const sac = reglages.sansMateriel ? 0 : 2 * compagnie.sac;
+      const acces = ville.acces.Orly ?? b.avionAccesMin;
       options.push({
         mode: 'avion', possible: true,
-        minutes: b.avionAccesMin + b.avionAvantMin + aero.volMin + b.avionApresMin + fin.minutes,
+        minutes: acces + b.avionAvantMin + aero.volMin + b.avionApresMin + fin.minutes,
         cout: reglages.billetAvion + sac + fin.cout, coutMin: null, coutMax: null,
         detail: {
           aeroport: aero.nom, code: aero.code, billet: reglages.billetAvion, sac, compagnie: compagnie.nom, fin,
-          vol: aero.volMin, acces: b.avionAccesMin, avant: b.avionAvantMin, apres: b.avionApresMin,
+          vol: aero.volMin, acces, avant: b.avionAvantMin, apres: b.avionApresMin,
           aeroLieu: { lat: aero.lat, lon: aero.lon }
         }
       });
@@ -558,17 +602,22 @@ export function classer(evaluations, reglages) {
     const resume = resumeHeures(ev.lignes);
     const choix = choisirMode(ev.options, reglages);
     const base = { ...ev, resume, favori: reglages.favoris.includes(ev.spot.id) };
+    const sejour = t => coutSejour(t, ev.jours || [], reglages);
     const requis = NIVEAUX.indexOf(ev.spot.niveau ?? 'tous');
     if (requis > NIVEAUX.indexOf(reglages.niveau ?? 'confirmé')) ecartes.push({ ...base, raison: 'niveau ' + ev.spot.niveau + ' requis' });
     else if (resume.navigables === 0) ecartes.push({ ...base, raison: raisonPrincipale(ev.lignes) });
-    else if (choix.raison === 'trop cher') aVerifier.push({ ...base, trajet: choix.option, raison: 'prix estimé au-dessus du budget' });
+    else if (choix.raison === 'trop cher') aVerifier.push({ ...base, trajet: choix.option, sejour: sejour(choix.option), raison: 'prix estimé au-dessus du budget' });
     else if (!choix.mode) ecartes.push({ ...base, raison: choix.raison });
-    else retenus.push({ ...base, trajet: choix.mode });
+    else retenus.push({ ...base, trajet: choix.mode, sejour: sejour(choix.mode) });
   });
-  retenus.sort((a, b) =>
-    b.resume.navigables - a.resume.navigables ||
-    (b.favori - a.favori) ||
-    a.trajet.cout - b.trajet.cout);
+  // Tri au choix, toujours après le filtre. « acces » est la règle de François : le plus proche d'abord,
+  // puis le moins cher. Un favori départage, jamais devant un spot mieux placé.
+  const tris = {
+    heures: (a, b) => b.resume.navigables - a.resume.navigables || (b.favori - a.favori) || a.trajet.cout - b.trajet.cout,
+    acces: (a, b) => a.trajet.minutes - b.trajet.minutes || a.trajet.cout - b.trajet.cout || (b.favori - a.favori),
+    prix: (a, b) => a.sejour.total - b.sejour.total || a.trajet.minutes - b.trajet.minutes || (b.favori - a.favori)
+  };
+  retenus.sort(tris[reglages.tri] || tris.heures);
   aVerifier.sort((a, b) => b.resume.navigables - a.resume.navigables || a.trajet.cout - b.trajet.cout);
   ecartes.sort((a, b) => b.resume.navigables - a.resume.navigables || a.spot.nom.localeCompare(b.spot.nom));
   return { retenus, aVerifier, ecartes };
@@ -577,8 +626,7 @@ export function classer(evaluations, reglages) {
 // « Quand partir sur mon spot ? » : chaque week-end couvert par la prévision, avec sa fiabilité.
 export function weekendsPourSpot(spot, prevision, reglages, aujourdhui) {
   return samedisDisponibles(prevision.jours.date).map(samedi => {
-    const jours = joursDuWeekend(samedi, reglages.pont);
-    const lignes = lireHeures(spot, prevision, jours, reglages);
+    const { jours, lignes } = meilleurSejour(spot, prevision, samedi, reglages);
     return {
       samedi, jours, lignes, resume: resumeHeures(lignes),
       fiabilite: fiabilite(joursEntre(aujourdhui, samedi)),
@@ -590,14 +638,23 @@ export function weekendsPourSpot(spot, prevision, reglages, aujourdhui) {
 // --------------------------------------------------------------------------------------------------
 // Liens sortants — la réservation et les vérifications se font ailleurs.
 
-export function liens(spot, option, ville, samedi) {
-  const vendredi = samedi ? ajouterJours(samedi, -1) : '';
+// `jours` : les jours du séjour (ou un samedi seul : le week-end samedi-dimanche).
+export function liens(spot, option, ville, jours) {
+  const sejour = Array.isArray(jours) ? jours : jours ? [jours, ajouterJours(jours, 1)] : [];
   const l = {
     windy: `https://www.windy.com/${spot.lat.toFixed(3)}/${spot.lon.toFixed(3)}?wind,${spot.lat.toFixed(3)},${spot.lon.toFixed(3)},11`,
     carte: `https://www.google.com/maps/search/?api=1&query=${spot.lat},${spot.lon}`
   };
   if (spot.windguru) l.windguru = `https://www.windguru.cz/${spot.windguru}`;
+  // Écoles et loueurs : une recherche Google Maps centrée sur le spot — rien n'est stocké.
+  l.ecoles = `https://www.google.com/maps/search/kitesurf/@${spot.lat},${spot.lon},12z`;
   if (spot.maree) l.maree = 'https://maree.shom.fr/';
+  // Booking accepte la recherche dans l'adresse (testé le 25/10/2026) : la commune, l'arrivée le premier
+  // jour, le départ le dernier. Pas de nuit, pas de lien.
+  if (sejour.length > 1) {
+    const ou = encodeURIComponent(`${spot.commune || spot.nom}, France`);
+    l.booking = `https://www.booking.com/searchresults.fr.html?ss=${ou}&checkin=${sejour[0]}&checkout=${sejour[sejour.length - 1]}&group_adults=1&no_rooms=1`;
+  }
   if (!option) return l;
   if (option.mode === 'voiture') {
     l.reserver = `https://www.google.com/maps/dir/?api=1&origin=${ville.lat},${ville.lon}&destination=${spot.lat},${spot.lon}&travelmode=driving`;
@@ -607,8 +664,7 @@ export function liens(spot, option, ville, samedi) {
     l.reserver = option.detail.sncf ? `https://www.sncf-connect.com/train/trajet/paris/${option.detail.sncf}` : 'https://www.sncf-connect.com/';
   } else if (option.mode === 'avion') {
     // Kayak accepte la recherche dans l'adresse ; Google Flights l'ignore (testé le 25/10/2026).
-    const dimanche = samedi ? ajouterJours(samedi, 1) : '';
-    l.reserver = `https://www.kayak.fr/flights/ORY-${option.detail.code}/${vendredi}/${dimanche}`;
+    l.reserver = `https://www.kayak.fr/flights/ORY-${option.detail.code}/${sejour[0]}/${sejour[sejour.length - 1]}`;
   }
   return l;
 }
