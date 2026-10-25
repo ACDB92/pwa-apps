@@ -1,3 +1,5 @@
+import { coefficients } from './engine.js';
+
 // Tout ce qui passe par le réseau : prévisions de vent et de mer (Open-Meteo), itinéraires (OSRM),
 // prix moyen du carburant (prix-carburants, données ouvertes). Aucune clé, aucun backend.
 // Chaque réponse est gardée dans localStorage : sans réseau, l'appli montre la dernière prévision
@@ -44,26 +46,41 @@ const coords = spots => ({
   lon: spots.map(s => s.lon.toFixed(3)).join(',')
 });
 
-// Une prévision par spot, au format attendu par le moteur. Deux appels en tout, quel que soit le
+// Les modèles dont la médiane fait le verdict, et leur horizon : Météo-France (AROME puis ARPEGE)
+// ~4 jours, ICON ~7 jours, ECMWF ~15 jours, GFS 16 jours. Au-delà, il en reste moins, et l'appli le dit.
+export const MODELES = { meteofrance_seamless: 'Météo-France', icon_seamless: 'ICON', ecmwf_ifs025: 'ECMWF', gfs_seamless: 'GFS' };
+// Point de référence du coefficient de marée (Brest), ajouté à la requête marine.
+const BREST = { lat: 48.38, lon: -4.50 };
+
+// Une prévision par spot, au format attendu par le moteur. Trois appels en tout, quel que soit le
 // nombre de spots : l'API accepte plusieurs positions à la fois.
 export async function chargerPrevisions(spots) {
-  const cle = 'prev:' + spots.map(s => s.id).join(',');
+  const cle = 'prev3:' + spots.map(s => s.id).join(',');
   return avecCache(cle, UNE_HEURE, async () => {
     const { lat, lon } = coords(spots);
     const base = `latitude=${lat}&longitude=${lon}&timezone=Europe%2FParis&forecast_days=16`;
-    const [vent, mer] = await Promise.all([
-      json(`https://api.open-meteo.com/v1/forecast?${base}&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,temperature_2m&daily=sunrise,sunset&wind_speed_unit=kn`),
-      // La mer n'est qu'un complément : sans elle, on garde le vent et on dit que la marée manque.
-      json(`https://marine-api.open-meteo.com/v1/marine?${base}&hourly=sea_level_height_msl,sea_surface_temperature`).catch(() => null)
+    const baseMer = `latitude=${lat},${BREST.lat}&longitude=${lon},${BREST.lon}&timezone=Europe%2FParis&forecast_days=16`;
+    const [vent, mer, modeles] = await Promise.all([
+      json(`https://api.open-meteo.com/v1/forecast?${base}&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,temperature_2m,weather_code&daily=sunrise,sunset&wind_speed_unit=kn`),
+      // La mer et les modèles ne sont que des compléments : sans eux, on garde le vent et on dit ce qui manque.
+      json(`https://marine-api.open-meteo.com/v1/marine?${baseMer}&hourly=sea_level_height_msl,sea_surface_temperature,wave_height,wave_period`).catch(() => null),
+      json(`https://api.open-meteo.com/v1/forecast?${base}&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m&models=${Object.keys(MODELES).join(',')}&wind_speed_unit=kn`).catch(() => null)
     ]);
     const liste = v => (Array.isArray(v) ? v : [v]);
-    const vents = liste(vent), mers = mer ? liste(mer) : [];
+    const vents = liste(vent), mers = mer ? liste(mer) : [], parModele = modeles ? liste(modeles) : [];
     const sortie = {};
     spots.forEach((s, k) => {
       const v = vents[k], m = mers[k];
       const index = {};
       m?.hourly?.time.forEach((t, i) => { index[t] = i; });
       const deLaMer = champ => v.hourly.time.map(t => (m && index[t] != null ? m.hourly[champ][index[t]] : null));
+      const pm = parModele[k]?.hourly;
+      const lesModeles = {};
+      if (pm && pm.time.length === v.hourly.time.length) {
+        Object.entries(MODELES).forEach(([cleModele, nom]) => {
+          if (pm['wind_speed_10m_' + cleModele]) lesModeles[nom] = { vent: pm['wind_speed_10m_' + cleModele], rafales: pm['wind_gusts_10m_' + cleModele], dir: pm['wind_direction_10m_' + cleModele] };
+        });
+      }
       sortie[s.id] = {
         heures: {
           time: v.hourly.time,
@@ -72,13 +89,24 @@ export async function chargerPrevisions(spots) {
           dir: v.hourly.wind_direction_10m,
           temp: v.hourly.temperature_2m,
           niveau: deLaMer('sea_level_height_msl'),
-          eau: deLaMer('sea_surface_temperature')
+          eau: deLaMer('sea_surface_temperature'),
+          vagues: deLaMer('wave_height'),
+          periode: deLaMer('wave_period'),
+          code: v.hourly.weather_code,
+          modeles: lesModeles
         },
         jours: { date: v.daily.time, lever: v.daily.sunrise, coucher: v.daily.sunset }
       };
     });
+    // Le dernier point de la requête marine est Brest : son niveau donne le coefficient du jour.
+    const brest = mers[spots.length]?.hourly;
+    sortie.__coefficients = brest ? coefficientsDeBrest(brest) : {};
     return sortie;
   });
+}
+
+function coefficientsDeBrest(h) {
+  return coefficients(h.time, h.sea_level_height_msl);
 }
 
 // Distance et durée par la route, de la ville de départ à chaque spot, en un appel (service `table`).

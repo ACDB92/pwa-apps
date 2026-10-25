@@ -12,6 +12,9 @@ export const REGLAGES_DEFAUT = {
   ventMax: 30,
   rafalesMax: 35,
   ecartRafalesMax: 12,  // rafale − vent moyen : au-delà, le vent est trop irrégulier pour naviguer
+  sessionMin: 2,        // heures d'affilée : une heure isolée ne vaut pas le déplacement
+  vaguesMax: 2.5,       // mètres, hauteur significative au large ; ignorée sur un plan d'eau fermé
+  niveau: 'confirmé',   // 'tous' | 'intermédiaire' | 'confirmé' : écarte les spots au-dessus
   trajetMaxH: 5,        // aller, en heures
   budgetMax: 250,       // aller-retour, en euros
   planche: 'twin-tip',  // 'twin-tip' | 'directionnelle' (plus de 130 cm : pas de train)
@@ -159,7 +162,13 @@ function minutesDuJour(hhmm) {
   return h * 60 + m;
 }
 
-// prevision : { heures: { time, vent, rafales, dir, temp, niveau, eau }, jours: { date, lever, coucher } }
+// Codes WMO d'orage (95 : orage ; 96 et 99 : orage avec grêle). Une heure d'orage n'est jamais navigable.
+export const CODES_ORAGE = [95, 96, 99];
+export const CODES_AVERSE = [80, 81, 82];
+
+// prevision : { heures: { time, vent, rafales, dir, temp, niveau, eau, vagues, periode, code, modeles },
+//               jours: { date, lever, coucher } }
+// `modeles` : { nom: { vent: [], dir: [] } } — les modèles pris un par un, pour mesurer leur accord.
 // Renvoie une ligne par heure de jour sur les jours demandés, avec la raison de chaque refus.
 export function lireHeures(spot, prevision, jours, reglages) {
   const { heures, jours: j } = prevision;
@@ -173,8 +182,8 @@ export function lireHeures(spot, prevision, jours, reglages) {
     const debut = minutesDuJour(t.slice(11));
     const [lever, coucher] = lumiere[date];
     if (debut < lever - 15 || debut + 60 > coucher + 15) return;
-    const vent = heures.vent[i], rafale = heures.rafales[i], dir = heures.dir[i];
-    if (vent == null) return;
+    const { vent, rafale, dir, modeles, parMediane } = ventA(heures, i);
+    if (vent == null || dir == null) return;
     const direction = lireDirection(spot, dir);
     const phase = spot.maree ? phaseMaree(heures.niveau, i) : null;
     const raisons = [];
@@ -186,15 +195,105 @@ export function lireHeures(spot, prevision, jours, reglages) {
     if (!direction.ok) raisons.push(direction.type);
     // Une marée inconnue (au-delà de l'horizon marine) ne refuse rien : l'heure est marquée, pas jetée.
     if (spot.maree && phase && !spot.maree.includes(phase)) raisons.push('marée ' + phase);
+    const code = heures.code?.[i] ?? null;
+    if (CODES_ORAGE.includes(code)) raisons.push('orage');
+    // La houle est lue au large (maille de 8 km) : sur un étang, elle ne dit rien du plan d'eau.
+    const vague = heures.vagues?.[i] ?? null;
+    if (!spot.secteurs && vague != null && vague > reglages.vaguesMax) raisons.push('vagues');
     lignes.push({
       t, date, heure: debut / 60, vent, rafale, dir, direction: direction.type,
       temp: heures.temp?.[i] ?? null, eau: heures.eau?.[i] ?? null,
+      vague, periode: heures.periode?.[i] ?? null, code, averse: CODES_AVERSE.includes(code),
+      modeles, source: parMediane ? `médiane de ${modeles.length} modèles` : 'modèle par défaut', ecartModeles: modeles.length >= 2 ? Math.max(...modeles.map(m => m.vent)) - Math.min(...modeles.map(m => m.vent)) : null,
       phase, mareeInconnue: Boolean(spot.maree) && phase == null,
       ok: raisons.length === 0, raisons
     });
   });
+  return appliquerSession(lignes, reglages.sessionMin ?? 1);
+}
+
+// Le vent retenu à l'heure i : la médiane des modèles disponibles. Un modèle isolé ne fait pas basculer
+// le verdict, et les rafales fortes d'un seul (ECMWF, souvent) ne refusent pas l'heure à elles seules.
+// Avec moins de deux modèles, on garde la prévision par défaut d'Open-Meteo. La carte lit la même valeur.
+export function ventA(heures, i) {
+  const modeles = Object.entries(heures.modeles || {})
+    .map(([nom, m]) => ({ nom, vent: m.vent[i], rafale: m.rafales?.[i] ?? null, dir: m.dir[i] }))
+    .filter(m => m.vent != null);
+  const parMediane = modeles.length >= 2;
+  if (!parMediane) return { vent: heures.vent[i], rafale: heures.rafales[i], dir: heures.dir[i], modeles, parMediane };
+  const vent = mediane(modeles.map(m => m.vent));
+  const avecRafale = modeles.filter(m => m.rafale != null).map(m => m.rafale);
+  const rafale = avecRafale.length >= 2 ? Math.max(vent, mediane(avecRafale)) : heures.rafales[i];
+  return { vent, rafale, dir: directionMoyenne(modeles.map(m => m.dir).filter(d => d != null)), modeles, parMediane };
+}
+
+// Une session, c'est des heures navigables d'affilée le même jour. Les morceaux plus courts que le
+// minimum sont refusés, avec leur raison : on ne fait pas 4 h de route pour une heure isolée.
+export function appliquerSession(lignes, min) {
+  let debut = 0;
+  for (let k = 0; k <= lignes.length; k++) {
+    const l = lignes[k], prec = lignes[k - 1];
+    const suite = l && prec && l.ok && prec.ok && l.date === prec.date && l.heure === prec.heure + 1;
+    if (suite) continue;
+    // La série [debut, k[ vient de se terminer.
+    if (prec?.ok && k - debut < min) {
+      for (let j = debut; j < k; j++) { lignes[j].ok = false; lignes[j].raisons.push('session trop courte'); }
+    }
+    debut = k;
+  }
   return lignes;
 }
+
+// La plus longue série d'heures navigables d'affilée, en heures.
+export function fenetreMax(lignes) {
+  let best = 0, cours = 0;
+  lignes.forEach((l, k) => {
+    const prec = lignes[k - 1];
+    cours = l.ok ? (prec && prec.ok && prec.date === l.date && prec.heure + 1 === l.heure ? cours + 1 : 1) : 0;
+    best = Math.max(best, cours);
+  });
+  return best;
+}
+
+// L'accord des modèles, mesuré sur les heures qui comptent (les navigables, sinon toutes) : écart moyen
+// entre le modèle le plus venté et le moins venté. Plus fiable qu'une fiabilité tirée de la seule échéance.
+export function accordModeles(lignes) {
+  const base = lignes.some(l => l.ok) ? lignes.filter(l => l.ok) : lignes;
+  const ecarts = base.map(l => l.ecartModeles).filter(e => e != null);
+  const n = Math.max(0, ...base.map(l => l.modeles?.length ?? 0));
+  if (!ecarts.length) return { niveau: 0, libelle: n ? 'un seul modèle' : 'modèles absents', ecart: null, n };
+  const ecart = ecarts.reduce((a, b) => a + b, 0) / ecarts.length;
+  if (ecart <= 4) return { niveau: 3, libelle: 'modèles d\'accord', ecart, n };
+  if (ecart <= 8) return { niveau: 2, libelle: 'léger désaccord', ecart, n };
+  return { niveau: 1, libelle: 'modèles en désaccord', ecart, n };
+}
+
+// Coefficient de marée estimé d'après le marnage à Brest : 100 correspond à un marnage de 6,10 m
+// (deux fois l'unité de hauteur de Brest, 3,05 m). Une valeur par jour, la même pour toute la côte.
+export function coefficients(time, niveauBrest) {
+  const parJour = {};
+  time.forEach((t, i) => {
+    const v = niveauBrest?.[i];
+    if (v == null) return;
+    const d = t.slice(0, 10);
+    parJour[d] ??= [];
+    parJour[d].push(v);
+  });
+  const sortie = {};
+  Object.entries(parJour).forEach(([d, v]) => {
+    if (v.length < 20) return;  // journée incomplète : pas de coefficient
+    sortie[d] = Math.round((Math.max(...v) - Math.min(...v)) / 6.10 * 100);
+  });
+  return sortie;
+}
+
+// Du 15 juin au 15 septembre, beaucoup de plages limitent le kite (zones, horaires, bande des 300 m).
+export function enSaison(date) {
+  const md = date.slice(5);
+  return md >= '06-15' && md <= '09-15';
+}
+
+export const NIVEAUX = ['tous', 'intermédiaire', 'confirmé'];
 
 // Ce qui a le plus souvent bloqué : c'est la raison qu'on affiche pour un spot écarté.
 export function raisonPrincipale(lignes) {
@@ -219,8 +318,20 @@ export function resumeHeures(lignes) {
     dirMoyenne: directionMoyenne((ok.length ? ok : lignes).map(l => l.dir)),
     air: moy(airs),
     eau: moy(eaux),
+    vagues: moy(lignes.map(l => l.vague).filter(x => x != null)),
+    periode: moy(lignes.map(l => l.periode).filter(x => x != null)),
+    orage: lignes.some(l => CODES_ORAGE.includes(l.code)),
+    averses: lignes.some(l => l.averse),
+    fenetre: fenetreMax(lignes),
+    accord: accordModeles(lignes),
     mareeInconnue: lignes.some(l => l.mareeInconnue)
   };
+}
+
+export function mediane(valeurs) {
+  const v = [...valeurs].sort((a, b) => a - b);
+  const m = v.length >> 1;
+  return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2;
 }
 
 export function directionMoyenne(dirs) {
@@ -350,7 +461,9 @@ export function classer(evaluations, reglages) {
     const resume = resumeHeures(ev.lignes);
     const choix = choisirMode(ev.options, reglages);
     const base = { ...ev, resume, favori: reglages.favoris.includes(ev.spot.id) };
-    if (resume.navigables === 0) ecartes.push({ ...base, raison: raisonPrincipale(ev.lignes) });
+    const requis = NIVEAUX.indexOf(ev.spot.niveau ?? 'tous');
+    if (requis > NIVEAUX.indexOf(reglages.niveau ?? 'confirmé')) ecartes.push({ ...base, raison: 'niveau ' + ev.spot.niveau + ' requis' });
+    else if (resume.navigables === 0) ecartes.push({ ...base, raison: raisonPrincipale(ev.lignes) });
     else if (!choix.mode) ecartes.push({ ...base, raison: choix.raison });
     else retenus.push({ ...base, trajet: choix.mode });
   });

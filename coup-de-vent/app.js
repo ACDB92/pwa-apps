@@ -3,7 +3,7 @@
 
 import {
   REGLAGES_DEFAUT, lireHeures, resumeHeures, optionsTrajet, classer, weekendsPourSpot, samedisDisponibles,
-  joursDuWeekend, fiabilite, joursEntre, combi, cardinal, liens, distanceKm, choisirMode
+  joursDuWeekend, fiabilite, joursEntre, combi, cardinal, liens, distanceKm, choisirMode, enSaison, NIVEAUX, ventA
 } from './engine.js';
 import { SPOTS, GARES, AEROPORTS, COMPAGNIES, VILLES, SOURCE_SPOTS } from './spots.js';
 import { chargerPrevisions, chargerRoutes, chargerCarburant } from './meteo.js';
@@ -35,7 +35,7 @@ const etat = {
   idx: 0,
   ouvert: null,        // id du spot dont la fiche est ouverte
   spotQuand: null,
-  prev: null, prevQuand: null, prevErreur: null,
+  prev: null, prevQuand: null, prevErreur: null, coef: {},
   routes: {}, carburant: null,
   resultat: null,
   lecture: null
@@ -78,6 +78,9 @@ function plageDates(jours) {
   return `${dateCourte(jours[0], false)} – ${dateCourte(jours[jours.length - 1], false)}`;
 }
 const pointsFiab = n => `<span class="points-fiab" title="Fiabilité de la prévision">${[1, 2, 3, 4].map(k => `<i class="${k <= n ? 'on' : ''}"></i>`).join('')}</span>`;
+const badgeAccord = a => `<span class="badge ${a.niveau === 3 ? '' : a.niveau === 2 ? 'ambre' : a.niveau === 1 ? 'corail' : 'gris'}" title="${a.ecart != null ? `écart moyen ${a.ecart.toFixed(1)} nœuds entre ${a.n} modèles` : ''}">${a.libelle}</span>`;
+const coefDe = date => etat.coef?.[date];
+const libCoef = c => (c == null ? '' : `coef. ~${c}${c >= 95 ? ' · vives-eaux' : c <= 45 ? ' · mortes-eaux' : ''}`);
 const echapper = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // Un chiffre qui défile jusqu'à sa valeur : on voit qu'il a changé.
@@ -180,7 +183,8 @@ function majCarte() {
   tousLesSpots().forEach(s => {
     const p = etat.prev[s.id];
     const i = instant ? p?.heures.time.indexOf(instant.t) : -1;
-    const kn = i >= 0 ? p.heures.vent[i] : null, dir = i >= 0 ? p.heures.dir[i] : null;
+    const v = i >= 0 ? ventA(p.heures, i) : {};
+    const kn = v.vent ?? null, dir = v.dir ?? null;
     vents.push({ lon: s.lon, lat: s.lat, kn, dir });
     const k = rang.get(s.id);
     const choisi = etat.vue === 'quand' ? s.id === etat.spotQuand : s.id === etat.ouvert;
@@ -259,7 +263,7 @@ function rendreOu() {
           <span><b data-compte="${Math.round(b.resume.ventMoyen)}">0</b> nœuds <span class="fleche-dir" style="transform:rotate(${(b.resume.dirMoyenne ?? 0) + 180}deg)">↑</span> ${cardinal(b.resume.dirMoyenne ?? 0)}</span>
           <span>${libelleTrajet(b.trajet)}</span>
         </div>
-        <div class="ligne">${tag}</div>
+        <div class="ligne">${tag} ${badgeAccord(b.resume.accord)}<span>session de ${b.resume.fenetre} h d'affilée</span></div>
       </div>`;
   } else {
     const raisons = {};
@@ -281,7 +285,8 @@ function rendreOu() {
       <span class="nomspot"><span>${echapper(r.spot.nom)}</span>${r.favori ? `<span class="etoile">${ICONES.etoile}</span>` : ''}</span>
       <span class="droite"><span class="h" data-compte="${r.resume.navigables}">0</span><span class="h"><small> h</small></span>
         <div class="trajet">${libelleTrajet(r.trajet)}</div></span>
-      <span class="zone">${echapper(r.spot.zone || r.spot.lieu || '')} · ${Math.round(r.resume.ventMoyen)} nœuds ${cardinal(r.resume.dirMoyenne ?? 0)}${r.resume.mareeInconnue ? ' · marée inconnue' : ''}</span>
+      <span class="zone">${echapper(r.spot.zone || r.spot.lieu || '')} · ${Math.round(r.resume.ventMoyen)} nœuds ${cardinal(r.resume.dirMoyenne ?? 0)} · session ${r.resume.fenetre} h${r.resume.mareeInconnue ? ' · marée inconnue' : ''}</span>
+      <span class="etiquettes">${badgeAccord(r.resume.accord)}${r.spot.niveau === 'confirmé' ? '<span class="badge corail">confirmés</span>' : ''}${r.resume.orage ? '<span class="badge corail">orage</span>' : ''}${r.spot.dangers?.length ? `<span class="badge gris">⚠ ${r.spot.dangers.length}</span>` : ''}</span>
       <span class="barres">${miniBarres(r.lignes)}</span>
     </button>`).join('');
 
@@ -317,6 +322,8 @@ function graphJour(lignes, r) {
     const c = l.ok ? 'url(#gok)' : 'var(--barre-non)';
     return `<rect class="b" style="--k:${k}" x="${x}" y="${y(l.vent)}" width="${w}" height="${bas - y(l.vent)}" rx="3" fill="${c}"><title>${l.heure} h : ${Math.round(l.vent)} nœuds, rafales ${Math.round(l.rafale)}${l.raisons.length ? ' — ' + l.raisons.join(', ') : ''}</title></rect>
       <line x1="${x}" x2="${x + w}" y1="${y(l.rafale)}" y2="${y(l.rafale)}" stroke="${couleurVent(l.rafale)}" stroke-width="2" stroke-linecap="round"/>
+      ${(l.modeles || []).map(m => `<circle cx="${x + w / 2}" cy="${y(m.vent)}" r="1.9" class="pt-modele"><title>${m.nom} : ${Math.round(m.vent)} nœuds</title></circle>`).join('')}
+      ${l.raisons.includes('orage') ? `<text x="${x + w / 2}" y="${y(l.vent) - 4}" text-anchor="middle" font-size="10">⚡</text>` : ''}
       <text class="lg" x="${x + w / 2}" y="${bas + 12}" text-anchor="middle">${l.heure % 2 ? '' : l.heure}</text>
       <g transform="translate(${x + w / 2} ${bas + 22}) rotate(${l.dir + 180})"><path d="M0 -5 L3 3 L0 1.5 L-3 3 Z" fill="${l.ok || !l.raisons.some(z => /off/.test(z)) ? 'var(--doux)' : 'var(--corail)'}"/></g>
       ${l.phase ? `<rect x="${x}" y="${H - 2}" width="${w}" height="3" rx="1" fill="${l.phase === 'haute' ? 'var(--bleu)' : l.phase === 'mi' ? 'color-mix(in srgb, var(--bleu) 55%, transparent)' : 'color-mix(in srgb, var(--bleu) 22%, transparent)'}"><title>marée ${l.phase}</title></rect>` : ''}`;
@@ -379,7 +386,7 @@ function rendreFiche(id) {
   const parJour = etat.jours.map(j => {
     const lj = ev.lignes.filter(l => l.date === j);
     if (!lj.length) return `<div class="graph"><div class="jour">${dateCourte(j)}<span>hors prévision</span></div></div>`;
-    return `<div class="graph apparait"><div class="jour">${dateCourte(j)}<span>${lj.filter(l => l.ok).length} h navigables</span></div>${graphJour(lj, etat.r)}</div>`;
+    return `<div class="graph apparait"><div class="jour">${dateCourte(j)}<span>${lj.filter(l => l.ok).length} h navigables${spot.maree && coefDe(j) != null ? ` · ${libCoef(coefDe(j))}` : ''}</span></div>${graphJour(lj, etat.r)}</div>`;
   }).join('');
 
   const options = ev.options.map(o => blocOption(o, choix && o.mode === choix.mode)).join('');
@@ -394,15 +401,28 @@ function rendreFiche(id) {
         <span class="fleche-dir" style="transform:rotate(${(resume.dirMoyenne ?? 0) + 180}deg)">↑</span><small>${cardinal(resume.dirMoyenne ?? 0)}</small></div></div>
       <div class="chip apparait" style="--k:3"><div class="k">Rafales max</div><div class="v"><span data-compte="${Math.round(resume.rafaleMax)}">0</span><small>nœuds</small></div></div>
       <div class="chip apparait" style="--k:4"><div class="k">Direction</div><div class="v" style="font-size:17px">${echapper(typeDir)}</div></div>
+      <div class="chip apparait" style="--k:5"><div class="k">Plus longue session</div><div class="v"><span data-compte="${resume.fenetre}">0</span><small>h d'affilée</small></div></div>
+      <div class="chip apparait" style="--k:5"><div class="k">Accord des modèles</div><div class="v" style="font-size:15px">${badgeAccord(resume.accord)}</div><div class="k" style="margin-top:4px">verdict : ${echapper(ev.lignes[0]?.source || '—')}</div></div>
+      <div class="chip apparait" style="--k:6"><div class="k">Houle au large</div><div class="v">${resume.vagues != null ? resume.vagues.toFixed(1) : '—'}<small>m${resume.periode != null ? ` · ${Math.round(resume.periode)} s` : ''}</small></div></div>
       <div class="chip apparait" style="--k:5"><div class="k">Eau · air</div><div class="v">${nd(eau)}°<small>· ${nd(air)}°</small></div></div>
       <div class="chip apparait" style="--k:6"><div class="k">Combi conseillée</div><div class="v" style="font-size:15px">${echapper(combi(eau) || '—')}</div></div>
     </div>
     ${spot.maree
       ? `<p class="note">Marée : le spot marche à marée ${spot.maree.join(', ')}.${resume.mareeInconnue ? ' La prévision marine s\'arrête à 8 jours : au-delà, la marée n\'est pas filtrée.' : ''} Niveau lu sur Open-Meteo Marine, maille de 8 km : à recouper.</p>`
       : '<p class="note">Méditerranée : marée négligeable, pas de filtre.</p>'}
+    <div class="titre-section">Sécurité</div>
+    <div class="securite apparait">
+      <div class="haut"><b>Niveau : ${echapper(spot.niveau || 'non renseigné')}</b>${NIVEAUX.indexOf(spot.niveau ?? 'tous') > NIVEAUX.indexOf(etat.r.niveau) ? ' <span class="badge corail">au-dessus de ton niveau</span>' : ''}</div>
+      ${(spot.dangers || []).length ? `<ul>${spot.dangers.map(d => `<li>${echapper(d)}</li>`).join('')}</ul>` : '<p>Aucun danger particulier noté — ce qui ne veut pas dire qu\'il n\'y en a pas.</p>'}
+      ${resume.orage ? '<p class="alerte">⚡ Orage prévu sur le week-end : les heures concernées sont refusées.</p>' : ''}
+      ${resume.averses ? '<p>Averses prévues : grains possibles, le vent peut forcir d\'un coup.</p>' : ''}
+      ${etat.jours.some(enSaison) ? '<p class="alerte">En saison, la pratique est souvent limitée à une zone ou à des horaires fixés par arrêté municipal : vérifier en mairie ou au club.</p>' : ''}
+      ${etat.jours.some(j => coefDe(j) >= 95) && spot.maree ? '<p>Vives-eaux : courants plus forts et plage réduite à marée haute.</p>' : ''}
+      <p class="note" style="margin:6px 0 0">Indications générales, à vérifier auprès d'un club local.</p>
+    </div>
     <div class="titre-section">Heure par heure</div>
     ${parJour}
-    <div class="legende"><span><i style="background:#2EE6C5"></i>navigable</span><span><i style="background:var(--barre-non)"></i>hors critères</span><span>— rafales</span><span>↑ sens du vent</span>${spot.maree ? '<span><i style="background:var(--bleu)"></i>marée haute</span>' : ''}</div>
+    <div class="legende"><span><i style="background:#2EE6C5"></i>navigable</span><span><i style="background:var(--barre-non)"></i>hors critères</span><span>— rafales</span><span>↑ sens du vent</span><span><i style="background:var(--encre);border-radius:50%;width:6px;height:6px"></i>chaque modèle (barre = médiane)</span>${spot.maree ? '<span><i style="background:var(--bleu)"></i>marée haute</span>' : ''}</div>
     <div class="titre-section">Y aller</div>
     ${options}
     <div class="titre-section">Quand partir ?</div>
@@ -420,6 +440,7 @@ function blocWeekend(w) {
   return `<div class="we apparait">
     <div class="haut"><span class="dates">${plageDates(w.jours)}</span>
       <span class="badge ${w.fiabilite.niveau >= 3 ? '' : w.fiabilite.niveau === 2 ? 'ambre' : 'corail'}">${pointsFiab(w.fiabilite.niveau)} ${w.fiabilite.libelle}</span></div>
+    <div class="haut"><span>${badgeAccord(w.resume.accord)} <span style="color:var(--doux);font-size:13px">session ${w.resume.fenetre} h${w.jours.some(j => coefDe(j) != null) ? ' · ' + libCoef(Math.max(...w.jours.map(coefDe).filter(c => c != null))) : ''}</span></span></div>
     <div class="haut"><span><b class="gros" data-compte="${w.resume.navigables}">0</b> h navigables${w.complet ? '' : ' <span class="badge gris">prévision partielle</span>'}</span>
       <span style="color:var(--doux);font-size:13px">${w.lignes.length ? `${Math.round(w.resume.ventMoyen)} nœuds ${cardinal(w.resume.dirMoyenne ?? 0)}` : ''}</span></div>
     ${miniBarres(w.lignes)}
@@ -560,6 +581,11 @@ function rendreReglages() {
     ${champNum('ventMax', 'Vent maximum', 18, 45, 1, 'nœuds')}
     ${champNum('rafalesMax', 'Rafales maximum', 20, 55, 1, 'nœuds')}
     ${champNum('ecartRafalesMax', 'Écart rafales − vent moyen', 5, 20, 1, 'nœuds', 'Au-delà, l\'heure est refusée : le vent est trop irrégulier, même sous le plafond de rafales.')}
+    ${champNum('sessionMin', 'Session minimum', 1, 6, 1, 'h', 'Heures navigables d\'affilée. Une série plus courte ne compte pas.')}
+    ${champNum('vaguesMax', 'Houle maximum', 1, 5, 0.5, 'm', 'Hauteur au large : sur la plage, elle est souvent plus faible. Ignorée sur un étang.')}
+    <div class="champ"><span class="lab">Ton niveau</span><div class="bascules">
+      ${NIVEAUX.map(n => bascule('niveau', n, n === 'tous' ? 'Débutant' : n[0].toUpperCase() + n.slice(1), r.niveau === n)).join('')}</div>
+      <div class="aide">Les spots notés pour un niveau au-dessus du tien sont écartés.</div></div>
     ${champNum('trajetMaxH', 'Trajet maximum (aller)', 1, 9, 0.5, 'h')}
     ${champNum('budgetMax', 'Budget trajet (aller-retour)', 40, 600, 10, '€', 'Logement non compté.')}
     <div class="champ"><span class="lab">Week-end</span><div class="bascules">
@@ -654,6 +680,7 @@ document.addEventListener('click', e => {
     const { groupe, valeur } = el.dataset;
     if (groupe === 'pont') etat.r.pont = valeur;
     if (groupe === 'planche') etat.r.planche = valeur;
+    if (groupe === 'niveau') etat.r.niveau = valeur;
     if (groupe === 'mode') etat.r.modes[valeur] = !etat.r.modes[valeur];
     if (groupe === 'favori') etat.r.favoris = etat.r.favoris.includes(valeur) ? etat.r.favoris.filter(x => x !== valeur) : [...etat.r.favoris, valeur];
     if (groupe === 'theme') appliquerTheme(valeur);
@@ -712,7 +739,9 @@ async function chargerTout(premiere) {
   const ville = VILLES[etat.r.ville];
   const [prev, routes, carbu] = await Promise.allSettled([chargerPrevisions(spots), chargerRoutes(ville, spots), chargerCarburant()]);
   if (prev.status === 'fulfilled') {
-    etat.prev = prev.value.valeur;
+    const { __coefficients, ...parSpot } = prev.value.valeur;
+    etat.prev = parSpot;
+    etat.coef = __coefficients || {};
     etat.prevQuand = prev.value.quand;
     if (prev.value.erreur) toast('Hors ligne : prévision du ' + new Date(prev.value.quand).toLocaleString('fr-FR', { weekday: 'short', hour: '2-digit', minute: '2-digit' }));
   } else {
