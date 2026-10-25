@@ -522,17 +522,19 @@ export function choisirMode(options, reglages) {
   const dansLeTemps = possibles.filter(o => o.minutes <= reglages.trajetMaxH * 60);
   if (!dansLeTemps.length) return { mode: null, raison: 'trop loin' };
   const dansLeBudget = dansLeTemps.filter(o => o.cout <= reglages.budgetMax);
-  if (!dansLeBudget.length) return { mode: null, raison: 'trop cher' };
+  // Trop cher : on garde l'option la moins chère, car le prix est estimé — le spot passe « à vérifier ».
+  if (!dansLeBudget.length) return { mode: null, raison: 'trop cher', option: dansLeTemps.reduce((a, o) => (o.cout < a.cout ? o : a)) };
   return { mode: dansLeBudget.reduce((a, o) => (o.cout < a.cout ? o : a)) };
 }
 
 // --------------------------------------------------------------------------------------------------
 // Classement
 
-// evaluations : [{ spot, lignes, options }] — sort les spots retenus, triés, et les écartés avec leur
-// raison. Un favori passe devant à égalité d'heures, jamais devant un spot qui navigue plus.
+// evaluations : [{ spot, lignes, options }] — sort les spots retenus, triés, ceux « à vérifier » et les
+// écartés avec leur raison. Un spot venté qui ne dépasse que le budget n'est pas écarté : le prix du
+// train, des péages et de l'avion est estimé, il ne peut pas éliminer à lui seul. Un favori passe devant à égalité d'heures, jamais devant un spot qui navigue plus.
 export function classer(evaluations, reglages) {
-  const retenus = [], ecartes = [];
+  const retenus = [], aVerifier = [], ecartes = [];
   evaluations.forEach(ev => {
     const resume = resumeHeures(ev.lignes);
     const choix = choisirMode(ev.options, reglages);
@@ -540,6 +542,7 @@ export function classer(evaluations, reglages) {
     const requis = NIVEAUX.indexOf(ev.spot.niveau ?? 'tous');
     if (requis > NIVEAUX.indexOf(reglages.niveau ?? 'confirmé')) ecartes.push({ ...base, raison: 'niveau ' + ev.spot.niveau + ' requis' });
     else if (resume.navigables === 0) ecartes.push({ ...base, raison: raisonPrincipale(ev.lignes) });
+    else if (choix.raison === 'trop cher') aVerifier.push({ ...base, trajet: choix.option, raison: 'prix estimé au-dessus du budget' });
     else if (!choix.mode) ecartes.push({ ...base, raison: choix.raison });
     else retenus.push({ ...base, trajet: choix.mode });
   });
@@ -547,8 +550,9 @@ export function classer(evaluations, reglages) {
     b.resume.navigables - a.resume.navigables ||
     (b.favori - a.favori) ||
     a.trajet.cout - b.trajet.cout);
+  aVerifier.sort((a, b) => b.resume.navigables - a.resume.navigables || a.trajet.cout - b.trajet.cout);
   ecartes.sort((a, b) => b.resume.navigables - a.resume.navigables || a.spot.nom.localeCompare(b.spot.nom));
-  return { retenus, ecartes };
+  return { retenus, aVerifier, ecartes };
 }
 
 // « Quand partir sur mon spot ? » : chaque week-end couvert par la prévision, avec sa fiabilité.
@@ -573,6 +577,7 @@ export function liens(spot, option, ville, samedi) {
     windy: `https://www.windy.com/${spot.lat.toFixed(3)}/${spot.lon.toFixed(3)}?wind,${spot.lat.toFixed(3)},${spot.lon.toFixed(3)},11`,
     carte: `https://www.google.com/maps/search/?api=1&query=${spot.lat},${spot.lon}`
   };
+  if (spot.windguru) l.windguru = `https://www.windguru.cz/${spot.windguru}`;
   if (spot.maree) l.maree = 'https://maree.shom.fr/';
   if (!option) return l;
   if (option.mode === 'voiture') {

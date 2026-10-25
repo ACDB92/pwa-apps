@@ -1,4 +1,4 @@
-const CACHE = 'coup-de-vent-v4';
+const CACHE = 'coup-de-vent-v5';
 const ASSETS = [
   './',
   './index.html',

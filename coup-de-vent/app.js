@@ -29,12 +29,10 @@ function sauverReglages() {
 
 const etat = {
   r: chargerReglages(),
-  vue: 'ou',
   samedi: null,
   instants: [],
   idx: 0,
   ouvert: null,        // id du spot dont la fiche est ouverte
-  spotQuand: null,
   prev: null, prevQuand: null, prevErreur: null, coef: {},
   routes: {}, carburant: null,
   resultat: null,
@@ -88,18 +86,24 @@ const libCoef = c => (c == null ? '' : `coef. ~${c}${c >= 95 ? ' · vives-eaux' 
 const echapper = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // Un chiffre qui défile jusqu'à sa valeur : on voit qu'il a changé.
+// Au premier affichage, la valeur s'écrit telle quelle : un compteur qui part de 0 montre un faux
+// chiffre pendant qu'il défile. On n'anime qu'un changement (réglage, week-end).
 function compter(el, vers, decimales = 0) {
-  const depuis = parseFloat(el.dataset.v ?? 0) || 0;
-  el.dataset.v = vers;
-  if (calme() || depuis === vers) { el.textContent = vers.toFixed(decimales); return; }
+  const ecrire = x => { el.textContent = (Math.abs(x) < 0.5 ? 0 : x).toFixed(decimales); };
+  const avant = compteurs.get(el.dataset.cle);
+  if (el.dataset.cle) compteurs.set(el.dataset.cle, vers);
+  if (calme() || avant == null || avant === vers) { ecrire(vers); return; }
+  const depuis = avant;
   const t0 = performance.now(), d = 700;
   const pas = t => {
     const k = Math.min(1, (t - t0) / d), e = 1 - Math.pow(1 - k, 3);
-    el.textContent = (depuis + (vers - depuis) * e).toFixed(decimales);
+    ecrire(depuis + (vers - depuis) * e);
     if (k < 1) requestAnimationFrame(pas);
   };
   requestAnimationFrame(pas);
 }
+// Dernière valeur affichée par compteur, pour n'animer que ce qui change d'un rendu à l'autre.
+const compteurs = new Map();
 function animerChiffres(racine) {
   racine.querySelectorAll('[data-compte]').forEach(el => compter(el, parseFloat(el.dataset.compte), +(el.dataset.dec || 0)));
 }
@@ -184,6 +188,7 @@ function majCarte() {
   const instant = etat.instants[etat.idx];
   const vents = [], points = [];
   const rang = new Map(etat.resultat.retenus.map((r, k) => [r.spot.id, k + 1]));
+  const aVerifier = new Set(etat.resultat.aVerifier.map(r => r.spot.id));
   tousLesSpots().forEach(s => {
     const p = etat.prev[s.id];
     const i = instant ? p?.heures.time.indexOf(instant.t) : -1;
@@ -191,9 +196,9 @@ function majCarte() {
     const kn = v.vent ?? null, dir = v.dir ?? null;
     vents.push({ lon: s.lon, lat: s.lat, kn, dir });
     const k = rang.get(s.id);
-    const choisi = etat.vue === 'quand' ? s.id === etat.spotQuand : s.id === etat.ouvert;
-    points.push({ id: s.id, nom: s.nom, lon: s.lon, lat: s.lat, kn, dir, rang: etat.vue === 'ou' ? k : null, choisi,
-      etat: etat.vue === 'quand' ? (choisi ? 'top' : 'ok') : k ? (k <= 3 ? 'top' : 'ok') : 'ecarte' });
+    const choisi = s.id === etat.ouvert;
+    points.push({ id: s.id, nom: s.nom, lon: s.lon, lat: s.lat, kn, dir, rang: k, choisi,
+      etat: k ? (k <= 3 ? 'top' : 'ok') : aVerifier.has(s.id) ? 'ok' : 'ecarte' });
   });
   carte.poserVents(vents);
   carte.poserSpots(points);
@@ -293,7 +298,7 @@ function libelleTrajet(t) {
 }
 
 function rendreOu() {
-  const { retenus, ecartes } = etat.resultat;
+  const { retenus, aVerifier, ecartes } = etat.resultat;
   const auj = aujourdhui();
   const tag = badgeConfiance(confianceDe(retenus[0]?.resume, etat.samedi));
   const quand = joursEntre(auj, etat.samedi) <= 6 ? 'Ce week-end' : `Le week-end du ${dateCourte(etat.samedi, false)}`;
@@ -305,8 +310,8 @@ function rendreOu() {
         <div class="sur">${quand}, c'est</div>
         <h2>${echapper(b.spot.nom)}</h2>
         <div class="ligne">
-          <span><b class="gros" data-compte="${b.resume.navigables}">0</b> h navigables</span>
-          <span><b data-compte="${Math.round(b.resume.ventMoyen)}">0</b> nœuds <span class="fleche-dir" style="transform:rotate(${(b.resume.dirMoyenne ?? 0) + 180}deg)">↑</span> ${cardinal(b.resume.dirMoyenne ?? 0)}</span>
+          <span><b class="gros" data-cle="heros-h" data-compte="${b.resume.navigables}">0</b> h navigables</span>
+          <span><b data-cle="heros-v" data-compte="${Math.round(b.resume.ventMoyen)}">0</b> nœuds <span class="fleche-dir" style="transform:rotate(${(b.resume.dirMoyenne ?? 0) + 180}deg)">↑</span> ${cardinal(b.resume.dirMoyenne ?? 0)}</span>
           <span>${libelleTrajet(b.trajet)}</span>
         </div>
         <div class="ligne">${tag}<span>session de ${b.resume.fenetre} h d'affilée</span></div>
@@ -319,7 +324,9 @@ function rendreOu() {
       <div class="heros apparait">
         <div class="sur">${quand}</div>
         <h2>Pas de bon plan</h2>
-        <div class="ligne">Aucun spot ne réunit vent, direction, marée et trajet. Le plus souvent : <b>${echapper(principale)}</b>.</div>
+        <div class="ligne">${aVerifier.length
+          ? `Ça souffle, mais au-dessus de ton budget estimé : ${aVerifier.length} spot${aVerifier.length > 1 ? 's' : ''} à vérifier plus bas.`
+          : `Aucun spot ne réunit vent, direction, marée et trajet. Le plus souvent : <b>${echapper(principale)}</b>.`}</div>
         <div class="ligne">${tag}</div>
       </div>`;
   }
@@ -329,7 +336,7 @@ function rendreOu() {
     <button class="carte-spot" data-cle="${r.spot.id}" data-spot="${r.spot.id}">
       <span class="num">${k + 1}</span>
       <span class="nomspot"><span>${echapper(r.spot.nom)}</span>${r.favori ? `<span class="etoile">${ICONES.etoile}</span>` : ''}</span>
-      <span class="droite"><span class="h" data-compte="${r.resume.navigables}">0</span><span class="h"><small> h</small></span>
+      <span class="droite"><span class="h" data-cle="carte-${r.spot.id}" data-compte="${r.resume.navigables}">0</span><span class="h"><small> h</small></span>
         <div class="trajet">${libelleTrajet(r.trajet)}</div></span>
       <span class="zone">${echapper(r.spot.zone || r.spot.lieu || '')} · ${Math.round(r.resume.ventMoyen)} nœuds ${cardinal(r.resume.dirMoyenne ?? 0)} · session ${r.resume.fenetre} h${r.resume.mareeInconnue ? ' · marée inconnue' : ''}</span>
       <span class="etiquettes">${r.spot.niveau === 'confirmé' ? '<span class="badge corail">confirmés</span>' : ''}${r.resume.orage ? '<span class="badge corail">orage</span>' : ''}${r.spot.dangers?.length ? `<span class="badge gris">⚠ ${r.spot.dangers.length}</span>` : ''}</span>
@@ -340,6 +347,12 @@ function rendreOu() {
     ? `<div class="titre-section">${retenus.length} spot${retenus.length > 1 ? 's' : ''} retenu${retenus.length > 1 ? 's' : ''} · classés par heures navigables</div>` : '';
   const ouvert = $('#corps details.ecartes')?.open;
   const bas = `
+    ${aVerifier.length ? `<div class="titre-section">À vérifier · prix estimé au-dessus de ton budget</div>
+      ${aVerifier.map(v => {
+        const l = liens(v.spot, v.trajet, VILLES[etat.r.ville], etat.samedi);
+        return `<div class="a-verifier"><button class="ligne-ecart" data-spot="${v.spot.id}"><span>${echapper(v.spot.nom)} · ${v.resume.navigables} h</span><span>${libelleTrajet(v.trajet)}</span></button>
+          ${l.reserver ? `<a class="lien-prix" href="${l.reserver}" target="_blank" rel="noopener">${v.trajet.mode === 'voiture' ? 'Voir l\'itinéraire' : 'Voir le vrai prix'} ↗</a>` : ''}</div>`;
+      }).join('')}` : ''}
     ${ecartes.length ? `<details class="ecartes" ${ouvert || !retenus.length ? 'open' : ''}>
       <summary class="titre-section">Écartés · ${ecartes.length}</summary>
       ${ecartes.map(e => `<button class="ligne-ecart" data-spot="${e.spot.id}"><span>${echapper(e.spot.nom)}</span><span>${echapper(e.raison)}${e.resume.navigables ? ` · ${e.resume.navigables} h` : ''}</span></button>`).join('')}
@@ -442,7 +455,7 @@ function rendreFiche(id) {
   $('#corps').innerHTML = `
     <div class="fiche">
     <div class="chips">
-      <div class="chip apparait" style="--k:1"><div class="k">Heures navigables</div><div class="v"><span data-compte="${resume.navigables}">0</span><small>h</small></div></div>
+      <div class="chip apparait" style="--k:1"><div class="k">Heures navigables</div><div class="v"><span data-cle="fiche-h-${id}" data-compte="${resume.navigables}">0</span><small>h</small></div></div>
       <div class="chip apparait" style="--k:2"><div class="k">Vent moyen</div><div class="v"><span data-compte="${Math.round(resume.ventMoyen ?? 0)}">0</span><small>nœuds</small>
         <span class="fleche-dir" style="transform:rotate(${(resume.dirMoyenne ?? 0) + 180}deg)">↑</span><small>${cardinal(resume.dirMoyenne ?? 0)}</small></div></div>
       <div class="chip apparait" style="--k:3"><div class="k">Rafales max</div><div class="v"><span data-compte="${Math.round(resume.rafaleMax)}">0</span><small>nœuds</small></div></div>
@@ -474,7 +487,7 @@ function rendreFiche(id) {
     <div class="titre-section">Quand partir ?</div>
     ${weekends.map(w => blocWeekend(w)).join('')}
     <div class="titre-section">Vérifier ailleurs</div>
-    <div class="liens"><a class="lien" href="${l.windy}" target="_blank" rel="noopener">Windy ↗</a><a class="lien" href="${l.carte}" target="_blank" rel="noopener">Carte ↗</a>${l.maree ? `<a class="lien" href="${l.maree}" target="_blank" rel="noopener">Marées SHOM ↗</a>` : ''}</div>
+    <div class="liens">${l.windguru ? `<a class="lien" href="${l.windguru}" target="_blank" rel="noopener">Windguru ↗</a>` : ''}<a class="lien" href="${l.windy}" target="_blank" rel="noopener">Windy ↗</a><a class="lien" href="${l.carte}" target="_blank" rel="noopener">Carte ↗</a>${l.maree ? `<a class="lien" href="${l.maree}" target="_blank" rel="noopener">Marées SHOM ↗</a>` : ''}</div>
     <p class="note">${spot.face != null ? `Plage orientée ${cardinal(spot.face)} (${spot.face}°) : un vent de ${cardinal(spot.face + 180)} y est offshore. ` : 'Plan d\'eau fermé : directions acceptées fixées par secteurs. '}${spot.perso ? 'Spot ajouté par toi.' : echapper(SOURCE_SPOTS)}</p>
     </div>`;
   $('#corps').scrollTop = 0;
@@ -491,35 +504,6 @@ function blocWeekend(w) {
       <span style="color:var(--doux);font-size:13px">${w.lignes.length ? `${Math.round(w.resume.ventMoyen)} nœuds ${cardinal(w.resume.dirMoyenne ?? 0)}` : ''}</span></div>
     ${miniBarres(w.lignes)}
   </div>`;
-}
-
-// ------------------------------------------------------------------------------------------------
-// Rendu : « Quand ? »
-
-function rendreQuand() {
-  const spots = [...tousLesSpots()].sort((a, b) => (etat.r.favoris.includes(b.id) - etat.r.favoris.includes(a.id)) || a.nom.localeCompare(b.nom));
-  if (!etat.spotQuand || !spotParId(etat.spotQuand)) etat.spotQuand = (etat.r.favoris[0] && spotParId(etat.r.favoris[0])) ? etat.r.favoris[0] : etat.resultat?.retenus[0]?.spot.id || spots[0].id;
-  const spot = spotParId(etat.spotQuand);
-  const weekends = etat.prev?.[spot.id] ? weekendsPourSpot(spot, etat.prev[spot.id], etat.r, aujourdhui()) : [];
-  const meilleur = weekends.reduce((a, w) => (!a || w.resume.navigables > a.resume.navigables ? w : a), null);
-
-  $('#heros').innerHTML = `
-    <div class="heros apparait">
-      <div class="sur">Quand partir à</div>
-      <h2>${echapper(spot.nom)}</h2>
-      <div class="ligne">${meilleur && meilleur.resume.navigables
-        ? `<span>Le mieux : <b>${plageDates(meilleur.jours)}</b>, <b data-compte="${meilleur.resume.navigables}">0</b> h navigables</span>`
-        : '<span>Aucun créneau navigable sur les week-ends prévus.</span>'}</div>
-    </div>`;
-  $('#corps').innerHTML = `
-    <div class="choix-spot">${spots.map(s => `<button class="puce verre" data-quand="${s.id}" aria-pressed="${s.id === spot.id}">${etat.r.favoris.includes(s.id) ? '★ ' : ''}${echapper(s.nom)}</button>`).join('')}</div>
-    <div class="titre-section">Les week-ends à venir</div>
-    ${weekends.map(blocWeekend).join('')}
-    <p class="note">La prévision couvre 16 jours, mais sa fiabilité tombe vite : au-delà d'une semaine, c'est une tendance, pas une promesse. La marée n'est connue qu'à 8 jours.</p>
-    <button class="bouton discret" data-spot="${spot.id}" style="width:100%">Ouvrir la fiche</button>`;
-  animerChiffres($('#heros'));
-  animerChiffres($('#corps'));
-  $('#corps').querySelector('[aria-pressed="true"]')?.scrollIntoView({ inline: 'center', block: 'nearest' });
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -541,20 +525,9 @@ function rendre() {
   calculer();
   rendreWeekends();
   majCurseur();
-  if (etat.vue === 'quand') rendreQuand();
-  else if (etat.ouvert) rendreFiche(etat.ouvert);
+  if (etat.ouvert) rendreFiche(etat.ouvert);
   else rendreOu();
   majCarte();
-  majSegment();
-}
-
-function majSegment() {
-  const seg = $('.segment');
-  const actif = seg.querySelector(`[data-vue="${etat.vue}"]`);
-  seg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === actif)));
-  const c = seg.querySelector('.curseur');
-  c.style.left = actif.offsetLeft + 'px';
-  c.style.width = actif.offsetWidth + 'px';
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -708,18 +681,11 @@ function ajouterSpot() {
 // Événements
 
 document.addEventListener('click', e => {
-  const el = e.target.closest('[data-spot], [data-samedi], [data-vue], [data-quand], [data-action], [data-groupe]');
+  const el = e.target.closest('[data-spot], [data-samedi], [data-action], [data-groupe]');
   if (!el) return;
-  if (el.dataset.vue) {
-    etat.vue = el.dataset.vue; etat.ouvert = null;
-    rendre();
-    if (!grandEcran() && cran === 'bas') poserCran('milieu');
-  } else if (el.dataset.samedi) {
+  if (el.dataset.samedi) {
     etat.samedi = el.dataset.samedi;
     rendre();
-  } else if (el.dataset.quand) {
-    etat.spotQuand = el.dataset.quand;
-    rendreQuand(); majCarte();
   } else if (el.dataset.spot) {
     ouvrirSpot(el.dataset.spot);
   } else if (el.dataset.groupe) {
@@ -749,7 +715,6 @@ document.addEventListener('click', e => {
 });
 
 function ouvrirSpot(id) {
-  if (etat.vue === 'quand') etat.vue = 'ou';
   etat.ouvert = id;
   rendre();
   if (!grandEcran() && cran !== 'haut') poserCran('milieu');
@@ -800,9 +765,8 @@ async function chargerTout(premiere) {
 }
 
 try { const t = localStorage.getItem('coup-de-vent:theme'); if (t && t !== 'auto') document.documentElement.dataset.theme = t; } catch { /* rien */ }
-carte = new Carte($('#carte'), { surSpot: id => (etat.vue === 'quand' ? (etat.spotQuand = id, rendreQuand(), majCarte()) : ouvrirSpot(id)) });
+carte = new Carte($('#carte'), { surSpot: ouvrirSpot });
 $('#lecture').innerHTML = ICONES.lecture;
 chargement();
 poserCran('bas');
-majSegment();
 chargerTout(true);

@@ -113,11 +113,6 @@
   .marque { display: flex; align-items: center; gap: 7px; font-weight: 750; letter-spacing: -.025em; font-size: 15px; flex: 1; min-width: 0; }
   .marque svg { width: 26px; height: 26px; flex: none; }
   .marque span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .segment { position: relative; display: flex; background: var(--barre-non); border-radius: 13px; padding: 3px; }
-  .segment button { position: relative; z-index: 1; padding: 6px 11px; border-radius: 10px; font-weight: 600; font-size: 14px; color: var(--doux); transition: color .3s; }
-  .segment button[aria-pressed="true"] { color: var(--encre); }
-  .segment .curseur { position: absolute; z-index: 0; top: 3px; bottom: 3px; border-radius: 10px; background: var(--verre-fort);
-                      box-shadow: 0 2px 10px rgba(0, 0, 0, .12); transition: left .45s var(--ressort), width .45s var(--ressort); }
   .rond { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 13px; color: var(--doux); transition: background .2s, transform .2s; }
   .rond:hover { background: var(--barre-non); }
   .rond:active { transform: scale(.92); }
@@ -190,6 +185,8 @@
   .securite li { margin: 2px 0; }
   .securite p { margin: 8px 0 0; color: var(--doux); }
   .securite .alerte { color: var(--corail); font-weight: 600; }
+  .a-verifier { margin-bottom: 4px; }
+  .lien-prix { display: inline-block; font-size: 13px; font-weight: 650; margin: 0 14px 6px; }
   .etoile { color: var(--ambre); }
   .etoile svg { width: 14px; height: 14px; }
 
@@ -319,11 +316,6 @@
     <svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="gm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7DF7E0"/><stop offset="1" stop-color="#0E9BD8"/></linearGradient></defs>
       <path d="M8 22 C22 6 46 6 58 18 L46 30 C38 24 26 24 18 30 Z" fill="url(#gm)"/><path d="M20 30 L31 56 M46 30 L33 56" stroke="currentColor" stroke-width="2" opacity=".55" fill="none"/></svg>
     <span>Coup de vent</span>
-  </div>
-  <div class="segment" role="group" aria-label="Question">
-    <span class="curseur"></span>
-    <button data-vue="ou" aria-pressed="true">Où ?</button>
-    <button data-vue="quand" aria-pressed="false">Quand ?</button>
   </div>
   <button class="rond" id="ouvrir-reglages" aria-label="Réglages">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>
