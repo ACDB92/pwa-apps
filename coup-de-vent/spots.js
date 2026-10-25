@@ -56,38 +56,40 @@ export const SPOTS = [
   { id: 'almanarre', nom: 'L\'Almanarre', lieu: 'Hyères', zone: 'Var', lat: 43.060, lon: 6.130, face: 235, maree: null, gare: 'hyeres', niveau: 'intermédiaire', dangers: ["Zone de pratique balisée, restreinte l'été", "Mistral rafaleux"], windguru: 48627 }
 ];
 
-// `parisMin` : durée habituelle depuis Paris, en minutes, au jugé d'après les horaires usuels — elle
-// remplace le modèle quand on part de Paris. `depuisParis` : la gare parisienne d'où partent ces trains. `tgv` : desservie par un TGV, ce qui change la vitesse
+// Depuis Paris, relevé sur les pages trajet de SNCF Connect le 25/10/2026 : `parisMin` = trajet le plus
+// rapide, en minutes (il remplace le modèle), `parisMoy` = durée moyenne de tous les trains du jour,
+// `prixDes` = prix d'appel de l'aller, `sncf` = nom de la ville dans l'adresse de la page trajet.
+// `depuisParis` : la gare parisienne d'où partent ces trains. `tgv` : desservie par un TGV, ce qui change la vitesse
 // du modèle pour une autre ville de départ.
 export const GARES = {
-  'dunkerque': { nom: 'Dunkerque', lat: 51.031, lon: 2.369, tgv: true, parisMin: 115, depuisParis: 'Paris Nord' },
-  'calais': { nom: 'Calais-Fréthun', lat: 50.901, lon: 1.811, tgv: true, parisMin: 110, depuisParis: 'Paris Nord' },
-  'boulogne': { nom: 'Boulogne-sur-Mer', lat: 50.716, lon: 1.611, tgv: true, parisMin: 140, depuisParis: 'Paris Nord' },
-  'etaples': { nom: 'Étaples – Le Touquet', lat: 50.514, lon: 1.640, tgv: true, parisMin: 150, depuisParis: 'Paris Nord' },
-  'rang': { nom: 'Rang-du-Fliers – Verton', lat: 50.418, lon: 1.646, tgv: true, parisMin: 150, depuisParis: 'Paris Nord' },
-  'noyelles': { nom: 'Noyelles-sur-Mer', lat: 50.185, lon: 1.708, tgv: false, parisMin: 140, depuisParis: 'Paris Nord' },
-  'caen': { nom: 'Caen', lat: 49.176, lon: -0.348, tgv: false, parisMin: 130, depuisParis: 'Paris Saint-Lazare' },
-  'coutances': { nom: 'Coutances', lat: 49.047, lon: -1.437, tgv: false, parisMin: 190, depuisParis: 'Paris Saint-Lazare' },
-  'cherbourg': { nom: 'Cherbourg', lat: 49.634, lon: -1.623, tgv: false, parisMin: 190, depuisParis: 'Paris Saint-Lazare' },
-  'saint-malo': { nom: 'Saint-Malo', lat: 48.647, lon: -2.006, tgv: true, parisMin: 150, depuisParis: 'Paris Montparnasse' },
-  'lamballe': { nom: 'Lamballe', lat: 48.468, lon: -2.517, tgv: true, parisMin: 150, depuisParis: 'Paris Montparnasse' },
-  'morlaix': { nom: 'Morlaix', lat: 48.578, lon: -3.832, tgv: true, parisMin: 205, depuisParis: 'Paris Montparnasse' },
-  'brest': { nom: 'Brest', lat: 48.388, lon: -4.479, tgv: true, parisMin: 215, depuisParis: 'Paris Montparnasse' },
-  'quimper': { nom: 'Quimper', lat: 47.995, lon: -4.095, tgv: true, parisMin: 220, depuisParis: 'Paris Montparnasse' },
-  'auray': { nom: 'Auray', lat: 47.680, lon: -2.999, tgv: true, parisMin: 175, depuisParis: 'Paris Montparnasse' },
-  'la-baule': { nom: 'La Baule-Escoublac', lat: 47.287, lon: -2.390, tgv: true, parisMin: 175, depuisParis: 'Paris Montparnasse' },
-  'saint-nazaire': { nom: 'Saint-Nazaire', lat: 47.286, lon: -2.212, tgv: true, parisMin: 160, depuisParis: 'Paris Montparnasse' },
-  'challans': { nom: 'Challans', lat: 46.846, lon: -1.877, tgv: false, parisMin: 200, depuisParis: 'Paris Montparnasse' },
-  'la-rochelle': { nom: 'La Rochelle', lat: 46.153, lon: -1.145, tgv: true, parisMin: 175, depuisParis: 'Paris Montparnasse' },
-  'chatelaillon': { nom: 'Châtelaillon-Plage', lat: 46.075, lon: -1.088, tgv: false, parisMin: 190, depuisParis: 'Paris Montparnasse' },
-  'rochefort': { nom: 'Rochefort', lat: 45.946, lon: -0.962, tgv: false, parisMin: 195, depuisParis: 'Paris Montparnasse' },
-  'bordeaux': { nom: 'Bordeaux Saint-Jean', lat: 44.826, lon: -0.556, tgv: true, parisMin: 125, depuisParis: 'Paris Montparnasse' },
-  'leucate': { nom: 'Leucate – La Franqui', lat: 42.915, lon: 3.031, tgv: false, parisMin: 300, depuisParis: 'Paris Gare de Lyon' },
-  'narbonne': { nom: 'Narbonne', lat: 43.190, lon: 3.006, tgv: true, parisMin: 265, depuisParis: 'Paris Gare de Lyon' },
-  'montpellier': { nom: 'Montpellier Saint-Roch', lat: 43.605, lon: 3.880, tgv: true, parisMin: 200, depuisParis: 'Paris Gare de Lyon' },
-  'grau-du-roi': { nom: 'Le Grau-du-Roi', lat: 43.538, lon: 4.137, tgv: false, parisMin: 250, depuisParis: 'Paris Gare de Lyon' },
-  'arles': { nom: 'Arles', lat: 43.684, lon: 4.632, tgv: false, parisMin: 240, depuisParis: 'Paris Gare de Lyon' },
-  'hyeres': { nom: 'Hyères', lat: 43.117, lon: 6.124, tgv: true, parisMin: 270, depuisParis: 'Paris Gare de Lyon' }
+  'dunkerque': { nom: 'Dunkerque', lat: 51.031, lon: 2.369, tgv: true, parisMin: 119, parisMoy: 148, sncf: 'dunkerque', prixDes: 12, depuisParis: 'Paris Nord' },
+  'calais': { nom: 'Calais-Fréthun', lat: 50.901, lon: 1.811, tgv: true, parisMin: 113, parisMoy: 152, sncf: 'calais', prixDes: 22, depuisParis: 'Paris Nord' },
+  'boulogne': { nom: 'Boulogne-sur-Mer', lat: 50.716, lon: 1.611, tgv: true, parisMin: 143, parisMoy: 166, sncf: 'boulogne-sur-mer', prixDes: 33, depuisParis: 'Paris Nord' },
+  'etaples': { nom: 'Étaples – Le Touquet', lat: 50.514, lon: 1.640, tgv: true, parisMin: 129, parisMoy: 166, sncf: 'etaples', prixDes: 20, depuisParis: 'Paris Nord' },
+  'rang': { nom: 'Rang-du-Fliers – Verton', lat: 50.418, lon: 1.646, tgv: true, parisMin: 120, parisMoy: 163, sncf: 'rang-du-fliers', prixDes: 12, depuisParis: 'Paris Nord' },
+  'noyelles': { nom: 'Noyelles-sur-Mer', lat: 50.185, lon: 1.708, tgv: false, parisMin: 103, parisMoy: 135, sncf: 'noyelles-sur-mer', prixDes: 34, depuisParis: 'Paris Nord' },
+  'caen': { nom: 'Caen', lat: 49.176, lon: -0.348, tgv: false, parisMin: 114, parisMoy: 135, sncf: 'caen', prixDes: 17, depuisParis: 'Paris Saint-Lazare' },
+  'coutances': { nom: 'Coutances', lat: 49.047, lon: -1.437, tgv: false, parisMin: 200, parisMoy: 232, sncf: 'coutances', prixDes: 20, depuisParis: 'Paris Saint-Lazare' },
+  'cherbourg': { nom: 'Cherbourg', lat: 49.634, lon: -1.623, tgv: false, parisMin: 187, parisMoy: 207, sncf: 'cherbourg', prixDes: 22, depuisParis: 'Paris Saint-Lazare' },
+  'saint-malo': { nom: 'Saint-Malo', lat: 48.647, lon: -2.006, tgv: true, parisMin: 139, parisMoy: 156, sncf: 'saint-malo', prixDes: 27, depuisParis: 'Paris Montparnasse' },
+  'lamballe': { nom: 'Lamballe', lat: 48.468, lon: -2.517, tgv: true, parisMin: 130, parisMoy: 156, sncf: 'lamballe', prixDes: 24, depuisParis: 'Paris Montparnasse' },
+  'morlaix': { nom: 'Morlaix', lat: 48.578, lon: -3.832, tgv: true, parisMin: 187, parisMoy: 208, sncf: 'morlaix', prixDes: 19, depuisParis: 'Paris Montparnasse' },
+  'brest': { nom: 'Brest', lat: 48.388, lon: -4.479, tgv: true, parisMin: 212, parisMoy: 231, sncf: 'brest', prixDes: 19, depuisParis: 'Paris Montparnasse' },
+  'quimper': { nom: 'Quimper', lat: 47.995, lon: -4.095, tgv: true, parisMin: 208, parisMoy: 239, sncf: 'quimper', prixDes: 19, depuisParis: 'Paris Montparnasse' },
+  'auray': { nom: 'Auray', lat: 47.680, lon: -2.999, tgv: true, parisMin: 157, parisMoy: 169, sncf: 'auray', prixDes: 19, depuisParis: 'Paris Montparnasse' },
+  'la-baule': { nom: 'La Baule-Escoublac', lat: 47.287, lon: -2.390, tgv: true, parisMin: 182, parisMoy: 200, sncf: 'la-baule-escoublac', prixDes: 21, depuisParis: 'Paris Montparnasse' },
+  'saint-nazaire': { nom: 'Saint-Nazaire', lat: 47.286, lon: -2.212, tgv: true, parisMin: 160, parisMoy: 181, sncf: 'saint-nazaire', prixDes: 20, depuisParis: 'Paris Montparnasse' },
+  'challans': { nom: 'Challans', lat: 46.846, lon: -1.877, tgv: false, parisMin: 183, parisMoy: 206, sncf: 'challans', prixDes: 26, depuisParis: 'Paris Montparnasse' },
+  'la-rochelle': { nom: 'La Rochelle', lat: 46.153, lon: -1.145, tgv: true, parisMin: 153, parisMoy: 243, sncf: 'la-rochelle', prixDes: 19, depuisParis: 'Paris Montparnasse' },
+  'chatelaillon': { nom: 'Châtelaillon-Plage', lat: 46.075, lon: -1.088, tgv: false, parisMin: 183, parisMoy: 293, sncf: 'chatelaillon-plage', prixDes: 5, depuisParis: 'Paris Montparnasse' },
+  'rochefort': { nom: 'Rochefort', lat: 45.946, lon: -0.962, tgv: false, parisMin: 199, parisMoy: 301, sncf: 'rochefort', prixDes: 23, depuisParis: 'Paris Montparnasse' },
+  'bordeaux': { nom: 'Bordeaux Saint-Jean', lat: 44.826, lon: -0.556, tgv: true, parisMin: 122, parisMoy: 154, sncf: 'bordeaux', prixDes: 16, depuisParis: 'Paris Montparnasse' },
+  'leucate': { nom: 'Leucate – La Franqui', lat: 42.915, lon: 3.031, tgv: false, parisMin: 318, parisMoy: 430, sncf: 'leucate', prixDes: 54, depuisParis: 'Paris Gare de Lyon' },
+  'narbonne': { nom: 'Narbonne', lat: 43.190, lon: 3.006, tgv: true, parisMin: 265, parisMoy: 356, sncf: 'narbonne', prixDes: 26, depuisParis: 'Paris Gare de Lyon' },
+  'montpellier': { nom: 'Montpellier Saint-Roch', lat: 43.605, lon: 3.880, tgv: true, parisMin: 192, parisMoy: 273, sncf: 'montpellier', prixDes: 25, depuisParis: 'Paris Gare de Lyon' },
+  'grau-du-roi': { nom: 'Le Grau-du-Roi', lat: 43.538, lon: 4.137, tgv: false, parisMin: 292, parisMoy: 333, sncf: 'le-grau-du-roi', prixDes: 37, depuisParis: 'Paris Gare de Lyon' },
+  'arles': { nom: 'Arles', lat: 43.684, lon: 4.632, tgv: false, parisMin: 224, parisMoy: 327, sncf: 'arles', prixDes: 31, depuisParis: 'Paris Gare de Lyon' },
+  'hyeres': { nom: 'Hyères', lat: 43.117, lon: 6.124, tgv: true, parisMin: 270, parisMoy: 362, sncf: 'hyeres', prixDes: 32, depuisParis: 'Paris Gare de Lyon' }
 };
 
 // Aéroports desservis depuis Paris-Orly en vol intérieur. `volMin` : durée du vol seul. L'avion n'est

@@ -101,8 +101,14 @@ export function cardinal(dir) {
 // pleine mer voisines (fenêtre de ±7 h, une demi-marée faisant environ 6 h 12). `null` si la série
 // manque autour de l'heure (au-delà de l'horizon de la prévision marine).
 
+// Open-Meteo Marine annonce la marée en avance d'environ 30 min sur les prédictions du SHOM : relevé le
+// 25/10/2026 sur Diélette (+25 à +35 min) et Port-Haliguen (+21 à +46 min), 8 pleines et basses mers, même
+// coefficient. Le niveau réel à l'heure i est donc celui que le modèle donne une demi-heure plus tôt.
+export const DECALAGE_MAREE_MIN = 30;
+
 export function phaseMaree(niveaux, i, demiFenetre = 7) {
   if (!niveaux || niveaux[i] == null) return null;
+  const actuel = i > 0 && niveaux[i - 1] != null ? (niveaux[i - 1] + niveaux[i]) / 2 : niveaux[i];
   let bas = Infinity, haut = -Infinity;
   for (let j = i - demiFenetre; j <= i + demiFenetre; j++) {
     if (j < 0 || j >= niveaux.length || niveaux[j] == null) return null;
@@ -110,7 +116,7 @@ export function phaseMaree(niveaux, i, demiFenetre = 7) {
     haut = Math.max(haut, niveaux[j]);
   }
   if (haut - bas < 0.3) return null;  // marnage trop faible pour situer la phase
-  const r = (niveaux[i] - bas) / (haut - bas);
+  const r = (actuel - bas) / (haut - bas);
   return r < 1 / 3 ? 'basse' : r > 2 / 3 ? 'haute' : 'mi';
 }
 
@@ -369,7 +375,7 @@ export function extremesMaree(time, niveau, date) {
     if (!haute && !basse) continue;
     const courbure = a - 2 * b + c;
     const decalage = courbure ? Math.max(-0.5, Math.min(0.5, (a - c) / (2 * courbure))) : 0;
-    const minutes = Math.round((+time[i].slice(11, 13) + decalage) * 60);
+    const minutes = Math.round((+time[i].slice(11, 13) + decalage) * 60) + DECALAGE_MAREE_MIN;
     sortie.push({ type: haute ? 'haute' : 'basse', minutes, hauteur: b - courbure * decalage * decalage / 4 });
   }
   return sortie;
@@ -492,6 +498,8 @@ export function optionsTrajet(spot, reglages, contexte, b = BAREMES) {
         detail: {
           depart: depuisParis ? gare.depuisParis : `${ville.nom} (gare principale)`,
           gare: gare.nom, minutesTrain, dureeConnue: Boolean(depuisParis),
+          minutesMoy: depuisParis ? gare.parisMoy : null, prixDes: depuisParis ? gare.prixDes : null,
+          sncf: depuisParis ? gare.sncf : null,
           // Une gare sans TGV demande presque toujours une correspondance (TER) : on le dit, sans
           // pouvoir dire où — aucune API d'horaires n'est ouverte.
           correspondance: !gare.tgv, fin, gareLieu: { lat: gare.lat, lon: gare.lon }
@@ -594,10 +602,13 @@ export function liens(spot, option, ville, samedi) {
   if (option.mode === 'voiture') {
     l.reserver = `https://www.google.com/maps/dir/?api=1&origin=${ville.lat},${ville.lon}&destination=${spot.lat},${spot.lon}&travelmode=driving`;
   } else if (option.mode === 'train') {
-    l.reserver = 'https://www.sncf-connect.com/';
+    // La page trajet de SNCF Connect (horaires du jour, prix d'appel) : pas de lien daté, SNCF Connect
+    // n'en publie pas. Au départ d'une autre ville que Paris, la page d'accueil.
+    l.reserver = option.detail.sncf ? `https://www.sncf-connect.com/train/trajet/paris/${option.detail.sncf}` : 'https://www.sncf-connect.com/';
   } else if (option.mode === 'avion') {
-    l.reserver = 'https://www.google.com/travel/flights?q=' +
-      encodeURIComponent(`vols de ORY à ${option.detail.code} le ${vendredi}`);
+    // Kayak accepte la recherche dans l'adresse ; Google Flights l'ignore (testé le 25/10/2026).
+    const dimanche = samedi ? ajouterJours(samedi, 1) : '';
+    l.reserver = `https://www.kayak.fr/flights/ORY-${option.detail.code}/${vendredi}/${dimanche}`;
   }
   return l;
 }

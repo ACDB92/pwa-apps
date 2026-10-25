@@ -425,8 +425,8 @@ function blocOption(o, retenu) {
       ${d.peage ? `<li>Péages ~${euros(d.peage)}<small>estimés à 0,10 €/km sur les trois quarts du trajet</small></li>` : '<li>Pas d\'autoroute supposée sous 80 km</li>'}`;
   } else if (o.mode === 'train') {
     prix = `${euros(o.coutMin)} – ${euros(o.coutMax)}<small>aller-retour</small>`;
-    etapes = `<li>${echapper(d.depart)} → ${echapper(d.gare)}, ~${duree(d.minutesTrain)}
-        <small>${d.dureeConnue ? 'durée habituelle' : 'durée estimée à la distance'}${d.correspondance ? ' · correspondance probable (gare sans TGV)' : ''} · départ ${vendredi} soir</small></li>
+    etapes = `<li>${echapper(d.depart)} → ${echapper(d.gare)}, ${d.dureeConnue ? `${duree(d.minutesTrain)} au plus rapide` : `~${duree(d.minutesTrain)}`}
+        <small>${d.dureeConnue ? `${duree(d.minutesMoy)} en moyenne sur les trains du jour · dès ${d.prixDes} € l'aller (SNCF Connect, relevé le 25/10)` : 'durée estimée à la distance'}${d.correspondance ? ' · correspondance probable (gare sans TGV)' : ''} · départ ${vendredi} soir</small></li>
       ${etapeFin(d.fin, d.gare, spot)}`;
   } else {
     etapes = `<li>${echapper(ville.nom)} → Orly, ~${duree(d.acces)}</li>
@@ -441,7 +441,7 @@ function blocOption(o, retenu) {
     <span class="prix">${prix}</span>
     <ol class="etapes">${etapes}</ol>
     <span class="actions"><button data-action="voir-trajet" data-mode="${o.mode}">Voir sur la carte</button>
-      ${l.reserver ? `<a href="${l.reserver}" target="_blank" rel="noopener">${o.mode === 'voiture' ? 'Itinéraire Google Maps' : 'Voir les vrais prix'} ↗</a>` : ''}</span>
+      ${l.reserver ? `<a href="${l.reserver}" target="_blank" rel="noopener">${{ voiture: 'Itinéraire Google Maps', train: 'Horaires et prix SNCF Connect', avion: 'Vols sur Kayak' }[o.mode]} ↗</a>` : ''}</span>
   </div>`;
 }
 
@@ -595,7 +595,7 @@ matchMedia('(min-width: 1200px)').addEventListener?.('change', e => { if (e.matc
 function rendreReglages() {
   const r = etat.r;
   const champNum = (cle, lib, min, max, pas, unite, aide = '') => `
-    <div class="champ"><label for="r-${cle}">${lib} <b id="v-${cle}">${r[cle]} ${unite}</b></label>
+    <div class="champ"><label for="r-${cle}">${lib} <b id="v-${cle}">${String(r[cle]).replace('.', ',')} ${unite}</b></label>
       <input type="range" id="r-${cle}" data-reglage="${cle}" min="${min}" max="${max}" step="${pas}" value="${r[cle]}" data-unite="${unite}">
       ${aide ? `<div class="aide">${aide}</div>` : ''}</div>`;
   const bascule = (groupe, valeur, lib, actif) => `<button class="bascule" data-groupe="${groupe}" data-valeur="${valeur}" aria-pressed="${actif}">${lib}</button>`;
@@ -733,7 +733,7 @@ document.addEventListener('input', e => {
   if (cle === 'ventMin' && etat.r.ventMax <= v) etat.r.ventMax = v + 1;
   if (cle === 'ventMax' && etat.r.ventMin >= v) etat.r.ventMin = v - 1;
   const lab = document.getElementById('v-' + cle);
-  if (lab) lab.textContent = `${v} ${el.dataset.unite}`;
+  if (lab) lab.textContent = `${String(v).replace('.', ',')} ${el.dataset.unite}`;
   if (cle === 'compagnie' || cle === 'carburant') rendreReglages();
   reglageChange(cle === 'ville');
 });
@@ -770,4 +770,9 @@ carte = new Carte($('#carte'), { surSpot: ouvrirSpot });
 $('#lecture').innerHTML = ICONES.lecture;
 chargement();
 if (reglagesFixes()) rendreReglages();
+// Une appli laissée ouverte (onglet, écran d'accueil) garde sa prévision : au retour au premier plan,
+// si elle a plus d'une heure, on recharge — le cache de meteo.js décide de ce qui est vraiment périmé.
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && etat.prevQuand && Date.now() - etat.prevQuand > 3600 * 1000) chargerTout(false);
+});
 chargerTout(true);
