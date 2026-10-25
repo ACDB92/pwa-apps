@@ -1,0 +1,15 @@
+{
+  "name": "Coup de vent — week-ends kitesurf",
+  "short_name": "Coup de vent",
+  "description": "Où et quand partir en week-end de kitesurf : le vent, la marée et le prix du trajet, spot par spot.",
+  "lang": "fr",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#020B15",
+  "theme_color": "#020B15",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

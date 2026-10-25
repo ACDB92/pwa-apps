@@ -1,0 +1,240 @@
+// La carte : contour de la France en SVG, spots, et un champ de vent animé dessiné dans un canvas.
+// Le mouvement porte la donnée : chaque particule suit le vent prévu à l'heure choisie, interpolé
+// entre les spots (pondération inverse du carré de la distance). Sa vitesse suit la force du vent,
+// sa couleur aussi. Avec « réduire les animations », le champ devient une grille de flèches fixes.
+
+import { CONTOUR_FRANCE, CONTOUR_CORSE } from './spots.js';
+
+const BORNES = { ouest: -5.6, est: 9.9, sud: 41.1, nord: 51.4 };
+const COS = Math.cos(46.5 * Math.PI / 180);
+const NS = 'http://www.w3.org/2000/svg';
+
+export function projeter(lon, lat) {
+  return [(lon - BORNES.ouest) * COS * 100, (BORNES.nord - lat) * 100];
+}
+const LARGEUR = (BORNES.est - BORNES.ouest) * COS * 100;
+const HAUTEUR = (BORNES.nord - BORNES.sud) * 100;
+
+function chemin(points) {
+  return points.map(([lon, lat], i) => (i ? 'L' : 'M') + projeter(lon, lat).map(v => v.toFixed(1)).join(' ')).join('') + 'Z';
+}
+
+// Couleur d'un vent, du calme au très fort — la même échelle sur la carte et dans les fiches.
+// `fonce` : sur fond clair, les mêmes teintes assombries, sinon les traînées pâles disparaissent.
+export function couleurVent(kn, alpha = 1, fonce = false) {
+  const pal = [[0, [120, 160, 200]], [10, [90, 190, 230]], [16, [46, 230, 197]], [24, [160, 240, 120]], [30, [255, 196, 87]], [38, [255, 110, 90]]];
+  let a = pal[0], b = pal[pal.length - 1];
+  for (let i = 0; i < pal.length - 1; i++) if (kn >= pal[i][0] && kn <= pal[i + 1][0]) { a = pal[i]; b = pal[i + 1]; break; }
+  if (kn > pal[pal.length - 1][0]) a = b;
+  const t = b[0] === a[0] ? 0 : (kn - a[0]) / (b[0] - a[0]);
+  const c = a[1].map((v, k) => Math.round((v + (b[1][k] - v) * t) * (fonce ? 0.62 : 1)));
+  return `rgba(${c[0]},${c[1]},${c[2]},${alpha})`;
+}
+
+export class Carte {
+  constructor(conteneur, { surSpot }) {
+    this.conteneur = conteneur;
+    this.surSpot = surSpot;
+    this.vents = [];          // [{ x, y, u, v, kn }] en coordonnées carte, vecteur = sens où va l'air
+    this.spots = [];
+    this.calmes = matchMedia('(prefers-reduced-motion: reduce)');
+
+    this.svg = document.createElementNS(NS, 'svg');
+    this.svg.setAttribute('viewBox', `0 0 ${LARGEUR.toFixed(0)} ${HAUTEUR.toFixed(0)}`);
+    this.svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    this.svg.classList.add('carte-svg');
+    this.svg.innerHTML = `
+      <defs>
+        <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="var(--accent)" stop-opacity=".55"/>
+          <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="lueur" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="6" result="f"/><feMerge><feMergeNode in="f"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <g class="terre">
+        <path class="contour-lueur" d="${chemin(CONTOUR_FRANCE)} ${chemin(CONTOUR_CORSE)}"/>
+        <path class="contour" d="${chemin(CONTOUR_FRANCE)} ${chemin(CONTOUR_CORSE)}"/>
+      </g>
+      <g class="spots"></g>`;
+    this.groupeSpots = this.svg.querySelector('.spots');
+
+    this.canvas = document.createElement('canvas');
+    this.canvas.className = 'carte-vent';
+    this.ctx = this.canvas.getContext('2d');
+    conteneur.append(this.canvas, this.svg);
+
+    this.particules = [];
+    new ResizeObserver(() => this.redimensionner()).observe(conteneur);
+    this.calmes.addEventListener?.('change', () => this.relancer());
+    matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => this.relancer());
+    document.addEventListener('visibilitychange', () => this.relancer());
+    this.redimensionner();
+  }
+
+  // Le SVG est en « meet » : on recalcule où tombe la carte dans le conteneur pour caler le canvas.
+  redimensionner() {
+    const r = this.conteneur.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    this.canvas.width = r.width * dpr;
+    this.canvas.height = r.height * dpr;
+    this.canvas.style.width = r.width + 'px';
+    this.canvas.style.height = r.height + 'px';
+    const echelle = Math.min(r.width / LARGEUR, r.height / HAUTEUR);
+    this.cadre = {
+      echelle: echelle * dpr,
+      dx: (r.width - LARGEUR * echelle) / 2 * dpr,
+      dy: (r.height - HAUTEUR * echelle) / 2 * dpr,
+      l: this.canvas.width, h: this.canvas.height, dpr
+    };
+    // Les spots se dessinent en pixels d'écran, quelle que soit la taille de la carte.
+    this.k = 1 / echelle;
+    this.groupeSpots.querySelectorAll('.spot').forEach(n => n.setAttribute('transform', `translate(${n.dataset.xy}) scale(${this.k})`));
+    const n = Math.round(Math.min(1600, (r.width * r.height) / 520));
+    this.particules = Array.from({ length: n }, () => this.naitre({}, true));
+    this.relancer();
+  }
+
+  naitre(p, ageAleatoire = false) {
+    p.x = Math.random() * this.canvas.width;
+    p.y = Math.random() * this.canvas.height;
+    p.age = ageAleatoire ? Math.random() * 80 : 0;
+    p.vie = 50 + Math.random() * 60;
+    return p;
+  }
+
+  // vents : [{ lon, lat, kn, dir }] — dir est d'où vient le vent, comme en météo.
+  poserVents(vents) {
+    this.vents = vents.filter(v => v.kn != null && v.dir != null).map(v => {
+      const [x, y] = projeter(v.lon, v.lat);
+      const va = (v.dir + 180) * Math.PI / 180;  // sens où va l'air
+      return { x, y, u: Math.sin(va) * v.kn, v: -Math.cos(va) * v.kn, kn: v.kn };
+    });
+    if (this.calmes.matches) this.dessinerFige();
+  }
+
+  // Vent au point (x, y) de la carte : moyenne pondérée par 1/d², donc très proche d'un spot, c'est
+  // le vent du spot.
+  ventEn(x, y) {
+    let su = 0, sv = 0, sk = 0, sp = 0;
+    for (const w of this.vents) {
+      const d2 = (w.x - x) ** 2 + (w.y - y) ** 2 + 400;
+      const p = 1 / d2;
+      su += w.u * p; sv += w.v * p; sk += w.kn * p; sp += p;
+    }
+    return sp ? { u: su / sp, v: sv / sp, kn: sk / sp } : { u: 0, v: 0, kn: 0 };
+  }
+
+  versCarte(px, py) {
+    const c = this.cadre;
+    return [(px - c.dx) / c.echelle, (py - c.dy) / c.echelle];
+  }
+
+  relancer() {
+    cancelAnimationFrame(this.boucle);
+    if (!this.cadre) return;
+    this.clair = getComputedStyle(document.documentElement).getPropertyValue('--mode').trim() === 'clair';
+    this.ctx.clearRect(0, 0, this.cadre.l, this.cadre.h);
+    if (this.calmes.matches || document.hidden) { this.dessinerFige(); return; }
+    const pas = () => { this.anime(); this.boucle = requestAnimationFrame(pas); };
+    this.boucle = requestAnimationFrame(pas);
+  }
+
+  anime() {
+    const { ctx } = this;
+    const c = this.cadre;
+    // Les traînées s'effacent doucement au lieu d'être repeintes : c'est ce qui donne le fil du vent.
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = 'rgba(0,0,0,0.055)';
+    ctx.fillRect(0, 0, c.l, c.h);
+    ctx.globalCompositeOperation = 'source-over';
+    if (!this.vents.length) return;
+    ctx.lineWidth = 1.3 * c.dpr;
+    ctx.lineCap = 'round';
+    const vitesse = 0.045 * c.dpr;
+    for (const p of this.particules) {
+      const [mx, my] = this.versCarte(p.x, p.y);
+      const w = this.ventEn(mx, my);
+      const nx = p.x + w.u * vitesse * 2.4, ny = p.y + w.v * vitesse * 2.4;
+      ctx.strokeStyle = couleurVent(w.kn, Math.min(0.9, 0.25 + w.kn / 40), this.clair);
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(nx, ny);
+      ctx.stroke();
+      p.x = nx; p.y = ny; p.age++;
+      if (p.age > p.vie || nx < 0 || ny < 0 || nx > c.l || ny > c.h) this.naitre(p);
+    }
+  }
+
+  // Sans animation : une grille de flèches, même échelle de couleur.
+  dessinerFige() {
+    const { ctx } = this;
+    const c = this.cadre;
+    if (!c) return;
+    ctx.clearRect(0, 0, c.l, c.h);
+    if (!this.vents.length) return;
+    const pas = 46 * c.dpr;
+    for (let y = pas / 2; y < c.h; y += pas) {
+      for (let x = pas / 2; x < c.l; x += pas) {
+        const [mx, my] = this.versCarte(x, y);
+        const w = this.ventEn(mx, my);
+        const n = Math.hypot(w.u, w.v) || 1;
+        const lg = (8 + Math.min(14, w.kn / 2)) * c.dpr;
+        const ux = w.u / n * lg, uy = w.v / n * lg;
+        ctx.strokeStyle = couleurVent(w.kn, 0.6, this.clair);
+        ctx.lineWidth = 1.5 * c.dpr;
+        ctx.beginPath();
+        ctx.moveTo(x - ux / 2, y - uy / 2);
+        ctx.lineTo(x + ux / 2, y + uy / 2);
+        const a = Math.atan2(uy, ux);
+        ctx.lineTo(x + ux / 2 - Math.cos(a - 0.5) * 5 * c.dpr, y + uy / 2 - Math.sin(a - 0.5) * 5 * c.dpr);
+        ctx.stroke();
+      }
+    }
+  }
+
+  // spots : [{ id, nom, lon, lat, etat: 'top' | 'ok' | 'ecarte', rang, kn, dir, choisi }]
+  poserSpots(spots) {
+    const g = this.groupeSpots;
+    const existants = new Map([...g.children].map(n => [n.dataset.id, n]));
+    spots.forEach(s => {
+      const [x, y] = projeter(s.lon, s.lat);
+      let n = existants.get(s.id);
+      if (!n) {
+        n = document.createElementNS(NS, 'g');
+        n.dataset.id = s.id;
+        n.classList.add('spot');
+        n.innerHTML = `<circle class="halo" r="26" fill="url(#halo)"/><circle class="pouls" r="7"/>
+          <g class="fleche"><path d="M0 -14 L4 -7.5 L-4 -7.5 Z"/></g><circle class="point" r="6"/>
+          <text class="nom" y="-17"></text><text class="rang" y="3.5"></text>`;
+        n.addEventListener('click', () => this.surSpot(s.id));
+        g.append(n);
+      }
+      existants.delete(s.id);
+      n.dataset.xy = `${x.toFixed(1)} ${y.toFixed(1)}`;
+      n.setAttribute('transform', `translate(${n.dataset.xy}) scale(${this.k ?? 1})`);
+      n.setAttribute('class', `spot ${s.etat}${s.choisi ? ' choisi' : ''}`);
+      n.style.setProperty('--c', couleurVent(s.kn ?? 0));
+      n.querySelector('.fleche').style.transform = `rotate(${(s.dir ?? 0) + 180}deg)`;
+      n.querySelector('.fleche').style.opacity = s.dir == null ? 0 : 1;
+      n.querySelector('.nom').textContent = '';
+      n.querySelector('.rang').textContent = s.rang && s.rang <= 9 ? s.rang : '';
+    });
+    existants.forEach(n => n.remove());
+
+    // Les noms : le spot choisi d'abord, puis par rang. Un nom qui tomberait à moins de 40 px d'un
+    // nom déjà posé est omis — sur la Côte d'Opale, cinq spots tiennent dans un centimètre.
+    const poses = [];
+    const ecart = 40 * (this.k ?? 1);
+    spots.filter(s => s.etat === 'top' || s.choisi)
+      .sort((a, b) => (b.choisi - a.choisi) || ((a.rang ?? 99) - (b.rang ?? 99)))
+      .forEach(s => {
+        const [x, y] = projeter(s.lon, s.lat);
+        if (poses.some(([px, py]) => Math.hypot(px - x, py - y) < ecart)) return;
+        poses.push([x, y]);
+        g.querySelector(`[data-id="${CSS.escape(s.id)}"] .nom`).textContent = s.nom;
+      });
+  }
+}
