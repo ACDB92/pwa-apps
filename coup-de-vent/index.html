@@ -221,6 +221,15 @@
   .graph { padding: 14px 12px 8px; border-radius: 20px; background: var(--verre); border: 1px solid var(--verre-bord); margin-bottom: 10px; overflow: hidden; }
   .graph .jour { font-weight: 700; font-size: 14px; margin: 0 4px 6px; display: flex; justify-content: space-between; }
   .graph .jour span { color: var(--doux); font-weight: 600; }
+  .graph .jour .titre-jour { color: var(--encre); }
+  .graph .jour .ok { color: var(--accent); font-weight: 700; }
+  .resume-jour { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 4px 4px 12px; font-size: 14px; }
+  .resume-jour dt { color: var(--doux); font-size: 13px; }
+  .resume-jour dd { margin: 0; font-weight: 600; }
+  .pale { color: var(--pale); font-weight: 500; }
+  .jour-ligne { font-size: 13px; color: var(--encre); padding: 2px 0; }
+  .jour-ligne b { margin-right: 4px; }
+  .jour-ligne.non { color: var(--pale); }
   .graph svg { width: 100%; height: auto; display: block; overflow: visible; }
   .graph .b { transform-box: fill-box; transform-origin: bottom; animation: pousse .8s var(--ressort) both; animation-delay: calc(var(--k) * 28ms); }
   .graph .lg { font-size: 10px; fill: var(--pale); }

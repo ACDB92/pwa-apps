@@ -3,7 +3,7 @@
 
 import {
   REGLAGES_DEFAUT, lireHeures, resumeHeures, optionsTrajet, classer, weekendsPourSpot, samedisDisponibles,
-  joursDuWeekend, fiabilite, joursEntre, combi, cardinal, liens, distanceKm, choisirMode, enSaison, NIVEAUX, ventA
+  joursDuWeekend, fiabilite, confiance, joursEntre, combi, cardinal, liens, distanceKm, choisirMode, enSaison, NIVEAUX, ventA, resumeJour, extremesMaree, heureMinute
 } from './engine.js';
 import { SPOTS, GARES, AEROPORTS, COMPAGNIES, VILLES, SOURCE_SPOTS } from './spots.js';
 import { chargerPrevisions, chargerRoutes, chargerCarburant } from './meteo.js';
@@ -78,7 +78,11 @@ function plageDates(jours) {
   return `${dateCourte(jours[0], false)} – ${dateCourte(jours[jours.length - 1], false)}`;
 }
 const pointsFiab = n => `<span class="points-fiab" title="Fiabilité de la prévision">${[1, 2, 3, 4].map(k => `<i class="${k <= n ? 'on' : ''}"></i>`).join('')}</span>`;
-const badgeAccord = a => `<span class="badge ${a.niveau === 3 ? '' : a.niveau === 2 ? 'ambre' : a.niveau === 1 ? 'corail' : 'gris'}" title="${a.ecart != null ? `écart moyen ${a.ecart.toFixed(1)} nœuds entre ${a.n} modèles` : ''}">${a.libelle}</span>`;
+// Un seul indicateur de confiance, en positif. Pas de rouge : une prévision lointaine n'est pas une
+// alerte, c'est une tendance — on dit quand la reconfirmer.
+const confianceDe = (resume, samedi) => confiance(joursEntre(aujourdhui(), samedi), resume?.accord, samedi, aujourdhui());
+const badgeConfiance = c => `<span class="badge ${c.niveau === 3 ? '' : 'gris'}">${pointsFiab(c.niveau + 1)} ${c.libelle}${c.conseil ? ' · ' + c.conseil : ''}</span>`;
+const detailAccord = a => (a.ecart != null ? `${a.libelle} : ${a.ecart.toFixed(1)} nœuds d'écart moyen autour de la médiane (${a.n} modèles)` : a.libelle);
 const coefDe = date => etat.coef?.[date];
 const libCoef = c => (c == null ? '' : `coef. ~${c}${c >= 95 ? ' · vives-eaux' : c <= 45 ? ' · mortes-eaux' : ''}`);
 const echapper = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -241,6 +245,49 @@ function miniBarres(lignes) {
   return `<div class="mini">${html}</div>`;
 }
 
+// Pleines et basses mers de jour (7 h – 20 h) pour un spot à marée.
+function mareesDuJour(spot, date) {
+  const h = etat.prev?.[spot.id]?.heures;
+  if (!spot.maree || !h) return [];
+  return extremesMaree(h.time, h.niveau, date).filter(e => e.minutes >= 7 * 60 && e.minutes <= 20 * 60);
+}
+
+const plageVent = r => (Math.round(r.ventMin) === Math.round(r.ventMax) ? `${Math.round(r.ventMin)}` : `${Math.round(r.ventMin)}-${Math.round(r.ventMax)}`);
+
+// La ligne d'un jour sur une carte de la liste : le créneau et son vent, ou ce qui bloque.
+function ligneJour(spot, lignes, date) {
+  const r = resumeJour(lignes, date);
+  const d = dateCourte(date).replace('.', '');
+  const jour = `<b>${d[0].toUpperCase() + d.slice(1)}</b>`;
+  if (!r) return `<div class="jour-ligne">${jour} hors prévision</div>`;
+  if (!r.meilleure) return `<div class="jour-ligne non">${jour} ${echapper(r.raison)}</div>`;
+  const pm = mareesDuJour(spot, date).find(e => e.type === 'haute');
+  return `<div class="jour-ligne">${jour} ${r.meilleure.debut} h → ${r.meilleure.fin} h · ${plageVent(r)} nœuds ${cardinal(r.dir)}${pm ? ` · PM ${heureMinute(pm.minutes)}` : ''}</div>`;
+}
+
+// Le résumé en clair d'un jour dans la fiche, au-dessus du graphique.
+function resumeJourFiche(spot, lignes, date) {
+  const r = resumeJour(lignes, date);
+  if (!r) return `<div class="jour">${dateCourte(date)}<span>hors prévision</span></div>`;
+  const titre = r.meilleure
+    ? `navigable ${r.meilleure.debut} h → ${r.meilleure.fin} h (${r.meilleure.fin - r.meilleure.debut} h)${r.sessions.length > 1 ? ` · ${r.heures} h en tout` : ''}`
+    : 'pas de créneau';
+  const marees = mareesDuJour(spot, date);
+  const coef = coefDe(date);
+  const lignesTexte = [
+    ['Vent', `${plageVent(r)} nœuds ${cardinal(r.dir)}, rafales ${Math.round(r.rafaleMax)}${r.meilleure ? '' : ` — ${echapper(r.raison)}`}`],
+    spot.maree ? ['Marée', marees.length
+      ? marees.map(e => `${e.type === 'haute' ? 'pleine mer' : 'basse mer'} ${heureMinute(e.minutes)}`).join(' · ') + (coef != null ? ` · coef. ~${coef}` : '')
+        + ` <span class="pale">(spot bon ${spot.maree.length === 3 ? 'à toutes marées' : 'à marée ' + spot.maree.join(', ')})</span>`
+      : 'inconnue au-delà de 8 jours'] : null,
+    ['Températures', `air ${nd(r.air)}° · eau ${nd(r.eau)}°${combi(r.eau) ? ` → ${combi(r.eau)}` : ''}`],
+    !spot.secteurs && r.vagues != null ? ['Houle', `${r.vagues.toFixed(1).replace('.', ',')} m · ${Math.round(r.periode ?? 0)} s <span class="pale">(au large)</span>`] : null
+  ].filter(Boolean);
+  const d = dateCourte(date);
+  return `<div class="jour"><span class="titre-jour">${d[0].toUpperCase() + d.slice(1)}</span><span class="${r.meilleure ? 'ok' : ''}">${titre}</span></div>
+    <dl class="resume-jour">${lignesTexte.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`;
+}
+
 function libelleTrajet(t) {
   return `${ICONES[t.mode]} ${duree(t.minutes)} · ~${euros(t.cout)}`;
 }
@@ -248,8 +295,7 @@ function libelleTrajet(t) {
 function rendreOu() {
   const { retenus, ecartes } = etat.resultat;
   const auj = aujourdhui();
-  const f = fiabilite(joursEntre(auj, etat.samedi));
-  const tag = `<span class="badge ${f.niveau >= 3 ? '' : f.niveau === 2 ? 'ambre' : 'corail'}">${pointsFiab(f.niveau)} prévision ${f.libelle}</span>`;
+  const tag = badgeConfiance(confianceDe(retenus[0]?.resume, etat.samedi));
   const quand = joursEntre(auj, etat.samedi) <= 6 ? 'Ce week-end' : `Le week-end du ${dateCourte(etat.samedi, false)}`;
 
   if (retenus.length) {
@@ -263,7 +309,7 @@ function rendreOu() {
           <span><b data-compte="${Math.round(b.resume.ventMoyen)}">0</b> nœuds <span class="fleche-dir" style="transform:rotate(${(b.resume.dirMoyenne ?? 0) + 180}deg)">↑</span> ${cardinal(b.resume.dirMoyenne ?? 0)}</span>
           <span>${libelleTrajet(b.trajet)}</span>
         </div>
-        <div class="ligne">${tag} ${badgeAccord(b.resume.accord)}<span>session de ${b.resume.fenetre} h d'affilée</span></div>
+        <div class="ligne">${tag}<span>session de ${b.resume.fenetre} h d'affilée</span></div>
       </div>`;
   } else {
     const raisons = {};
@@ -286,8 +332,8 @@ function rendreOu() {
       <span class="droite"><span class="h" data-compte="${r.resume.navigables}">0</span><span class="h"><small> h</small></span>
         <div class="trajet">${libelleTrajet(r.trajet)}</div></span>
       <span class="zone">${echapper(r.spot.zone || r.spot.lieu || '')} · ${Math.round(r.resume.ventMoyen)} nœuds ${cardinal(r.resume.dirMoyenne ?? 0)} · session ${r.resume.fenetre} h${r.resume.mareeInconnue ? ' · marée inconnue' : ''}</span>
-      <span class="etiquettes">${badgeAccord(r.resume.accord)}${r.spot.niveau === 'confirmé' ? '<span class="badge corail">confirmés</span>' : ''}${r.resume.orage ? '<span class="badge corail">orage</span>' : ''}${r.spot.dangers?.length ? `<span class="badge gris">⚠ ${r.spot.dangers.length}</span>` : ''}</span>
-      <span class="barres">${miniBarres(r.lignes)}</span>
+      <span class="etiquettes">${r.spot.niveau === 'confirmé' ? '<span class="badge corail">confirmés</span>' : ''}${r.resume.orage ? '<span class="badge corail">orage</span>' : ''}${r.spot.dangers?.length ? `<span class="badge gris">⚠ ${r.spot.dangers.length}</span>` : ''}</span>
+      <span class="barres">${etat.jours.map(j => ligneJour(r.spot, r.lignes, j)).join('')}</span>
     </button>`).join('');
 
   const entete = retenus.length
@@ -367,7 +413,7 @@ function rendreFiche(id) {
   const resume = resumeHeures(ev.lignes);
   const choix = choisirMode(ev.options, etat.r).mode;
   const favori = etat.r.favoris.includes(id);
-  const f = fiabilite(joursEntre(aujourdhui(), etat.samedi));
+  const conf = confianceDe(resume, etat.samedi);
   const eau = resume.eau, air = resume.air;
   const typeDir = ev.lignes.length ? ev.lignes.find(l => l.ok)?.direction || ev.lignes[0].direction : '—';
 
@@ -380,13 +426,13 @@ function rendreFiche(id) {
     <div class="heros apparait" style="--k:1">
       <div class="sur">${echapper(spot.lieu || '')} · ${echapper(spot.zone || '')}</div>
       <h2>${echapper(spot.nom)}</h2>
-      <div class="ligne"><span class="badge ${f.niveau >= 3 ? '' : f.niveau === 2 ? 'ambre' : 'corail'}">${pointsFiab(f.niveau)} ${plageDates(etat.jours)} · ${f.libelle}</span></div>
+      <div class="ligne"><span class="badge gris">${plageDates(etat.jours)}</span>${badgeConfiance(conf)}</div>
     </div>`;
 
   const parJour = etat.jours.map(j => {
     const lj = ev.lignes.filter(l => l.date === j);
     if (!lj.length) return `<div class="graph"><div class="jour">${dateCourte(j)}<span>hors prévision</span></div></div>`;
-    return `<div class="graph apparait"><div class="jour">${dateCourte(j)}<span>${lj.filter(l => l.ok).length} h navigables${spot.maree && coefDe(j) != null ? ` · ${libCoef(coefDe(j))}` : ''}</span></div>${graphJour(lj, etat.r)}</div>`;
+    return `<div class="graph apparait">${resumeJourFiche(spot, ev.lignes, j)}${graphJour(lj, etat.r)}</div>`;
   }).join('');
 
   const options = ev.options.map(o => blocOption(o, choix && o.mode === choix.mode)).join('');
@@ -402,8 +448,8 @@ function rendreFiche(id) {
       <div class="chip apparait" style="--k:3"><div class="k">Rafales max</div><div class="v"><span data-compte="${Math.round(resume.rafaleMax)}">0</span><small>nœuds</small></div></div>
       <div class="chip apparait" style="--k:4"><div class="k">Direction</div><div class="v" style="font-size:17px">${echapper(typeDir)}</div></div>
       <div class="chip apparait" style="--k:5"><div class="k">Plus longue session</div><div class="v"><span data-compte="${resume.fenetre}">0</span><small>h d'affilée</small></div></div>
-      <div class="chip apparait" style="--k:5"><div class="k">Accord des modèles</div><div class="v" style="font-size:15px">${badgeAccord(resume.accord)}</div><div class="k" style="margin-top:4px">verdict : ${echapper(ev.lignes[0]?.source || '—')}</div></div>
-      <div class="chip apparait" style="--k:6"><div class="k">Houle au large</div><div class="v">${resume.vagues != null ? resume.vagues.toFixed(1) : '—'}<small>m${resume.periode != null ? ` · ${Math.round(resume.periode)} s` : ''}</small></div></div>
+      <div class="chip apparait" style="--k:5"><div class="k">Confiance</div><div class="v" style="font-size:17px">${conf.libelle}</div><div class="k" style="margin-top:4px">${echapper(conf.conseil ? conf.conseil[0].toUpperCase() + conf.conseil.slice(1) + '. ' : '')}Verdict sur la ${echapper(ev.lignes[0]?.source || '—')} ; ${echapper(detailAccord(resume.accord))}.</div></div>
+      <div class="chip apparait" style="--k:6"><div class="k">Houle au large</div><div class="v">${resume.vagues != null ? resume.vagues.toFixed(1).replace('.', ',') : '—'}<small>m${resume.periode != null ? ` · ${Math.round(resume.periode)} s` : ''}</small></div></div>
       <div class="chip apparait" style="--k:5"><div class="k">Eau · air</div><div class="v">${nd(eau)}°<small>· ${nd(air)}°</small></div></div>
       <div class="chip apparait" style="--k:6"><div class="k">Combi conseillée</div><div class="v" style="font-size:15px">${echapper(combi(eau) || '—')}</div></div>
     </div>
@@ -420,7 +466,7 @@ function rendreFiche(id) {
       ${etat.jours.some(j => coefDe(j) >= 95) && spot.maree ? '<p>Vives-eaux : courants plus forts et plage réduite à marée haute.</p>' : ''}
       <p class="note" style="margin:6px 0 0">Indications générales, à vérifier auprès d'un club local.</p>
     </div>
-    <div class="titre-section">Heure par heure</div>
+    <div class="titre-section">Jour par jour</div>
     ${parJour}
     <div class="legende"><span><i style="background:#2EE6C5"></i>navigable</span><span><i style="background:var(--barre-non)"></i>hors critères</span><span>— rafales</span><span>↑ sens du vent</span><span><i style="background:var(--encre);border-radius:50%;width:6px;height:6px"></i>chaque modèle (barre = médiane)</span>${spot.maree ? '<span><i style="background:var(--bleu)"></i>marée haute</span>' : ''}</div>
     <div class="titre-section">Y aller</div>
@@ -439,8 +485,8 @@ function rendreFiche(id) {
 function blocWeekend(w) {
   return `<div class="we apparait">
     <div class="haut"><span class="dates">${plageDates(w.jours)}</span>
-      <span class="badge ${w.fiabilite.niveau >= 3 ? '' : w.fiabilite.niveau === 2 ? 'ambre' : 'corail'}">${pointsFiab(w.fiabilite.niveau)} ${w.fiabilite.libelle}</span></div>
-    <div class="haut"><span>${badgeAccord(w.resume.accord)} <span style="color:var(--doux);font-size:13px">session ${w.resume.fenetre} h${w.jours.some(j => coefDe(j) != null) ? ' · ' + libCoef(Math.max(...w.jours.map(coefDe).filter(c => c != null))) : ''}</span></span></div>
+      ${badgeConfiance(confianceDe(w.resume, w.samedi))}</div>
+    <div class="haut"><span><span style="color:var(--doux);font-size:13px">session ${w.resume.fenetre} h${w.jours.some(j => coefDe(j) != null) ? ' · ' + libCoef(Math.max(...w.jours.map(coefDe).filter(c => c != null))) : ''}</span></span></div>
     <div class="haut"><span><b class="gros" data-compte="${w.resume.navigables}">0</b> h navigables${w.complet ? '' : ' <span class="badge gris">prévision partielle</span>'}</span>
       <span style="color:var(--doux);font-size:13px">${w.lignes.length ? `${Math.round(w.resume.ventMoyen)} nœuds ${cardinal(w.resume.dirMoyenne ?? 0)}` : ''}</span></div>
     ${miniBarres(w.lignes)}

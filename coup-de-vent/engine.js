@@ -204,7 +204,7 @@ export function lireHeures(spot, prevision, jours, reglages) {
       t, date, heure: debut / 60, vent, rafale, dir, direction: direction.type,
       temp: heures.temp?.[i] ?? null, eau: heures.eau?.[i] ?? null,
       vague, periode: heures.periode?.[i] ?? null, code, averse: CODES_AVERSE.includes(code),
-      modeles, source: parMediane ? `médiane de ${modeles.length} modèles` : 'modèle par défaut', ecartModeles: modeles.length >= 2 ? Math.max(...modeles.map(m => m.vent)) - Math.min(...modeles.map(m => m.vent)) : null,
+      modeles, source: parMediane ? `médiane de ${modeles.length} modèles` : 'modèle par défaut', dispersion: modeles.length >= 2 ? dispersion(modeles.map(m => m.vent)) : null,
       phase, mareeInconnue: Boolean(spot.maree) && phase == null,
       ok: raisons.length === 0, raisons
     });
@@ -255,17 +255,39 @@ export function fenetreMax(lignes) {
   return best;
 }
 
-// L'accord des modèles, mesuré sur les heures qui comptent (les navigables, sinon toutes) : écart moyen
-// entre le modèle le plus venté et le moins venté. Plus fiable qu'une fiabilité tirée de la seule échéance.
+// Dispersion des modèles autour de leur médiane : écart absolu moyen, en nœuds. Contrairement à
+// l'écart entre les deux extrêmes, un modèle isolé ne la fait pas exploser — c'est la médiane qui
+// tranche, et c'est autour d'elle qu'on mesure.
+export function dispersion(valeurs) {
+  const m = mediane(valeurs);
+  return valeurs.reduce((s, v) => s + Math.abs(v - m), 0) / valeurs.length;
+}
+
+// L'accord des modèles, sur les heures qui comptent (les navigables, sinon toutes).
 export function accordModeles(lignes) {
   const base = lignes.some(l => l.ok) ? lignes.filter(l => l.ok) : lignes;
-  const ecarts = base.map(l => l.ecartModeles).filter(e => e != null);
+  const d = base.map(l => l.dispersion).filter(e => e != null);
   const n = Math.max(0, ...base.map(l => l.modeles?.length ?? 0));
-  if (!ecarts.length) return { niveau: 0, libelle: n ? 'un seul modèle' : 'modèles absents', ecart: null, n };
-  const ecart = ecarts.reduce((a, b) => a + b, 0) / ecarts.length;
-  if (ecart <= 4) return { niveau: 3, libelle: 'modèles d\'accord', ecart, n };
-  if (ecart <= 8) return { niveau: 2, libelle: 'léger désaccord', ecart, n };
-  return { niveau: 1, libelle: 'modèles en désaccord', ecart, n };
+  if (!d.length) return { niveau: 0, libelle: n ? 'un seul modèle' : 'modèles absents', ecart: null, n };
+  const ecart = d.reduce((a, b) => a + b, 0) / d.length;
+  if (ecart <= 3) return { niveau: 3, libelle: 'modèles d\'accord', ecart, n };
+  if (ecart <= 6) return { niveau: 2, libelle: 'modèles proches', ecart, n };
+  return { niveau: 1, libelle: 'modèles partagés', ecart, n };
+}
+
+// Un seul indicateur pour l'utilisateur : l'échéance fixe le plafond (une prévision à 6 jours reste
+// une tendance, même si les modèles s'accordent), et des modèles partagés le baissent d'un cran.
+// Formulé en positif, avec ce qu'il faut faire : « à confirmer jeudi », pas « désaccord ».
+export function confiance(joursAvance, accord, samedi, aujourdhui) {
+  let niveau = joursAvance <= 2 ? 3 : joursAvance <= 5 ? 2 : 1;
+  if (accord?.niveau === 1) niveau = Math.max(1, niveau - 1);
+  const libelle = ['', 'Tendance', 'Probable', 'Fiable'][niveau];
+  let conseil = '';
+  if (niveau === 1 && samedi) {
+    const jeudi = ajouterJours(samedi, -2);
+    conseil = aujourdhui && jeudi > aujourdhui ? 'à confirmer jeudi' : 'à surveiller';
+  } else if (niveau === 2) conseil = 'à reconfirmer la veille';
+  return { niveau, libelle, conseil };
 }
 
 // Coefficient de marée estimé d'après le marnage à Brest : 100 correspond à un marnage de 6,10 m
@@ -332,6 +354,60 @@ export function mediane(valeurs) {
   const v = [...valeurs].sort((a, b) => a - b);
   const m = v.length >> 1;
   return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2;
+}
+
+// Pleines et basses mers d'un jour, lues sur la série horaire du niveau de la mer : un extrême local,
+// affiné à la minute par une parabole sur les trois points voisins. Vide si la série manque.
+export function extremesMaree(time, niveau, date) {
+  const sortie = [];
+  if (!niveau) return sortie;
+  for (let i = 1; i < time.length - 1; i++) {
+    if (time[i].slice(0, 10) !== date) continue;
+    const [a, b, c] = [niveau[i - 1], niveau[i], niveau[i + 1]];
+    if (a == null || b == null || c == null) continue;
+    const haute = b >= a && b > c, basse = b <= a && b < c;
+    if (!haute && !basse) continue;
+    const courbure = a - 2 * b + c;
+    const decalage = courbure ? Math.max(-0.5, Math.min(0.5, (a - c) / (2 * courbure))) : 0;
+    const minutes = Math.round((+time[i].slice(11, 13) + decalage) * 60);
+    sortie.push({ type: haute ? 'haute' : 'basse', minutes, hauteur: b - courbure * decalage * decalage / 4 });
+  }
+  return sortie;
+}
+
+export function heureMinute(minutes) {
+  const m = ((Math.round(minutes) % 1440) + 1440) % 1440;
+  return `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')}`;
+}
+
+// Ce qu'on lit d'un jour sans graphique : le meilleur créneau, le vent pendant ce créneau (ou toute
+// la journée s'il n'y en a pas, avec la raison), les températures, la houle.
+export function resumeJour(lignes, date) {
+  const jour = lignes.filter(l => l.date === date);
+  if (!jour.length) return null;
+  const sessions = [];
+  jour.forEach((l, k) => {
+    const prec = jour[k - 1];
+    if (!l.ok) return;
+    if (prec && prec.ok && prec.heure + 1 === l.heure) sessions[sessions.length - 1].fin = l.heure + 1;
+    else sessions.push({ debut: l.heure, fin: l.heure + 1 });
+  });
+  const meilleure = sessions.reduce((a, s) => (!a || s.fin - s.debut > a.fin - a.debut ? s : a), null);
+  const base = meilleure ? jour.filter(l => l.heure >= meilleure.debut && l.heure < meilleure.fin) : jour;
+  const moy = arr => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null);
+  const vents = base.map(l => l.vent);
+  return {
+    date, sessions, meilleure,
+    heures: sessions.reduce((n, s) => n + s.fin - s.debut, 0),
+    ventMin: Math.min(...vents), ventMax: Math.max(...vents),
+    rafaleMax: Math.max(...base.map(l => l.rafale)),
+    dir: directionMoyenne(base.map(l => l.dir)),
+    air: moy(jour.map(l => l.temp).filter(x => x != null)),
+    eau: moy(jour.map(l => l.eau).filter(x => x != null)),
+    vagues: moy(base.map(l => l.vague).filter(x => x != null)),
+    periode: moy(base.map(l => l.periode).filter(x => x != null)),
+    raison: meilleure ? null : raisonPrincipale(jour)
+  };
 }
 
 export function directionMoyenne(dirs) {
