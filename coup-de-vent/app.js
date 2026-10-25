@@ -559,6 +559,7 @@ function rendreReglages() {
     ${champNum('ventMin', 'Vent minimum', 8, 25, 1, 'nœuds')}
     ${champNum('ventMax', 'Vent maximum', 18, 45, 1, 'nœuds')}
     ${champNum('rafalesMax', 'Rafales maximum', 20, 55, 1, 'nœuds')}
+    ${champNum('ecartRafalesMax', 'Écart rafales − vent moyen', 5, 20, 1, 'nœuds', 'Au-delà, l\'heure est refusée : le vent est trop irrégulier, même sous le plafond de rafales.')}
     ${champNum('trajetMaxH', 'Trajet maximum (aller)', 1, 9, 0.5, 'h')}
     ${champNum('budgetMax', 'Budget trajet (aller-retour)', 40, 600, 10, '€', 'Logement non compté.')}
     <div class="champ"><span class="lab">Week-end</span><div class="bascules">

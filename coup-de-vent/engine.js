@@ -11,6 +11,7 @@ export const REGLAGES_DEFAUT = {
   ventMin: 15,          // nœuds
   ventMax: 30,
   rafalesMax: 35,
+  ecartRafalesMax: 12,  // rafale − vent moyen : au-delà, le vent est trop irrégulier pour naviguer
   trajetMaxH: 5,        // aller, en heures
   budgetMax: 250,       // aller-retour, en euros
   planche: 'twin-tip',  // 'twin-tip' | 'directionnelle' (plus de 130 cm : pas de train)
@@ -180,6 +181,8 @@ export function lireHeures(spot, prevision, jours, reglages) {
     if (vent < reglages.ventMin) raisons.push('vent faible');
     if (vent > reglages.ventMax) raisons.push('trop fort');
     if (rafale > reglages.rafalesMax) raisons.push('rafales');
+    // Le plafond seul laisse passer 19 nœuds rafalant à 35 : c'est l'écart qui fait un vent irrégulier.
+    if (rafale - vent > reglages.ecartRafalesMax) raisons.push('rafales irrégulières');
     if (!direction.ok) raisons.push(direction.type);
     // Une marée inconnue (au-delà de l'horizon marine) ne refuse rien : l'heure est marquée, pas jetée.
     if (spot.maree && phase && !spot.maree.includes(phase)) raisons.push('marée ' + phase);
