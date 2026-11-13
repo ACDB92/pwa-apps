@@ -186,6 +186,21 @@ function ouvrirTerme(terme) {
   carteTerme.scrollIntoView({ block: 'center', behavior: 'smooth' });
 }
 
+function afficherAutres(autres) {
+  $('autres').hidden = !autres.length;
+  $('autres-nb').textContent = autres.length ? `${autres.length} titres` : '';
+  $('autres-liste').replaceChildren(...autres.map(a => {
+    const lien = lienSur(a.lien);
+    const li = el('li', {}, a.titre);
+    if (lien) {
+      const l = el('a', { href: lien, target: '_blank', rel: 'noopener noreferrer' }, `${a.source || 'Lire'} ↗`);
+      l.addEventListener('click', () => noter('article'));
+      li.append(el('br'), l);
+    }
+    return li;
+  }));
+}
+
 // ── Vue Édition ─────────────────────────────────────────────────────────────
 
 function afficherBandeau() {
@@ -217,6 +232,7 @@ async function afficherEdition(date, sujetCible = null) {
   if (cartes.length > 1) cartes.splice(1, 0, el('div', { class: 'suite' }, semaine ? 'Aussi cette semaine' : 'Aussi ce jour-là'));
   $('sujets').replaceChildren(...(n ? cartes
     : [el('div', { class: 'vide' }, 'Rien de notable ce jour-là : aucune nouvelle ne valait vos trois minutes.')]));
+  afficherAutres(ed.autres || []);
   if (sujetCible) {
     const c = $(`s-${date}-${sujetCible}`);
     if (c) { c.classList.add('cible'); c.scrollIntoView({ block: 'start' }); }

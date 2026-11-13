@@ -46,6 +46,8 @@ FENETRE_EXPLICATION = 90
 TUTOIEMENT = re.compile(r"(?<![\w'’])(tu|toi|ton|ta|tes)(?![\w'’])|(?<![\w'’])t['’](?=\w)", re.IGNORECASE)
 NOMS_PERMIS = {"IA", "Côme", "Alix", "Par"}
 
+MAX_AUTRES = 10                # « les autres titres du jour » : panorama, sans explication
+
 LEXIQUE_TAILLE = 5
 THEMES = ("ia", "data-bi", "banque", "quotidien")
 MAX_DEFINITION, MAX_EXEMPLE = 320, 260
@@ -199,10 +201,14 @@ def verifier(edition, candidats, interdits=(), publiees=()):
         pb.append("deux sujets ont le même lien")
     lexique = edition.get("lexique", [])
     _controle_lexique(lexique, termes_recents(publiees, jour), interdits, pb)
+    autres = edition.get("autres", [])
     if semaine:
+        if autres:
+            pb.append("pas d'« autres titres » le dimanche (la semaine en 5 suffit)")
         _controle_reprises(sujets, jour, publiees, pb)
         return pb
     par_lien = {a["lien"]: a for a in candidats.get("articles", [])}
+    _controle_autres(autres, par_lien, set(liens), lexique, interdits, pb)
     for i, s in enumerate(sujets, 1):
         nom = f"sujet {i} « {s.get('titre', '')[:40]} »"
         for champ in CHAMPS:
@@ -244,6 +250,36 @@ def verifier(edition, candidats, interdits=(), publiees=()):
     return pb
 
 
+def _controle_autres(autres, par_lien, liens_sujets, lexique, interdits, pb):
+    """Les autres titres du jour : une ligne chacun, tirée d'un article collecté ce matin."""
+    if len(autres) > MAX_AUTRES:
+        pb.append(f"autres titres : {len(autres)}, {MAX_AUTRES} au plus")
+    vus = set()
+    for i, a in enumerate(autres, 1):
+        nom = f"autre titre {i} « {a.get('titre', '')[:40]} »"
+        article = par_lien.get(a.get("lien"))
+        if not a.get("titre"):
+            pb.append(f"{nom} : titre manquant")
+        if article is None:
+            pb.append(f"{nom} : le lien n'est pas un article collecté ce matin")
+            continue
+        if a["lien"] in liens_sujets or a["lien"] in vus:
+            pb.append(f"{nom} : déjà dans l'édition")
+        vus.add(a["lien"])
+        titre = a.get("titre", "")
+        if len(titre) > MAX_TITRE:
+            pb.append(f"{nom} : {len(titre)} caractères ({MAX_TITRE} au plus)")
+        if mots_trouves(titre + " " + article.get("source", ""), interdits):
+            pb.append(f"{nom} : mot(s) interdit(s) — en parler sans le nommer, ou le retirer")
+        fautes = jargon_non_explique(titre, [t.get("terme", "") for t in lexique])
+        if fautes:
+            pb.append(f"{nom} : jargon ({', '.join(fautes)}) — le dire en mots simples")
+        source = " ".join([article.get("titre", ""), article.get("texte", ""), article.get("texte_page", "")])
+        inconnus = sorted(nombres(titre) - nombres(source))
+        if inconnus:
+            pb.append(f"{nom} : chiffre(s) absent(s) de la source : {', '.join(inconnus)}")
+
+
 def _controle_reprises(sujets, jour, publiees, pb):
     """La semaine en 5 : chaque sujet est repris **tel quel** d'une édition des 6 jours précédents
     (déjà contrôlée à sa parution), avec la date d'origine dans `repris_du`."""
@@ -279,6 +315,9 @@ def a_publier(edition, candidats, maintenant):
         "publie_le": maintenant.isoformat(timespec="minutes"),
         "sujets": sujets,
     }
+    if edition.get("autres") and not semaine:
+        publiee["autres"] = [{"titre": a["titre"], "lien": a["lien"], "source": sources.get(a["lien"], "")}
+                             for a in edition["autres"]]
     if edition.get("lexique"):
         publiee["lexique"] = [{c: t[c] for c in ("terme", "theme", "definition", "exemple")} for t in edition["lexique"]]
     return publiee

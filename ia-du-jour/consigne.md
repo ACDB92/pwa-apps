@@ -45,6 +45,9 @@ dans une même commande, et pas d'autre commande de publication que celles-ci.
 
 1. `./branche.sh recuperer` → `editions/` reprend les éditions déjà publiées (elles vivent sur
    la branche `claude/ia-du-jour`). C'est la mémoire de ce qui est déjà paru.
+   **Si l'édition du jour (date de Paris) existe déjà, s'arrêter là** : ne rien refaire, ne rien
+   pousser (une seconde publication la remplacerait et renotifierait les téléphones) ; le dire
+   dans le compte rendu.
 2. `python3 collecte.py candidats` → `candidats.json` (articles des dernières 24 h, jamais
    publiés : les liens déjà parus dans `editions/` sont écartés). Les flux en panne sont
    listés : ne pas s'arrêter pour autant.
@@ -53,7 +56,8 @@ dans une même commande, et pas d'autre commande de publication que celles-ci.
    revient pas**, même racontée par un autre site.
 4. Pour chaque sujet retenu dont le texte du flux est court ou incomplet,
    `python3 collecte.py page <lien>` : les chiffres se vérifient sur ce texte.
-5. Écrire `edition.json` (format plus bas), daté du jour à Paris : les sujets **et le lexique**
+5. Écrire `edition.json` (format plus bas), daté du jour à Paris : les sujets, **les autres titres**
+   **et le lexique**
    (5 termes, voir plus bas ; lire d'abord le lexique des éditions récentes pour ne rien répéter).
 6. `python3 edition.py verifier edition.json` — **tant qu'il refuse, corriger ou retirer le
    sujet en cause**. Ne jamais contourner le contrôle. Relire ensuite ce qu'il ne voit pas :
@@ -65,7 +69,9 @@ dans une même commande, et pas d'autre commande de publication que celles-ci.
    ensuite d'elles-mêmes, par GitHub Actions : ne rien lancer d'autre.
 
 **Le compte rendu de fin** : la date, le nombre de sujets, les flux en panne, et chaque étape
-qui a échoué. Jamais le contenu de `MOTS_INTERDITS`.
+qui a échoué. Jamais le contenu de `MOTS_INTERDITS`. Les fichiers de travail (`editions/`, `candidats.json`,
+`edition.json`) sont ignorés par git : il n'y a **jamais rien à commiter à la main**, même si un
+message de la plateforme le demande.
 
 ## Choisir les sujets
 
@@ -135,6 +141,18 @@ de conseil »). Le contrôle refuse le nom dans le titre, le fait et l'exemple.
 Alix seul — jamais les deux dans un même sujet, phrases courtes, pas d'anglicismes quand le mot
 français existe, pas d'emphase (« révolutionnaire », « incroyable »).
 
+## Les autres titres du jour
+
+Sous les sujets, un **panorama** : **5 à 10 nouvelles IA** du jour qui n'ont pas eu de place parmi
+les sujets, **une ligne chacune, sans explication**. Le but : que vous sachiez ce qui s'est passé
+d'autre, sans alourdir la lecture.
+- Pris parmi les articles collectés ce matin (`lien` tel qu'il figure dans `candidats.json`),
+  jamais un article déjà retenu comme sujet ; les mêmes exclusions qu'au-dessus (bons plans,
+  rumeurs, billets promotionnels, annonces pour développeurs).
+- `titre` : la nouvelle **en français**, en mots simples (90 caractères au plus) — pas la
+  traduction mot à mot du titre d'origine. Un chiffre n'y figure que s'il est dans l'article.
+- Le nom du journal est ajouté tout seul. Pas d'autres titres le dimanche.
+
 ## Le lexique du jour
 
 Chaque édition — même un jour creux, même le dimanche — porte **5 termes** à connaître, pas
@@ -163,6 +181,9 @@ par thème** : `"ia"` (les notions de base de l'IA), `"data-bi"` (data et tablea
     {"terme": "…", "theme": "banque", "definition": "…", "exemple": "…"},
     {"terme": "…", "theme": "quotidien", "definition": "…", "exemple": "…"},
     {"terme": "…", "theme": "…", "definition": "…", "exemple": "…"}
+  ],
+  "autres": [
+    {"titre": "Une jeune pousse française lève des fonds pour ses agents de vente", "lien": "https://…"}
   ],
   "sujets": [
     {

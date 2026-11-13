@@ -123,8 +123,9 @@ def filtrer(articles, maintenant, heures, deja_envoyes):
 
 
 def liens_publies(editions_par_mois):
-    """Liens de tous les sujets déjà publiés : la mémoire de ce qui est déjà paru."""
-    return {s["lien"] for mois in editions_par_mois for e in mois.get("editions", []) for s in e.get("sujets", [])}
+    """Liens de tous les sujets et autres titres déjà publiés : la mémoire de ce qui est déjà paru."""
+    return {s["lien"] for mois in editions_par_mois for e in mois.get("editions", [])
+            for s in e.get("sujets", []) + e.get("autres", [])}
 
 
 def domaines(config):

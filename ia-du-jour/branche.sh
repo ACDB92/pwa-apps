@@ -2,7 +2,8 @@
 # Les éditions publiées vivent sur la branche claude/ia-du-jour du dépôt, jamais sur main
 # (main porte les autres apps ; le déploiement Pages va chercher les éditions sur cette branche).
 #
-#   ./branche.sh recuperer   avant la collecte : editions/ = celles de la branche (la mémoire)
+#   ./branche.sh recuperer   avant la collecte : editions/ = celles de la branche (la mémoire).
+#                            Sur main, editions/ est ignoré par git : l'arbre de travail reste propre.
 #   ./branche.sh pousser     après `edition.py publier` : commite editions/ seul sur la branche, pousse
 #
 # Le code de la routine (collecte, contrôle, consigne) reste celui de main ; seules les données
@@ -16,11 +17,13 @@ DOSSIER="$(git rev-parse --show-prefix)editions"     # ex. ia-du-jour/editions
 case "${1:-}" in
   recuperer)
     if git fetch -q origin "$BRANCHE" 2>/dev/null; then
-      git -C "$RACINE" checkout FETCH_HEAD -- "$DOSSIER"
-      git -C "$RACINE" reset -q -- "$DOSSIER"
+      mkdir -p editions
+      for f in $(git ls-tree --full-tree --name-only FETCH_HEAD "$DOSSIER/"); do
+        git show "FETCH_HEAD:$f" > "editions/$(basename "$f")"
+      done
       echo "éditions récupérées depuis $BRANCHE"
     else
-      echo "pas encore de branche $BRANCHE : on part des éditions de main"
+      echo "pas encore de branche $BRANCHE : aucune édition publiée"
     fi
     ;;
   pousser)
@@ -31,7 +34,7 @@ case "${1:-}" in
     cp editions/*.json "$ARBRE/$DOSSIER/"
     (
       cd "$ARBRE"
-      git add -- "$DOSSIER"
+      git add -f -- "$DOSSIER"     # -f : editions/ est ignoré sur main, suivi sur la branche seulement
       if git diff --cached --quiet; then
         echo "rien de nouveau à pousser"
       else

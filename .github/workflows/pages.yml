@@ -83,6 +83,7 @@ jobs:
           import json, re, shutil
           from pathlib import Path
           src, dst = Path("/tmp/editions/ia-du-jour/editions"), Path("ia-du-jour/editions")
+          dst.mkdir(parents=True, exist_ok=True)   # editions/ n'est plus sur main
           for f in sorted(src.iterdir()):
               if not re.fullmatch(r"(index|\d{4}-\d{2})\.json", f.name) or f.stat().st_size > 2_000_000:
                   print("ignoré :", f.name); continue

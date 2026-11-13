@@ -3,3 +3,5 @@ candidats.json
 edition.json
 .env
 __pycache__/
+# Les éditions vivent sur la branche claude/ia-du-jour, pas sur main
+editions/
