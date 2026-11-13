@@ -23,6 +23,7 @@ USAGES = ("data-bi", "entretien", "outil", "general", "quotidien", "banque")
 ORIGINES = ("article", "illustration")
 MARQUE_ILLUSTRATION = "Par exemple"
 CHAMPS = ("titre", "pour", "usage", "fait", "concretement", "origine_exemple", "lien")
+AFFICHES = ("titre", "fait", "concretement")   # le texte que l'app montre
 
 _NOMBRE = re.compile(r"\d+(?:[.,   ]\d+)*")
 
@@ -77,11 +78,15 @@ def verifier(edition, candidats, interdits=()):
             pb.append(f"{nom} : pour = {s['pour']!r}, attendu l'un de {POUR}")
         if s.get("usage") and s["usage"] not in USAGES:
             pb.append(f"{nom} : usage = {s['usage']!r}, attendu l'un de {USAGES}")
-        trouves = mots_trouves(" ".join(str(s.get(c, "")) for c in CHAMPS), interdits)
+        article = par_lien.get(s.get("lien"))
+        # Le texte affiché seulement (le lien n'est pas affiché) : on peut parler d'une entreprise
+        # interdite, sans la nommer.
+        affiche = [s.get(c, "") for c in AFFICHES] + [(article or {}).get("source", "")]
+        trouves = mots_trouves(" ".join(map(str, affiche)), interdits)
         if trouves:
             # on ne recopie pas le mot : la sortie de la routine est lisible dans son historique
-            pb.append(f"{nom} : {len(trouves)} mot(s) interdit(s) — retirer le sujet ou le reformuler")
-        article = par_lien.get(s.get("lien"))
+            pb.append(f"{nom} : {len(trouves)} mot(s) interdit(s) dans le texte — en parler sans le nommer"
+                      " (« un grand cabinet de conseil »), ou retirer le sujet")
         if article is None:
             pb.append(f"{nom} : le lien n'est pas un article collecté ce matin")
             continue

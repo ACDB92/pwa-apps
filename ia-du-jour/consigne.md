@@ -103,6 +103,10 @@ l'article (« cette semaine »).
 **La longueur** : un sujet tient en **700 caractères environ** (fait et exemple compris), pour
 que l'édition se lise en 3 à 4 minutes.
 
+**Les entreprises des lecteurs** : une nouvelle qui concerne l'employeur de l'un d'eux peut être
+retenue, mais l'entreprise n'est **jamais nommée** — la désigner par son secteur (« un grand cabinet
+de conseil »). Le contrôle refuse le nom dans le titre, le fait et l'exemple.
+
 **Le ton** : tutoiement collectif (« vous »), phrases courtes, pas d'anglicismes quand le mot
 français existe, pas d'emphase (« révolutionnaire », « incroyable »).
 
