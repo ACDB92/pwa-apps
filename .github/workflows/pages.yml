@@ -1,17 +1,25 @@
 name: Deploy GitHub Pages
 
 # Seule `main` peut publier sur Pages (règle de l'environnement github-pages).
-# L'IA du jour : la routine du matin pousse ses éditions sur la branche `claude/ia-du-jour`,
-# jamais sur `main`. Ce workflow (celui de `main`, que la routine ne modifie pas) va les y
-# chercher et ne copie que des fichiers JSON valides nommés index.json ou AAAA-MM.json.
+#
+# L'IA du jour : la routine du matin pousse ses éditions sur la branche `claude/ia-du-jour` et
+# s'arrête là. Ce workflow-ci (celui de `main`, que la routine ne touche jamais) :
+#   1. regarde si la dernière édition de la branche diffère de celle en ligne ;
+#   2. si oui, la met en ligne — en ne copiant que des JSON valides (index.json, AAAA-MM.json) ;
+#   3. puis envoie la notification aux téléphones abonnés. Les clés (VAPID_PRIVEE,
+#      PUSH_ABONNEMENT_*) sont des secrets du dépôt : la routine ne les a pas.
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      notifier:
+        description: "Notifier les téléphones si une nouvelle édition est mise en ligne"
+        type: boolean
+        default: false
   schedule:
-    # filet de sécurité si la routine n'a pas pu déclencher le déploiement : toutes les
-    # 15 min de 7 h à 10 h à Paris (en UTC, heure d'hiver et d'été couvertes) ;
-    # ne déploie que si une nouvelle édition attend
+    # toutes les 15 min de 7 h à 10 h à Paris (en UTC, heure d'hiver et d'été couvertes) ;
+    # ne déploie et ne notifie que si une nouvelle édition attend sur la branche
     - cron: "*/15 5-8 * * *"
 
 permissions:
@@ -27,23 +35,38 @@ jobs:
   verifier:
     runs-on: ubuntu-latest
     outputs:
-      deployer: ${{ steps.comparer.outputs.deployer }}
+      nouvelle: ${{ steps.comparer.outputs.nouvelle }}
     steps:
       - id: comparer
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if [ "${{ github.event_name }}" != "schedule" ]; then echo "deployer=true" >> "$GITHUB_OUTPUT"; exit 0; fi
-          branche=$(gh api "repos/${{ github.repository }}/contents/ia-du-jour/editions/index.json?ref=claude/ia-du-jour" \
-            -H "Accept: application/vnd.github.raw" 2>/dev/null | python3 -c "import json,sys;print(json.load(sys.stdin)['derniere'])" 2>/dev/null || echo "")
-          en_ligne=$(curl -fsS "https://acdb92.github.io/pwa-apps/ia-du-jour/editions/index.json?t=$(date +%s)" 2>/dev/null \
-            | python3 -c "import json,sys;print(json.load(sys.stdin)['derniere'])" 2>/dev/null || echo "")
-          echo "branche=$branche en_ligne=$en_ligne"
-          if [ -n "$branche" ] && [ "$branche" != "$en_ligne" ]; then echo "deployer=true" >> "$GITHUB_OUTPUT"; else echo "deployer=false" >> "$GITHUB_OUTPUT"; fi
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, subprocess, time, urllib.request
+          def branche(chemin):
+              r = subprocess.run(["gh", "api", f"repos/${{ github.repository }}/contents/ia-du-jour/editions/{chemin}?ref=claude/ia-du-jour",
+                                  "-H", "Accept: application/vnd.github.raw"], capture_output=True, text=True)
+              return json.loads(r.stdout) if r.returncode == 0 else None
+          def en_ligne(chemin):
+              try:
+                  with urllib.request.urlopen(f"https://acdb92.github.io/pwa-apps/ia-du-jour/editions/{chemin}?t={int(time.time())}", timeout=20) as r:
+                      return json.loads(r.read())
+              except Exception:
+                  return None
+          def signature(index, mois_de):
+              if not index: return None
+              d = index["derniere"]; mois = mois_de(f"{d[:7]}.json") or {}
+              e = next((e for e in mois.get("editions", []) if e["date"] == d), {})
+              return (d, e.get("publie_le"))
+          b = signature(branche("index.json"), branche)
+          l = signature(en_ligne("index.json"), en_ligne)
+          print(f"nouvelle={'true' if b and b != l else 'false'}")
+          import sys; print(f"branche={b} en_ligne={l}", file=sys.stderr)
+          PY
 
   deploy:
     needs: verifier
-    if: needs.verifier.outputs.deployer == 'true'
+    if: github.event_name != 'schedule' || needs.verifier.outputs.nouvelle == 'true'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -72,3 +95,22 @@ jobs:
           path: .
       - uses: actions/deploy-pages@v4
         id: deployment
+
+  notifier:
+    needs: [verifier, deploy]
+    if: needs.verifier.outputs.nouvelle == 'true' && (github.event_name == 'schedule' || inputs.notifier)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Éditions de la branche (pour le texte de la notification)
+        run: |
+          git fetch --depth=1 origin claude/ia-du-jour
+          git checkout FETCH_HEAD -- ia-du-jour/editions
+      - run: pip install --quiet cryptography
+      - name: Notifier les téléphones une fois l'édition en ligne
+        working-directory: ia-du-jour
+        env:
+          VAPID_PRIVEE: ${{ secrets.VAPID_PRIVEE }}
+          PUSH_ABONNEMENT_COME: ${{ secrets.PUSH_ABONNEMENT_COME }}
+          PUSH_ABONNEMENT_ALIX: ${{ secrets.PUSH_ABONNEMENT_ALIX }}
+        run: python3 notifier.py --attendre 600
