@@ -1,6 +1,138 @@
 {
  "editions": [
   {
+   "date": "2026-11-13",
+   "type": "jour",
+   "rien_de_notable": false,
+   "publie_le": "2026-11-13T15:46+00:00",
+   "sujets": [
+    {
+     "titre": "Jensen Huang quitte la direction de Nvidia, le géant des puces d'IA",
+     "pour": "Vous deux",
+     "usage": "general",
+     "fait": "Le patron de Nvidia, qui dirigeait l'entreprise depuis près de 33 ans, démissionne après un scandale. La directrice financière assure l'intérim le temps de trouver un successeur.",
+     "concretement": "Par exemple, un fournisseur dont dépendent presque tous les services d'IA change de capitaine : cela peut peser sur les prix et les délais de ces services.",
+     "origine_exemple": "illustration",
+     "lien": "https://siecledigital.fr/2026/11/13/le-patron-de-nvidia-contraint-a-la-demission-apres-un-scandale-aux-ramifications-internationales/",
+     "source": "Siècle Digital"
+    },
+    {
+     "titre": "Google Search passe à Gemini 4 Hydrogen pour mieux répondre",
+     "pour": "Vous deux",
+     "usage": "outil",
+     "fait": "Google déploie dans le monde entier une nouvelle version de l'IA de son moteur de recherche. Elle comprend les questions en plusieurs parties et répond avec des tableaux et des images.",
+     "concretement": "Par exemple, vous pouvez poser en une seule phrase un voyage avec toutes vos contraintes, et obtenir un tableau comparatif au lieu d'une liste de liens. À essayer cette semaine.",
+     "origine_exemple": "illustration",
+     "lien": "https://blog.google/products-and-platforms/products/search/gemini-4-hydrogen-search-upgrade/",
+     "source": "Google"
+    },
+    {
+     "titre": "United Airlines interdit aux assistants IA de réserver des vols",
+     "pour": "Alix",
+     "usage": "banque",
+     "fait": "United Airlines bloque les assistants IA qui réservent à la place des clients, par crainte de risques de sécurité. La semaine dernière, des banques ont demandé de ne pas partager ses mots de passe avec ces assistants.",
+     "concretement": "Par exemple, si tu donnes tes identifiants bancaires à un assistant, la banque ne sait plus distinguer ton action de celle d'un intrus : un sujet de conseil pour tes clients.",
+     "origine_exemple": "illustration",
+     "lien": "https://techcrunch.com/2026/11/12/united-airlines-blocks-ai-agents-from-booking-flights-citing-cybersecurity-risks/",
+     "source": "TechCrunch"
+    },
+    {
+     "titre": "Seules 13 % des banques repensent leurs métiers de bout en bout avec l'IA",
+     "pour": "Alix",
+     "usage": "entretien",
+     "fait": "Selon une enquête d'American Banker, seuls 13 % des professionnels de la banque disent que leur établissement refond d'ordinaire ses processus de bout en bout en adoptant l'IA. Citi en revoit une centaine.",
+     "concretement": "Par exemple, ajouter une IA à une étape d'un circuit de validation ne change pas grand-chose : le gain vient de repenser tout le parcours. Un fait à citer en mission.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.americanbanker.com/news/citi-is-redesigning-100-processes-what-s-stopping-others",
+     "source": "American Banker"
+    },
+    {
+     "titre": "Les embauches de juniors chutent de 28 % dans les métiers exposés à l'IA",
+     "pour": "Côme",
+     "usage": "entretien",
+     "fait": "Les embauches de juniors en CDI baissent de 28 % sur les métiers exposés à l'IA. Un article du Journal du Net y voit un risque : sans débutants, les entreprises manqueront d'experts plus tard.",
+     "concretement": "Par exemple, en entretien, tu peux montrer que tu sais faire ce que l'IA ne fait pas seule : choisir la bonne question et vérifier la réponse.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.journaldunet.com/intelligence-artificielle/1557941-les-entreprises-qui-ne-recrutent-plus-de-juniors-organisent-leur-penurie-de-seniors/",
+     "source": "Journal du Net"
+    }
+   ],
+   "autres": [
+    {
+     "titre": "Une panne mondiale de Microsoft 365 paralyse entreprises, écoles et laboratoires",
+     "lien": "https://www.numerama.com/cyberguerre/2373867-retour-au-fax-pas-de-cinema-paiements-en-ligne-bloques-la-panne-de-microsoft-engendre-une-pagaille-en-france-et-dans-le-monde.html",
+     "source": "Numerama"
+    },
+    {
+     "titre": "Claude, l'assistant d'Anthropic, a connu une panne avant un correctif rapide",
+     "lien": "https://www.numerama.com/cyberguerre/2373927-panne-de-claude-lia-ne-repond-plus-chez-une-partie-des-utilisateurs-voici-ce-que-lon-sait.html",
+     "source": "Numerama"
+    },
+    {
+     "titre": "Test d'un nouvel assistant de Claude pour le travail du quotidien",
+     "lien": "https://www.theverge.com/ai-artificial-intelligence/1032518/claude-duet-ai-agent-hands-on",
+     "source": "The Verge"
+    },
+    {
+     "titre": "Microsoft laisse désormais désactiver les réponses IA dans son moteur Bing",
+     "lien": "https://siecledigital.fr/2026/11/13/microsoft-prend-le-contre-pied-de-google-en-permettant-de-desactiver-les-reponses-ia-dans-bing/",
+     "source": "Siècle Digital"
+    },
+    {
+     "titre": "Une banque française victime d'un vol numérique aidé par l'IA",
+     "lien": "https://news.google.com/rss/articles/CBMijwFBVV95cUxNenpfU2FXT1kzdDNjeFJqSWxaYXRDZGFaQldUOUViQVhwNDV0RWRsOXBHa2tkWVhoRDd0VG5WS2tPNGFLb05ZV0JpTUNackJHZkpGYmlUT1VaRUtzaUNIcTRDLWUxRDlvQ3pudTJ1ZThZRUZfcENVc2VWQW1HdXBXZndPZGhPaGJEQmNfTkZ5Zw?oc=5",
+     "source": "big-n.fr"
+    },
+    {
+     "titre": "Zone euro : l'IA tire un quart de la croissance du crédit",
+     "lien": "https://news.google.com/rss/articles/CBMitAFBVV95cUxQZVVfSm5NYkxIVTMzS2h1T3dIYTQyeXRPelFuczhZeGlSTHNWZHFMVVhNbW9ZRDRLOEZaQ2tmLXlCQzhRUlBDVUk2RFEyeGh4ZHRjZ0lRSVlVVkNRQjktUUxqcmxEU1NMUm5GZ3pzZVlrMHdkMS1SR1F2TDVoQnlTTnVtM3pvQTdsMUppU3RGSmt6NkNnXzlMRlVYcGZiS3VyRVc3UDVISmFUdzZvU1dOXzRGMkQ?oc=5",
+     "source": "Le Revenu"
+    },
+    {
+     "titre": "ElevenLabs lance une appli de prise de notes de réunion et de dictée",
+     "lien": "https://techcrunch.com/2026/11/13/elevenlabs-new-app-combines-meeting-note-taking-and-dictation-for-teams/",
+     "source": "TechCrunch"
+    },
+    {
+     "titre": "Une IA qui paie avec son propre compte bancaire et sa propre carte",
+     "lien": "https://www.finextra.com/pressarticle/111665/wirex-launches-navoka-an-ai-agent-that-pays-from-its-own-bank-account-and-card?utm_medium=rssfinextra&utm_source=finextrafeed",
+     "source": "Finextra (IA)"
+    }
+   ],
+   "lexique": [
+    {
+     "terme": "Hallucination",
+     "theme": "ia",
+     "definition": "Quand une IA donne avec aplomb une réponse fausse ou inventée, parce qu'elle fabrique une suite de mots plausible sans savoir si c'est vrai.",
+     "exemple": "Un assistant vous cite une étude qui n'existe pas, avec un titre et un auteur très crédibles."
+    },
+    {
+     "terme": "Couche sémantique",
+     "theme": "data-bi",
+     "definition": "Un dictionnaire central qui dit ce que veut dire chaque chiffre de l'entreprise, pour que tout le monde calcule de la même façon.",
+     "exemple": "Le « chiffre d'affaires » s'affiche pareil dans tous les tableaux de bord, quel que soit le service qui le regarde."
+    },
+    {
+     "terme": "KYC",
+     "theme": "banque",
+     "definition": "Pour « connaître son client » : les vérifications qu'une banque doit faire sur l'identité et l'activité de ses clients avant et pendant la relation.",
+     "exemple": "À l'ouverture d'un compte, la banque demande une pièce d'identité et un justificatif de domicile."
+    },
+    {
+     "terme": "Hameçonnage",
+     "theme": "quotidien",
+     "definition": "Une arnaque où un faux message imite un organisme connu pour vous pousser à donner vos mots de passe ou vos coordonnées bancaires.",
+     "exemple": "Un faux SMS de livraison vous renvoie vers un site qui copie celui d'un transporteur."
+    },
+    {
+     "terme": "Biais algorithmique",
+     "theme": "ia",
+     "definition": "Une tendance systématique d'un modèle à favoriser ou défavoriser certains cas, souvent héritée des exemples avec lesquels on l'a entraîné.",
+     "exemple": "Un outil de tri de candidatures écarte plus souvent un profil parce que les anciens recrutements allaient dans ce sens."
+    }
+   ]
+  },
+  {
    "date": "2026-11-08",
    "rien_de_notable": false,
    "publie_le": "2026-11-13T14:13+00:00",
