@@ -22,7 +22,6 @@
 
     {"nom": "Power BI (mises à jour)", "rubrique": "data-bi", "url": "https://community.fabric.microsoft.com/t5/s/rss/board?board.id=fbc_pbiupdatesblog"},
     {"nom": "dbt", "rubrique": "data-bi", "url": "https://www.getdbt.com/blog/rss.xml"},
-    {"nom": "Snowflake", "rubrique": "data-bi", "url": "https://www.snowflake.com/feed/"},
     {"nom": "Databricks", "rubrique": "data-bi", "url": "https://www.databricks.com/feed"},
 
     {"nom": "Finextra (IA)", "rubrique": "banque", "url": "https://www.finextra.com/rss/channel.aspx?channel=ai", "note": "publie aussi des articles datés dans le futur (événements) : écartés par la collecte"},
@@ -37,7 +36,8 @@
     {"nom": "Blog du Modérateur IA, Benn Stancil", "raison": "plus rien publié depuis septembre"},
     {"nom": "Tableau, The Financial Brand, FinTech Futures, Le Big Data, Usine Digitale", "raison": "refusent les lecteurs automatiques (403)"},
     {"nom": "Revue Banque, L'Agefi", "raison": "pas de flux (404) — trou : aucune source bancaire en français"},
-    {"nom": "Finyear", "raison": "flux mal formé"}
+    {"nom": "Finyear", "raison": "flux mal formé"},
+    {"nom": "Snowflake", "raison": "retiré le 13/11/2026 : redirige vers un serveur Adobe refusé par le réseau de la routine, et billets trop techniques"}
   ],
   "_domaines_en_plus": "Sites des articles quand le flux est hébergé ailleurs (miroirs GitHub d'Anthropic et Mistral) : `collecte.py page` doit pouvoir les lire. acdb92.github.io pour vérifier que l'édition est en ligne ; les services de notification d'Apple (iPhone), de Google (Chrome) et de Mozilla (Firefox). GitHub (pour pousser les éditions) est déjà dans la liste par défaut.",
   "domaines_en_plus": ["www.anthropic.com", "mistral.ai", "acdb92.github.io", "web.push.apple.com", "fcm.googleapis.com", "updates.push.services.mozilla.com"]
