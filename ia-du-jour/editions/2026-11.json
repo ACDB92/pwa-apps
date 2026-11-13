@@ -1,63 +1,6 @@
 {
  "editions": [
   {
-   "date": "2026-11-13",
-   "rien_de_notable": false,
-   "publie_le": "2026-11-13T15:18+00:00",
-   "sujets": [
-    {
-     "titre": "Une panne géante de Microsoft coupe les mails de millions d'utilisateurs",
-     "pour": "Vous deux",
-     "usage": "quotidien",
-     "fait": "Depuis jeudi soir, le service de messagerie professionnelle de Microsoft 365 est perturbé dans le monde entier. Vendredi après-midi, tout revient peu à peu, mais avec des rechutes. Microsoft parle de serveurs défaillants qui ont reporté toute la charge sur les autres.",
-     "concretement": "Par exemple, une équipe qui ne reçoit plus ses courriels ni ses invitations de réunion doit se rabattre sur le téléphone. Ayez sous la main un second moyen de joindre vos collègues et vos clients.",
-     "origine_exemple": "illustration",
-     "lien": "https://www.numerama.com/tech/2374177-les-mesures-prises-nont-pas-apporte-le-soulagement-attendu-le-journal-de-bord-de-microsoft-revele-ses-tatonnements-pendant-sa-panne-geante.html",
-     "source": "Numerama"
-    },
-    {
-     "titre": "Les embauches de jeunes baissent de 28 % là où l'IA est très présente",
-     "pour": "Côme",
-     "usage": "entretien",
-     "fait": "Selon la Banque de France, les embauches en CDI des 21-29 ans sont inférieures d'environ 28 % à leur niveau de novembre 2022 dans les métiers les plus exposés à l'IA. L'écart n'est que de 8 % dans les métiers les moins exposés.",
-     "concretement": "Par exemple, en entretien, tu peux montrer que tu sais vérifier le travail d'une IA : repérer un chiffre faux dans un tableau, c'est justement ce que les recruteurs cherchent chez un débutant.",
-     "origine_exemple": "illustration",
-     "lien": "https://www.journaldunet.com/intelligence-artificielle/1557941-les-entreprises-qui-ne-recrutent-plus-de-juniors-organisent-leur-penurie-de-seniors/",
-     "source": "Journal du Net"
-    },
-    {
-     "titre": "Une compagnie aérienne interdit aux assistants IA de réserver à votre place",
-     "pour": "Alix",
-     "usage": "banque",
-     "fait": "United Airlines restreint l'accès de ses services aux assistants IA qui réservent des vols pour les clients. Elle cite les risques liés au partage des identifiants. Les banques, elles aussi, ont demandé à leurs clients de ne pas donner leurs mots de passe à ces assistants.",
-     "concretement": "Par exemple, un client qui confie ses identifiants bancaires à un assistant IA s'expose à des opérations non voulues. Tes clients du secteur bancaire vont vouloir une règle claire sur ce point.",
-     "origine_exemple": "illustration",
-     "lien": "https://techcrunch.com/2026/11/12/united-airlines-blocks-ai-agents-from-booking-flights-citing-cybersecurity-risks/",
-     "source": "TechCrunch"
-    },
-    {
-     "titre": "Dans les banques, peu repensent leurs processus de bout en bout avec l'IA",
-     "pour": "Alix",
-     "usage": "banque",
-     "fait": "Selon une enquête d'American Banker, seuls 13 % des professionnels de la banque disent que leur établissement refait le plus souvent ses processus de travail de bout en bout en adoptant l'IA. L'article cite Citi, qui en redessine une centaine.",
-     "concretement": "Par exemple, ajouter une IA à une étape isolée du traitement d'un dossier gagne peu de temps si les autres étapes restent identiques. C'est un sujet de mission pour toi.",
-     "origine_exemple": "illustration",
-     "lien": "https://www.americanbanker.com/news/citi-is-redesigning-100-processes-what-s-stopping-others",
-     "source": "American Banker"
-    },
-    {
-     "titre": "Bing permet de désactiver les réponses générées par l'IA",
-     "pour": "Vous deux",
-     "usage": "outil",
-     "fait": "Microsoft laisse désormais les utilisateurs de son moteur de recherche Bing désactiver les réponses écrites par l'IA. Google, lui, impose ses résumés par IA dans ses résultats.",
-     "concretement": "Par exemple, si vous préférez lire vous-mêmes les sources avant de citer un chiffre, vous pouvez retrouver des résultats de recherche classiques.",
-     "origine_exemple": "illustration",
-     "lien": "https://siecledigital.fr/2026/11/13/microsoft-prend-le-contre-pied-de-google-en-permettant-de-desactiver-les-reponses-ia-dans-bing/",
-     "source": "Siècle Digital"
-    }
-   ]
-  },
-  {
    "date": "2026-11-08",
    "rien_de_notable": false,
    "publie_le": "2026-11-13T14:13+00:00",
