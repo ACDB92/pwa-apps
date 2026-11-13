@@ -34,6 +34,8 @@ def message(edition, app=APP):
         texte = "Rien de notable aujourd'hui."
     else:
         texte = sujets[0]["titre"] + (f" · +{len(sujets) - 1}" if len(sujets) > 1 else "")
+        if edition.get("type") == "semaine":
+            texte = "La semaine en 5 · " + texte
     url = f"{app}#{edition['date']}" if edition.get("date") else app
     return {"title": "L'IA du jour", "body": texte, "url": url}
 

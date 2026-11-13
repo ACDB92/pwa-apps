@@ -26,6 +26,16 @@ du matin d'un foyer, lue dans une petite app web : **5 sujets au plus**, lus en 
 - **Aucun des deux n'est technicien.** Ils ne codent pas et ne lisent pas de documentation
   technique. Si un sujet ne s'explique pas sans jargon, il n'est pas pour eux.
 
+## Le dimanche : « la semaine en 5 »
+
+Le dimanche (date du jour à Paris), **pas de collecte** : l'édition reprend les **5 sujets qui
+comptaient le plus** parmi ceux publiés du lundi au samedi (`editions/`, après l'étape 1), **recopiés
+tels quels** — mêmes champs, sans retouche — avec `"repris_du": "AAAA-MM-JJ"` (la date de leur
+édition) et `"source"` recopiée aussi. `"type": "semaine"`. Le premier reste la une. Équilibre
+Côme / Alix comme en semaine. Le lexique, lui, est **neuf** comme tous les jours.
+Étapes du dimanche : 1, puis écrire `edition.json`, puis 6, 7 et 8 (`verifier` vérifie que chaque
+sujet est bien repris tel quel des 6 jours précédents).
+
 ## Les étapes
 
 Toutes les commandes se lancent **depuis le dossier de ce fichier**. Tu ne crées ni ne changes
@@ -43,7 +53,8 @@ dans une même commande, et pas d'autre commande de publication que celles-ci.
    revient pas**, même racontée par un autre site.
 4. Pour chaque sujet retenu dont le texte du flux est court ou incomplet,
    `python3 collecte.py page <lien>` : les chiffres se vérifient sur ce texte.
-5. Écrire `edition.json` (format plus bas), daté du jour à Paris.
+5. Écrire `edition.json` (format plus bas), daté du jour à Paris : les sujets **et le lexique**
+   (5 termes, voir plus bas ; lire d'abord le lexique des éditions récentes pour ne rien répéter).
 6. `python3 edition.py verifier edition.json` — **tant qu'il refuse, corriger ou retirer le
    sujet en cause**. Ne jamais contourner le contrôle. Relire ensuite ce qu'il ne voit pas :
    jargon, prénom ou nom d'entreprise inventé dans un exemple.
@@ -81,17 +92,30 @@ Chaque sujet suit le même moule :
 
 - **`titre`** : la nouvelle en une ligne, en français, sans jargon (12 mots au plus).
 - **`fait`** : ce qui s'est passé, en une ou deux phrases simples. Un mot technique
-  inévitable s'explique dans la phrase (« un agent, c'est-à-dire une IA qui enchaîne les
-  tâches seule »).
+  inévitable s'explique **juste après** (« un agent, c'est-à-dire une IA qui enchaîne les
+  tâches seule », ou entre parenthèses) — sauf s'il est dans le lexique du jour. Le contrôle
+  refuse le jargon courant non expliqué (LLM, prompt, API, GPU, open source, inférence…).
 - **`concretement`** : un exemple de la vie réelle — le travail de Côme, celui d'Alix, ou le
   quotidien. **D'où vient l'exemple** (`origine_exemple`) :
   - `"article"` : l'article en donne un. Le reformuler simplement ; ses chiffres sont vérifiés
     comme ceux du fait.
   - `"illustration"` : l'article n'en donne pas. L'inventer, mais **commencer par « Par
-    exemple »**, n'y mettre **aucun chiffre** et **aucun nom d'entreprise ou de personne** :
-    c'est une aide à comprendre, pas un fait.
+    exemple »**, n'y mettre **aucun chiffre** et **aucun nom propre** — ni personne, ni
+    entreprise, ni ville (« une ville de province ») : c'est une aide à comprendre, pas un fait.
+    Le contrôle refuse tout nom propre absent de l'article (les sigles comme IBAN passent).
 - **`pour`** : `"Côme"`, `"Alix"` ou `"Vous deux"`.
-- **`usage`** : `"data-bi"`, `"entretien"`, `"outil"`, `"general"`, `"quotidien"` ou `"banque"`.
+- **`usage`** — l'étiquette, **d'après ce qui change pour le lecteur**, pas d'après le secteur de
+  l'entreprise citée :
+  - `"data-bi"` : ce qui change le métier de la data et des tableaux de bord (outils de BI, entrepôts
+    de données, IA qui analyse des chiffres). *Ex. : un assistant qui répond aux questions de chiffres dans Slack.*
+  - `"entretien"` : un fait chiffré ou une tendance qu'on peut citer en entretien d'embauche sur l'IA
+    au travail. *Ex. : la baisse des embauches de jeunes là où l'IA est très présente.*
+  - `"outil"` : quelque chose qu'on peut essayer soi-même cette semaine. *Ex. : une fonction de Google ou de Claude.*
+  - `"general"` : une nouvelle majeure de l'IA, sans usage direct. *Ex. : le patron de Nvidia qui part.*
+  - `"quotidien"` : l'IA dans la vie de tous les jours (achats, voyages, maison, santé). *Ex. : une
+    compagnie aérienne qui refuse les réservations faites par des IA.*
+  - `"banque"` : **seulement** ce qui touche les banques, l'assurance, les paiements ou le conseil à
+    ces secteurs. *Ex. : une banque qui fait programmer des virements à la voix.*
 - **`lien`** : le lien de l'article tel qu'il figure dans `candidats.json`.
 
 **Les chiffres** : tout nombre du titre ou du fait doit figurer dans le texte de l'article
@@ -100,8 +124,8 @@ dit « 3 trillion » ne devient pas « 3 000 milliards » — écrire alors la c
 (« des milliers de milliards de dollars »). Une date se dit en mots si elle n'est pas dans
 l'article (« cette semaine »).
 
-**La longueur** : un sujet tient en **700 caractères environ** (fait et exemple compris), pour
-que l'édition se lise en 3 à 4 minutes.
+**La longueur** : un sujet tient en **700 caractères environ** (fait et exemple compris ; le
+contrôle refuse au-delà de 800, et un titre de plus de 90), pour que l'édition se lise en 3 à 4 minutes.
 
 **Les entreprises des lecteurs** : une nouvelle qui concerne l'employeur de l'un d'eux peut être
 retenue, mais l'entreprise n'est **jamais nommée** — la désigner par son secteur (« un grand cabinet
@@ -111,12 +135,35 @@ de conseil »). Le contrôle refuse le nom dans le titre, le fait et l'exemple.
 Alix seul — jamais les deux dans un même sujet, phrases courtes, pas d'anglicismes quand le mot
 français existe, pas d'emphase (« révolutionnaire », « incroyable »).
 
+## Le lexique du jour
+
+Chaque édition — même un jour creux, même le dimanche — porte **5 termes** à connaître, pas
+forcément liés à l'actualité : le but est de **consolider** les connaissances. **Au moins un terme
+par thème** : `"ia"` (les notions de base de l'IA), `"data-bi"` (data et tableaux de bord),
+`"banque"` (banque, assurance, conseil, réglementation), `"quotidien"` (le numérique de tous les jours).
+- Des **notions établies** (« hallucination », « couche sémantique », « KYC », « chiffrement de
+  bout en bout »), jamais le nom d'un produit ni le jargon d'une seule entreprise.
+- **Pas de terme paru dans les 60 derniers jours** (lire le lexique des éditions de `editions/`) :
+  le contrôle le refuse.
+- `definition` : une ou deux phrases simples (320 caractères au plus). `exemple` : une situation
+  concrète (260 au plus). **Aucun chiffre** (rien ne permettrait de les vérifier), aucun nom propre.
+- Un terme du lexique peut être employé dans un sujet du jour sans autre explication : l'app le
+  rend touchable.
+
 ## Format de `edition.json`
 
 ```json
 {
   "date": "2026-11-08",
+  "type": "jour",
   "rien_de_notable": false,
+  "lexique": [
+    {"terme": "Hallucination", "theme": "ia", "definition": "…", "exemple": "…"},
+    {"terme": "…", "theme": "data-bi", "definition": "…", "exemple": "…"},
+    {"terme": "…", "theme": "banque", "definition": "…", "exemple": "…"},
+    {"terme": "…", "theme": "quotidien", "definition": "…", "exemple": "…"},
+    {"terme": "…", "theme": "…", "definition": "…", "exemple": "…"}
+  ],
   "sujets": [
     {
       "titre": "…",

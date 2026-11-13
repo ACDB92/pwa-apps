@@ -2,7 +2,7 @@
 // tout est inséré en texte (textContent), jamais en HTML, et un lien n'est affiché que s'il est en http(s).
 import {
   USAGES, dateFr, aParis, fraicheur, chercher, lienSur, minutesDeLecture, normaliser,
-  voisins, lireAncre, ancre, compter, resumeCompteur,
+  voisins, lireAncre, ancre, compter, resumeCompteur, THEMES, lierTermes, estSemaine,
 } from './lecture.js';
 
 const $ = id => document.getElementById(id);
@@ -99,7 +99,18 @@ async function partager(date, numero, sujet) {
 
 // ── Une carte de sujet ──────────────────────────────────────────────────────
 
-function carte(sujet, { date, numero = null, une = false, avecDate = false, mots = [] } = {}) {
+/** Texte d'un sujet : mots cherchés surlignés (archive), ou termes du lexique du jour touchables (édition). */
+function texte(contenu, mots, termes) {
+  if (mots.length || !termes.length) return surligne(contenu, mots);
+  return lierTermes(contenu, termes).map(m => {
+    if (!m.terme) return m.texte;
+    const b = el('button', { class: 'mot', type: 'button', title: 'Voir dans le lexique du jour' }, m.texte);
+    b.addEventListener('click', () => ouvrirTerme(m.terme));
+    return b;
+  });
+}
+
+function carte(sujet, { date, numero = null, une = false, avecDate = false, mots = [], termes = [], semaine = false } = {}) {
   const u = USAGES[sujet.usage] || { libelle: sujet.usage };
   const pour = sujet.pour === 'Vous deux' ? 'vous deux' : sujet.pour;
   const lien = lienSur(sujet.lien);
@@ -110,15 +121,16 @@ function carte(sujet, { date, numero = null, une = false, avecDate = false, mots
   const bouton = el('button', { class: 'partager', type: 'button' }, 'Partager');
   bouton.addEventListener('click', () => partager(date, numero, sujet));
   return el('article', { class: `sujet${une ? ' une' : ''}`, id: numero ? `s-${date}-${numero}` : null },
-    une ? el('div', { class: 'surtitre' }, 'À la une') : null,
+    une ? el('div', { class: 'surtitre' }, semaine ? 'À la une de la semaine' : 'À la une') : null,
     el('div', { class: 'haut' },
       avecDate ? el('span', { class: 'quand' }, dateFr(date)) : null,
+      sujet.repris_du ? el('span', { class: 'quand' }, `paru ${dateFr(sujet.repris_du)}`) : null,
       el('span', { style: couleur, class: 'etiquette-bloc' }, picto(sujet.usage)),
       el('span', { class: 'etiquette', style: couleur }, u.libelle),
       el('span', { class: 'pour' }, `pour ${pour}`)),
     el(une ? 'h2' : 'h3', {}, numero && !une ? el('span', { class: 'n' }, `${numero}. `) : null, surligne(sujet.titre, mots)),
-    el('p', {}, surligne(sujet.fait, mots)),
-    el('div', { class: 'concret' }, el('b', {}, 'Concrètement'), surligne(sujet.concretement, mots)),
+    el('p', {}, texte(sujet.fait, mots, termes)),
+    el('div', { class: 'concret' }, el('b', {}, 'Concrètement'), texte(sujet.concretement, mots, termes)),
     el('div', { class: 'actions' }, a, bouton));
 }
 
@@ -147,6 +159,33 @@ async function edition(date) {
   return (await chargerMois(date.slice(0, 7))).find(e => e.date === date) || null;
 }
 
+// ── Lexique du jour ─────────────────────────────────────────────────────────
+
+const CLE_LEXIQUE = 'ia-du-jour:lexique-ouvert';
+
+function afficherLexique(ed) {
+  const zone = $('lexique');
+  const termes = ed.lexique || [];
+  zone.hidden = !termes.length;
+  if (!termes.length) return;
+  $('termes').replaceChildren(...termes.map((t, i) => el('div', { class: 'terme', id: `t-${i}`, 'data-terme': t.terme },
+    el('div', { class: 'theme' }, THEMES[t.theme] || t.theme),
+    el('div', { class: 'nom' }, t.terme),
+    el('p', {}, t.definition),
+    el('p', { class: 'ex' }, el('b', {}, 'Exemple : '), t.exemple))));
+  try { zone.open = localStorage.getItem(CLE_LEXIQUE) === '1'; } catch { zone.open = false; }
+}
+
+function ouvrirTerme(terme) {
+  const zone = $('lexique');
+  zone.open = true;
+  const carteTerme = [...$('termes').children].find(c => c.dataset.terme === terme);
+  if (!carteTerme) return;
+  for (const c of $('termes').children) c.classList.remove('cible');
+  carteTerme.classList.add('cible');
+  carteTerme.scrollIntoView({ block: 'center', behavior: 'smooth' });
+}
+
 // ── Vue Édition ─────────────────────────────────────────────────────────────
 
 function afficherBandeau() {
@@ -163,16 +202,19 @@ async function afficherEdition(date, sujetCible = null) {
   if (!ed) { date = etat.index.derniere; ed = await edition(date); sujetCible = null; }
   etat.affiche = date;
   const n = ed.sujets.length;
-  $('meta').replaceChildren(el('b', {}, dateFr(date)),
+  const semaine = estSemaine(ed);
+  $('meta').replaceChildren(el('b', {}, semaine ? `La semaine en 5 · ${dateFr(date)}` : dateFr(date)),
     n ? `${n} sujet${n > 1 ? 's' : ''} · ${minutesDeLecture(ed)} min de lecture` : 'Rien de notable');
+  afficherLexique(ed);
+  const termes = (ed.lexique || []).map(t => t.terme);
   $('retour').hidden = date === etat.index.derniere;
   const { avant, apres } = voisins((await toutesLesEditions()).map(e => e.date), date);
   $('avant').disabled = !avant;
   $('apres').disabled = !apres;
   $('avant').dataset.date = avant || '';
   $('apres').dataset.date = apres || '';
-  const cartes = ed.sujets.map((s, i) => carte(s, { date, numero: i + 1, une: i === 0 }));
-  if (cartes.length > 1) cartes.splice(1, 0, el('div', { class: 'suite' }, 'Aussi ce jour-là'));
+  const cartes = ed.sujets.map((s, i) => carte(s, { date, numero: i + 1, une: i === 0, termes, semaine }));
+  if (cartes.length > 1) cartes.splice(1, 0, el('div', { class: 'suite' }, semaine ? 'Aussi cette semaine' : 'Aussi ce jour-là'));
   $('sujets').replaceChildren(...(n ? cartes
     : [el('div', { class: 'vide' }, 'Rien de notable ce jour-là : aucune nouvelle ne valait vos trois minutes.')]));
   if (sujetCible) {
@@ -210,7 +252,7 @@ async function afficherArchive() {
   const tri = [...editions].sort((a, b) => b.date.localeCompare(a.date));
   $('compte').textContent = `${tri.length} édition${tri.length > 1 ? 's' : ''}`;
   res.replaceChildren(...tri.map(e => {
-    const titres = e.sujets.length ? e.sujets.map(s => s.titre).join(' · ') : 'Rien de notable';
+    const titres = (estSemaine(e) ? 'La semaine en 5 — ' : '') + (e.sujets.length ? e.sujets.map(s => s.titre).join(' · ') : 'Rien de notable');
     const d = el('details', { class: 'jour' },
       el('summary', {}, el('span', { class: 'j' }, dateFr(e.date)), el('span', { class: 't' }, titres)));
     const contenu = el('div', { class: 'contenu' });
@@ -346,6 +388,9 @@ async function demarrer() {
     attente = setTimeout(() => { etat.q = ev.target.value; afficherArchive().catch(erreur); }, 150);
   });
   window.addEventListener('hashchange', () => suivreAncre().catch(erreur));
+  $('lexique').addEventListener('toggle', e => {
+    try { localStorage.setItem(CLE_LEXIQUE, e.currentTarget.open ? '1' : '0'); } catch { /* navigation privée */ }
+  });
   noter('ouverture');
   etat.index = await lireJson('./editions/index.json');
   afficherBandeau();

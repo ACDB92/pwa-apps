@@ -75,11 +75,16 @@ def lire_flux(contenu, source):
     for it in racine.iter("item"):
         lien = (it.findtext("link") or "").strip()
         texte = nettoyer(it.findtext(CONTENT) or "") or nettoyer(it.findtext("description") or "")
+        titre = nettoyer(it.findtext("title") or "")
+        journal = nettoyer(it.findtext("source") or "")   # agrégateurs (Google Actualités) : le vrai journal
+        if journal and titre.endswith(" - " + journal):
+            titre = titre[: -len(" - " + journal)]
         articles.append({
-            "titre": nettoyer(it.findtext("title") or ""),
+            "titre": titre,
             "lien": lien,
             "date": lire_date(it.findtext("pubDate") or it.findtext(DC_DATE)),
             "texte": texte,
+            "journal": journal,
         })
     for e in racine.iter(ATOM + "entry"):
         lien = ""
@@ -95,7 +100,7 @@ def lire_flux(contenu, source):
             "texte": texte,
         })
     for a in articles:
-        a["source"] = source["nom"]
+        a["source"] = a.pop("journal", "") or source["nom"]
         a["rubrique"] = source["rubrique"]
     return articles
 

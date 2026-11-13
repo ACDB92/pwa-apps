@@ -62,7 +62,8 @@ export function estPour(sujet, personne) {
 export function chercher(editions, { q = '', pour = '', usage = '' } = {}) {
   const mots = normaliser(q).split(/\s+/).filter(Boolean);
   const res = [];
-  for (const e of [...editions].sort((a, b) => b.date.localeCompare(a.date))) {
+  // la semaine en 5 reprend des sujets déjà parus : on ne les compte qu'une fois, à leur date d'origine
+  for (const e of [...editions].filter(e => e.type !== 'semaine').sort((a, b) => b.date.localeCompare(a.date))) {
     for (const s of e.sujets || []) {
       if (!estPour(s, pour) || (usage && s.usage !== usage)) continue;
       const texte = normaliser([s.titre, s.fait, s.concretement, s.source].join(' '));
@@ -128,3 +129,41 @@ export function resumeCompteur(c) {
   return `Sur ce téléphone depuis le ${dateFr(c.depuis).replace(/^\S+ /, '')} : ouverte ${c.ouvertures} fois, `
     + `${j} jour${j > 1 ? 's' : ''} différent${j > 1 ? 's' : ''}, ${c.articles} article${c.articles > 1 ? 's' : ''} ouvert${c.articles > 1 ? 's' : ''}.`;
 }
+
+// ── Lexique et semaine en 5 ─────────────────────────────────────────────────
+
+export const THEMES = {
+  ia:        'Les bases de l’IA',
+  'data-bi': 'Data & BI',
+  banque:    'Banque & conseil',
+  quotidien: 'Numérique du quotidien',
+};
+
+/** Découpe un texte pour rendre touchables les termes du lexique du jour :
+ *  [{ texte }, { texte, terme }, …]. Mot entier, sans tenir compte de la casse ni des accents ;
+ *  chaque terme n'est lié qu'à sa première apparition. */
+export function lierTermes(texte, termes) {
+  const norm = normaliser(texte);
+  if (norm.length !== texte.length || !termes.length) return [{ texte }];
+  const restants = new Map(termes.map(t => [normaliser(t), t]));
+  const morceaux = [];
+  let i = 0;
+  const lettre = c => c && /[\p{L}\p{N}]/u.test(c);
+  while (i < texte.length && restants.size) {
+    let meilleur = null;
+    for (const [cle, terme] of restants) {
+      let p = norm.indexOf(cle, i);
+      while (p !== -1 && (lettre(norm[p - 1]) || lettre(norm[p + cle.length]))) p = norm.indexOf(cle, p + 1);
+      if (p !== -1 && (!meilleur || p < meilleur.p || (p === meilleur.p && cle.length > meilleur.cle.length))) meilleur = { p, cle, terme };
+    }
+    if (!meilleur) break;
+    if (meilleur.p > i) morceaux.push({ texte: texte.slice(i, meilleur.p) });
+    morceaux.push({ texte: texte.slice(meilleur.p, meilleur.p + meilleur.cle.length), terme: meilleur.terme });
+    restants.delete(meilleur.cle);
+    i = meilleur.p + meilleur.cle.length;
+  }
+  if (i < texte.length) morceaux.push({ texte: texte.slice(i) });
+  return morceaux;
+}
+
+export const estSemaine = edition => edition?.type === 'semaine';

@@ -1,5 +1,5 @@
 // L'IA du jour — service worker. Changer CACHE à chaque publication du code de l'app.
-const CACHE = 'ia-du-jour-v3';
+const CACHE = 'ia-du-jour-v4';
 const ASSETS = ['./', './index.html', './app.js', './lecture.js', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e =>

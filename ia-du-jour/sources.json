@@ -26,7 +26,12 @@
 
     {"nom": "Finextra (IA)", "rubrique": "banque", "url": "https://www.finextra.com/rss/channel.aspx?channel=ai", "note": "publie aussi des articles datés dans le futur (événements) : écartés par la collecte"},
     {"nom": "American Banker", "rubrique": "banque", "url": "https://www.americanbanker.com/feed?rss=true", "note": "flux général bancaire"},
-    {"nom": "Banking Dive", "rubrique": "banque", "url": "https://www.bankingdive.com/feeds/news/", "note": "flux général bancaire"}
+    {"nom": "Banking Dive", "rubrique": "banque", "url": "https://www.bankingdive.com/feeds/news/", "note": "flux général bancaire"},
+
+    {"nom": "Google Actualités — IA et banque", "rubrique": "banque", "url": "https://news.google.com/rss/search?hl=fr&gl=FR&ceid=FR:fr&q=intelligence+artificielle+banque+when:2d", "note": "presse française (Les Echos, L'Agefi, L'Usine Digitale…) : titre et une ligne seulement, page non lisible ; le nom du journal est repris de chaque article"},
+    {"nom": "Google Actualités — IA, banque et assurance", "rubrique": "banque", "url": "https://news.google.com/rss/search?hl=fr&gl=FR&ceid=FR:fr&q=IA+banque+assurance+when:2d", "note": "idem"},
+    {"nom": "Google Actualités — IA et conseil", "rubrique": "banque", "url": "https://news.google.com/rss/search?hl=fr&gl=FR&ceid=FR:fr&q=IA+cabinet+de+conseil+when:2d", "note": "idem ; les employeurs des lecteurs ne sont jamais nommés (contrôle)"},
+    {"nom": "Google Actualités — IA et métiers de la data", "rubrique": "data-bi", "url": "https://news.google.com/rss/search?hl=fr&gl=FR&ceid=FR:fr&q=intelligence+artificielle+data+analyst+when:2d", "note": "idem ; métiers et recrutement, utile en entretien"}
   ],
   "ecartes": [
     {"nom": "Hugging Face", "raison": "trop technique, aucun texte dans le flux"},
@@ -35,7 +40,7 @@
     {"nom": "01net, BFM Tech", "raison": "bruit : bons plans, high-tech grand public"},
     {"nom": "Blog du Modérateur IA, Benn Stancil", "raison": "plus rien publié depuis septembre"},
     {"nom": "Tableau, The Financial Brand, FinTech Futures, Le Big Data, Usine Digitale", "raison": "refusent les lecteurs automatiques (403)"},
-    {"nom": "Revue Banque, L'Agefi", "raison": "pas de flux (404) — trou : aucune source bancaire en français"},
+    {"nom": "Revue Banque, L'Agefi", "raison": "pas de flux (404) — comblé le 13/11/2026 par les recherches Google Actualités"},
     {"nom": "Finyear", "raison": "flux mal formé"},
     {"nom": "Snowflake", "raison": "retiré le 13/11/2026 : redirige vers un serveur Adobe refusé par le réseau de la routine, et billets trop techniques"}
   ],
