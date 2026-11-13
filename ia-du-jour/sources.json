@@ -1,0 +1,44 @@
+{
+  "_lire": "Liste des flux lus chaque matin. Testés le 2026-11-08 (joignables, publiés dans la semaine sauf mention). Ajouter un flux : le tester avec `python3 collecte.py tester`, puis ajouter son domaine à l'environnement cloud (`python3 collecte.py domaines`).",
+  "sources": [
+    {"nom": "Anthropic", "rubrique": "ia-generale", "url": "https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_news.xml", "note": "Anthropic n'a plus de flux officiel (404) : miroir public sur GitHub, titres et liens seulement"},
+    {"nom": "OpenAI", "rubrique": "ia-generale", "url": "https://openai.com/news/rss.xml"},
+    {"nom": "Google", "rubrique": "ia-generale", "url": "https://blog.google/technology/ai/rss/"},
+    {"nom": "Mistral", "rubrique": "ia-generale", "url": "https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_mistral.xml", "note": "miroir public, comme Anthropic"},
+    {"nom": "The Verge", "rubrique": "ia-generale", "url": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"},
+    {"nom": "TechCrunch", "rubrique": "ia-generale", "url": "https://techcrunch.com/category/artificial-intelligence/feed/"},
+    {"nom": "MIT Technology Review", "rubrique": "ia-generale", "url": "https://www.technologyreview.com/topic/artificial-intelligence/feed"},
+
+    {"nom": "The Rundown AI", "rubrique": "usages", "url": "https://rss.beehiiv.com/feeds/2R3C6Bt5wj.xml", "note": "newsletter grand public, articles longs"},
+    {"nom": "Ben's Bites", "rubrique": "usages", "url": "https://www.bensbites.com/feed"},
+    {"nom": "One Useful Thing (Ethan Mollick)", "rubrique": "usages", "url": "https://www.oneusefulthing.org/feed", "note": "rare (dernier article le 20/10), mais le meilleur sur l'IA au travail"},
+
+    {"nom": "Presse-citron", "rubrique": "francais", "url": "https://www.presse-citron.net/category/intelligence-artificielle/feed/"},
+    {"nom": "Frandroid", "rubrique": "francais", "url": "https://www.frandroid.com/tag/intelligence-artificielle/feed"},
+    {"nom": "Siècle Digital", "rubrique": "francais", "url": "https://siecledigital.fr/feed/", "note": "flux général : l'IA n'y est qu'un sujet parmi d'autres"},
+    {"nom": "ActuIA", "rubrique": "francais", "url": "https://www.actuia.com/feed/"},
+    {"nom": "Journal du Net", "rubrique": "francais", "url": "https://www.journaldunet.com/intelligence-artificielle/rss/"},
+    {"nom": "Numerama", "rubrique": "francais", "url": "https://www.numerama.com/feed/", "note": "flux général"},
+
+    {"nom": "Power BI (mises à jour)", "rubrique": "data-bi", "url": "https://community.fabric.microsoft.com/t5/s/rss/board?board.id=fbc_pbiupdatesblog"},
+    {"nom": "dbt", "rubrique": "data-bi", "url": "https://www.getdbt.com/blog/rss.xml"},
+    {"nom": "Snowflake", "rubrique": "data-bi", "url": "https://www.snowflake.com/feed/"},
+    {"nom": "Databricks", "rubrique": "data-bi", "url": "https://www.databricks.com/feed"},
+
+    {"nom": "Finextra (IA)", "rubrique": "banque", "url": "https://www.finextra.com/rss/channel.aspx?channel=ai", "note": "publie aussi des articles datés dans le futur (événements) : écartés par la collecte"},
+    {"nom": "American Banker", "rubrique": "banque", "url": "https://www.americanbanker.com/feed?rss=true", "note": "flux général bancaire"},
+    {"nom": "Banking Dive", "rubrique": "banque", "url": "https://www.bankingdive.com/feeds/news/", "note": "flux général bancaire"}
+  ],
+  "ecartes": [
+    {"nom": "Hugging Face", "raison": "trop technique, aucun texte dans le flux"},
+    {"nom": "Simon Willison", "raison": "trop technique (développeurs)"},
+    {"nom": "Le Monde Pixels", "raison": "le flux mélange tous les sujets (politique, société)"},
+    {"nom": "01net, BFM Tech", "raison": "bruit : bons plans, high-tech grand public"},
+    {"nom": "Blog du Modérateur IA, Benn Stancil", "raison": "plus rien publié depuis septembre"},
+    {"nom": "Tableau, The Financial Brand, FinTech Futures, Le Big Data, Usine Digitale", "raison": "refusent les lecteurs automatiques (403)"},
+    {"nom": "Revue Banque, L'Agefi", "raison": "pas de flux (404) — trou : aucune source bancaire en français"},
+    {"nom": "Finyear", "raison": "flux mal formé"}
+  ],
+  "_domaines_en_plus": "Sites des articles quand le flux est hébergé ailleurs (miroirs GitHub d'Anthropic et Mistral) : `collecte.py page` doit pouvoir les lire. GitHub (pour pousser les éditions) est déjà dans la liste par défaut.",
+  "domaines_en_plus": ["www.anthropic.com", "mistral.ai"]
+}

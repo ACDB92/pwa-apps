@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>L'IA du jour</title>
+<meta name="description" content="L'actualité de l'IA chaque matin, en cinq sujets au plus, expliquée sans jargon avec un exemple concret.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#FBF6EE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#15181F" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon.svg">
+<link rel="apple-touch-icon" href="./icon.svg">
+<style>
+  /* Un journal du matin : papier chaud et encre bleu nuit le jour, papier sombre la nuit
+     (le thème suit le réglage du téléphone — choix du 13 novembre 2026). */
+  :root {
+    --fond: #FBF6EE; --papier: #FFFFFF; --encre: #1B2436; --doux: #5D6677; --pale: #98A0AE;
+    --trait: #EAE2D4; --accent: #D24A31; --accent-doux: #FDEBE6; --encadre: #FBF4E8; --onglets: #F1E9DC;
+    --bouton: #1B2436; --bouton-encre: #FFFFFF;
+    --ombre: 0 10px 30px -18px rgba(27, 36, 54, .35);
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    /* une teinte par étiquette : trait et texte, puis fond de la pastille */
+    --u-data-bi: #1D4ED8; --u-data-bi-f: #DBEAFE;
+    --u-entretien: #6D28D9; --u-entretien-f: #EDE9FE;
+    --u-outil: #047857; --u-outil-f: #D1FAE5;
+    --u-general: #334155; --u-general-f: #E2E8F0;
+    --u-quotidien: #B45309; --u-quotidien-f: #FEF3C7;
+    --u-banque: #0F766E; --u-banque-f: #CCFBF1;
+    --surligne: #FFE58A;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fond: #15181F; --papier: #1E222B; --encre: #ECE6DA; --doux: #A4AAB6; --pale: #6E7480;
+      --trait: #2E333E; --accent: #F2826B; --accent-doux: #3A231E; --encadre: #262420; --onglets: #22262F;
+      --bouton: #ECE6DA; --bouton-encre: #15181F;
+      --ombre: 0 10px 30px -18px rgba(0, 0, 0, .7);
+      --u-data-bi: #8DB3FF; --u-data-bi-f: rgba(141, 179, 255, .14);
+      --u-entretien: #C4A8FF; --u-entretien-f: rgba(196, 168, 255, .14);
+      --u-outil: #6FD9AE; --u-outil-f: rgba(111, 217, 174, .13);
+      --u-general: #C3CBD8; --u-general-f: rgba(195, 203, 216, .12);
+      --u-quotidien: #F5BE6A; --u-quotidien-f: rgba(245, 190, 106, .14);
+      --u-banque: #5FD3C6; --u-banque-f: rgba(95, 211, 198, .13);
+      --surligne: #6B5A12;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--fond); color: var(--encre); font: 16px/1.55 var(--sans);
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  main { max-width: 720px; margin: 0 auto; padding: 20px 16px 48px; }
+  a { color: inherit; }
+  button, input { font: inherit; color: inherit; }
+  button { -webkit-tap-highlight-color: transparent; }
+
+  header .date { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--doux); }
+  header h1 { font-family: var(--serif); font-size: 34px; line-height: 1.1; margin: 4px 0 0; letter-spacing: -.01em; }
+
+  .bandeau { margin: 14px 0 0; padding: 10px 14px; border-radius: 12px; font-size: 14px; }
+  .bandeau.attendue { background: #EEF2FF; color: #3730A3; }
+  .bandeau.manquante { background: var(--accent-doux); color: var(--accent); }
+  @media (prefers-color-scheme: dark) { .bandeau.attendue { background: #23284A; color: #C7CEFF; } }
+
+  nav.onglets { display: flex; gap: 6px; margin: 18px 0 14px; background: var(--onglets); padding: 4px; border-radius: 12px; }
+  nav.onglets button {
+    flex: 1; border: 0; background: transparent; padding: 9px 10px; border-radius: 9px; cursor: pointer;
+    font-weight: 600; color: var(--doux);
+  }
+  nav.onglets button[aria-selected="true"] { background: var(--papier); color: var(--encre); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+
+  /* Barre de l'édition : ◀ jour d'avant · date et durée · jour d'après ▶ */
+  .jours { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .jours .meta { flex: 1; text-align: center; font-size: 14px; color: var(--doux); line-height: 1.35; }
+  .jours .meta b { display: block; color: var(--encre); font-size: 15px; }
+  .fleche {
+    flex: none; width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--trait); background: var(--papier);
+    font-size: 16px; cursor: pointer; display: grid; place-items: center;
+  }
+  .fleche:disabled { opacity: .3; cursor: default; }
+  .retour { display: block; margin: -4px auto 14px; border: 0; background: none; color: var(--accent); font-weight: 600; cursor: pointer; font-size: 14px; }
+
+  .outils { display: grid; gap: 10px; margin-bottom: 16px; }
+  .outils input[type="search"] {
+    width: 100%; padding: 11px 14px; border-radius: 12px; border: 1px solid var(--trait); background: var(--papier);
+  }
+  .outils input[type="search"]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .puces { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+  .puces::-webkit-scrollbar { display: none; }
+  .puce {
+    flex: none; border: 1px solid var(--trait); background: var(--papier); padding: 6px 11px; border-radius: 999px;
+    font-size: 13px; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px;
+  }
+  .puce svg { width: 15px; height: 15px; }
+  .puce[aria-pressed="true"] { background: var(--bouton); border-color: var(--bouton); color: var(--bouton-encre); }
+  .compte { font-size: 13px; color: var(--doux); margin: 0 0 10px; }
+
+  /* Un sujet */
+  .sujet {
+    background: var(--papier); border: 1px solid var(--trait); border-radius: 16px; padding: 18px 18px 18px;
+    margin-bottom: 14px; box-shadow: var(--ombre); scroll-margin-top: 16px;
+  }
+  .sujet .haut { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 12px; color: var(--doux); }
+  .picto { width: 22px; height: 22px; flex: none; }
+  .etiquette { font-weight: 700; letter-spacing: .02em; }
+  .pour::before { content: "·"; margin-right: 10px; color: var(--pale); }
+  .sujet h2, .sujet h3 { font-family: var(--serif); font-size: 21px; line-height: 1.28; margin: 10px 0 8px; }
+  .sujet .n { color: var(--accent); }
+  .sujet p { margin: 0; }
+  .concret { margin-top: 14px; background: var(--encadre); border-left: 4px solid var(--accent); border-radius: 8px; padding: 11px 13px; font-size: 15px; }
+  .concret b { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); margin-bottom: 3px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .lire, .partager {
+    display: inline-flex; align-items: center; gap: 6px; text-decoration: none; padding: 8px 14px; border-radius: 9px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .lire { background: var(--bouton); color: var(--bouton-encre); border: 0; }
+  .partager { background: transparent; border: 1px solid var(--trait); color: var(--encre); }
+  .lire:focus-visible, .partager:focus-visible, .fleche:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .sujet.cible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  /* La une : le premier sujet de l'édition, le plus important */
+  .sujet.une { padding: 22px 20px 20px; border-top: 4px solid var(--accent); }
+  .sujet.une .surtitre { font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+  .sujet.une .picto { width: 30px; height: 30px; }
+  .sujet.une h2 { font-size: 27px; line-height: 1.18; margin-top: 12px; }
+  .sujet.une p { font-size: 17px; }
+  .suite { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--doux); margin: 22px 0 10px; }
+
+  .vide { background: var(--papier); border: 1px dashed var(--trait); border-radius: 16px; padding: 22px; color: var(--doux); text-align: center; }
+
+  /* Archive : une édition par jour, repliée ; la recherche affiche les sujets à plat. */
+  details.jour { background: var(--papier); border: 1px solid var(--trait); border-radius: 14px; margin-bottom: 10px; }
+  details.jour > summary { cursor: pointer; padding: 13px 16px; list-style: none; }
+  details.jour > summary::-webkit-details-marker { display: none; }
+  details.jour > summary .j { font-weight: 700; }
+  details.jour > summary .t { display: block; color: var(--doux); font-size: 14px; margin-top: 2px; }
+  details.jour[open] > summary { border-bottom: 1px solid var(--trait); }
+  details.jour .contenu { padding: 14px 12px 2px; }
+  details.jour .sujet { box-shadow: none; }
+  .sujet .quand { font-weight: 600; color: var(--encre); }
+  mark { background: var(--surligne); color: inherit; border-radius: 3px; padding: 0 1px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+    background: var(--bouton); color: var(--bouton-encre); padding: 10px 16px; border-radius: 10px; font-size: 14px;
+    box-shadow: var(--ombre);
+  }
+
+  footer { margin-top: 28px; font-size: 12px; line-height: 1.5; color: var(--doux); }
+  footer p { margin: 0 0 6px; }
+  [hidden] { display: none !important; }
+  @media (min-width: 640px) {
+    main { padding-top: 36px; }
+    header h1 { font-size: 42px; }
+    .sujet { padding: 22px 24px 22px; }
+    .sujet.une { padding: 28px 28px 26px; }
+    .sujet.une h2 { font-size: 32px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .sujet { animation: entree .35s ease both; }
+    @keyframes entree { from { opacity: 0; transform: translateY(6px); } }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="date" id="date-du-jour"></div>
+    <h1>L’IA du jour</h1>
+    <div class="bandeau" id="bandeau" role="status" hidden></div>
+  </header>
+
+  <nav class="onglets" role="tablist" aria-label="Vues">
+    <button role="tab" id="onglet-edition" aria-selected="true" aria-controls="vue-edition">Édition</button>
+    <button role="tab" id="onglet-archive" aria-selected="false" aria-controls="vue-archive">🔎 Archive</button>
+  </nav>
+
+  <section id="vue-edition" role="tabpanel" aria-labelledby="onglet-edition">
+    <div class="jours">
+      <button class="fleche" id="avant" type="button" aria-label="Édition précédente">◀</button>
+      <div class="meta" id="meta" aria-live="polite"></div>
+      <button class="fleche" id="apres" type="button" aria-label="Édition suivante">▶</button>
+    </div>
+    <button class="retour" id="retour" type="button" hidden>Revenir à la dernière édition</button>
+    <div id="sujets"></div>
+  </section>
+
+  <section id="vue-archive" role="tabpanel" aria-labelledby="onglet-archive" hidden>
+    <div class="outils">
+      <input type="search" id="recherche" placeholder="Chercher : banque, Power BI, agent…" autocomplete="off" aria-label="Chercher dans toutes les éditions">
+      <div class="puces" id="puces-pour" aria-label="Pour qui"></div>
+      <div class="puces" id="puces-usage" aria-label="Étiquette"></div>
+    </div>
+    <p class="compte" id="compte" aria-live="polite"></p>
+    <div id="resultats"></div>
+  </section>
+
+  <footer>
+    <p>Chaque chiffre a été vérifié dans l’article cité. Un exemple qui commence par « Par exemple » est une
+    illustration, pas un fait. Rédigé chaque matin vers 7 h 30 par Claude, à partir d’une liste fixe de sources.</p>
+    <p id="compteur"></p>
+  </footer>
+</main>
+<div class="toast" id="toast" role="status" hidden></div>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

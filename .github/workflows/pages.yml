@@ -1,9 +1,18 @@
 name: Deploy GitHub Pages
 
+# Seule `main` peut publier sur Pages (règle de l'environnement github-pages).
+# L'IA du jour : la routine du matin pousse ses éditions sur la branche `claude/ia-du-jour`,
+# jamais sur `main`. Ce workflow (celui de `main`, que la routine ne modifie pas) va les y
+# chercher et ne copie que des fichiers JSON valides nommés index.json ou AAAA-MM.json.
 on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    # filet de sécurité si la routine n'a pas pu déclencher le déploiement : toutes les
+    # 15 min de 7 h à 10 h à Paris (en UTC, heure d'hiver et d'été couvertes) ;
+    # ne déploie que si une nouvelle édition attend
+    - cron: "*/15 5-8 * * *"
 
 permissions:
   contents: read
@@ -15,13 +24,48 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    outputs:
+      deployer: ${{ steps.comparer.outputs.deployer }}
+    steps:
+      - id: comparer
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then echo "deployer=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          branche=$(gh api "repos/${{ github.repository }}/contents/ia-du-jour/editions/index.json?ref=claude/ia-du-jour" \
+            -H "Accept: application/vnd.github.raw" 2>/dev/null | python3 -c "import json,sys;print(json.load(sys.stdin)['derniere'])" 2>/dev/null || echo "")
+          en_ligne=$(curl -fsS "https://acdb92.github.io/pwa-apps/ia-du-jour/editions/index.json?t=$(date +%s)" 2>/dev/null \
+            | python3 -c "import json,sys;print(json.load(sys.stdin)['derniere'])" 2>/dev/null || echo "")
+          echo "branche=$branche en_ligne=$en_ligne"
+          if [ -n "$branche" ] && [ "$branche" != "$en_ligne" ]; then echo "deployer=true" >> "$GITHUB_OUTPUT"; else echo "deployer=false" >> "$GITHUB_OUTPUT"; fi
+
   deploy:
+    needs: verifier
+    if: needs.verifier.outputs.deployer == 'true'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Éditions de L'IA du jour (branche claude/ia-du-jour, JSON valides seulement)
+        run: |
+          if ! git fetch --depth=1 origin claude/ia-du-jour; then echo "pas encore de branche d'éditions"; exit 0; fi
+          rm -rf /tmp/editions && mkdir -p /tmp/editions
+          git --work-tree=/tmp/editions checkout FETCH_HEAD -- ia-du-jour/editions
+          git reset -q
+          python3 - <<'PY'
+          import json, re, shutil
+          from pathlib import Path
+          src, dst = Path("/tmp/editions/ia-du-jour/editions"), Path("ia-du-jour/editions")
+          for f in sorted(src.iterdir()):
+              if not re.fullmatch(r"(index|\d{4}-\d{2})\.json", f.name) or f.stat().st_size > 2_000_000:
+                  print("ignoré :", f.name); continue
+              json.loads(f.read_text(encoding="utf-8"))
+              shutil.copy(f, dst / f.name); print("copié :", f.name)
+          PY
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

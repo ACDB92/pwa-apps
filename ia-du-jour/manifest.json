@@ -1,0 +1,15 @@
+{
+  "name": "L'IA du jour",
+  "short_name": "IA du jour",
+  "description": "L'actualité de l'IA chaque matin, en cinq sujets au plus, expliquée sans jargon avec un exemple concret.",
+  "lang": "fr",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FBF6EE",
+  "theme_color": "#FBF6EE",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

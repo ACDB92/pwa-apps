@@ -1,0 +1,108 @@
+{
+ "editions": [
+  {
+   "date": "2026-11-13",
+   "rien_de_notable": false,
+   "publie_le": "2026-11-13T14:14+00:00",
+   "sujets": [
+    {
+     "titre": "Le patron de Nvidia, l'entreprise au cœur de l'IA, quitte son poste",
+     "pour": "Vous deux",
+     "usage": "general",
+     "fait": "Jensen Huang dirigeait Nvidia depuis près de 33 ans. Nvidia fabrique les puces sur lesquelles tournent presque toutes les IA. Après un scandale sur sa vie privée qui inquiétait les investisseurs, il démissionne. La directrice financière, Colette Kress, assure l'intérim le temps de trouver un successeur.",
+     "concretement": "Par exemple, si l'on vous demande pourquoi le prix des IA pourrait bouger cette année, c'est un bon exemple : quand le principal fournisseur de puces vacille, tous ceux qui en dépendent retiennent leur souffle.",
+     "origine_exemple": "illustration",
+     "lien": "https://siecledigital.fr/2026/11/13/le-patron-de-nvidia-contraint-a-la-demission-apres-un-scandale-aux-ramifications-internationales/",
+     "source": "Siècle Digital"
+    },
+    {
+     "titre": "Chez Starling, on peut programmer un virement en parlant à l'appli",
+     "pour": "Alix",
+     "usage": "banque",
+     "fait": "La banque en ligne britannique Starling lance une fonction appuyée sur l'IA : ses clients particuliers mettent en place un paiement simplement en le demandant à voix haute dans l'application.",
+     "concretement": "Par exemple, au lieu de chercher l'IBAN d'un ami et de remplir trois écrans, on dit à l'appli « rembourse à mon frère le dîner de samedi », et elle prépare le virement à valider.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.finextra.com/newsarticle/48748/starling-unveils-ai-powered-talk-to-transact-feature?utm_medium=rssfinextra&utm_source=finextrafeed",
+     "source": "Finextra (IA)"
+    },
+    {
+     "titre": "Poser ses questions de chiffres directement dans Slack",
+     "pour": "Côme",
+     "usage": "data-bi",
+     "fait": "Databricks rend disponible Genie dans Slack : on écrit à l'assistant en message privé ou on le cite dans un canal, et il répond avec les données de l'entreprise, graphiques compris. Chaque question respecte les droits d'accès de celui qui la pose.",
+     "concretement": "L'exemple de Databricks : une manager demande dans Slack pourquoi la croissance a ralenti le mois dernier. Aujourd'hui, quelqu'un met deux heures à croiser le tableau de bord, le chiffre de la finance et les notes de réunion ; Genie répond dans le fil de discussion.",
+     "origine_exemple": "article",
+     "lien": "https://www.databricks.com/blog/genie-slack-now-generally-available-governed-ai-cowork-right-where-work-happens",
+     "source": "Databricks"
+    },
+    {
+     "titre": "Black Friday : les chatbots recommandent parfois de faux sites marchands",
+     "pour": "Vous deux",
+     "usage": "quotidien",
+     "fait": "Une étude a posé à ChatGPT, Gemini et Perplexity des questions d'achat sur 151 marques. Les trois ont parfois cité des sites à risque : des contrefaçons, des copies de vraies boutiques ou d'anciennes adresses rachetées par d'autres. C'était le cas dans 15 % des réponses de Perplexity, 8 % pour ChatGPT et 4 % pour Gemini.",
+     "concretement": "Par exemple, si un chatbot vous donne « le site officiel » d'une marque pour une bonne affaire du Black Friday, tapez plutôt l'adresse vous-même ou passez par la page de la marque.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.theverge.com/ai-artificial-intelligence/1032020/gemini-chatgpt-perplexity-shopping-test-risky-fake-websites-citations",
+     "source": "The Verge"
+    },
+    {
+     "titre": "La recherche Google comprend mieux les questions compliquées",
+     "pour": "Vous deux",
+     "usage": "outil",
+     "fait": "Google déploie dans le monde entier un nouveau modèle d'IA pour son moteur de recherche, Gemini 4 Hydrogen. Il saisit mieux l'intention derrière une question longue ou complexe, et répond 2,5 fois plus vite que le modèle rapide précédent, selon Google.",
+     "concretement": "Par exemple, au lieu de trois recherches séparées, vous pouvez taper la question entière : « quel train pour Nantes vendredi soir si on veut arriver avant le dîner et rentrer dimanche ».",
+     "origine_exemple": "illustration",
+     "lien": "https://siecledigital.fr/2026/11/13/google-deploie-une-mise-a-jour-majeure-de-son-moteur-de-recherche-grace-a-gemini-4/",
+     "source": "Siècle Digital"
+    }
+   ]
+  },
+  {
+   "date": "2026-11-08",
+   "rien_de_notable": false,
+   "publie_le": "2026-11-13T14:13+00:00",
+   "sujets": [
+    {
+     "titre": "Claude lit désormais vos comptes bancaires, mais pas en France",
+     "pour": "Alix",
+     "usage": "banque",
+     "fait": "Anthropic, l'entreprise qui fait Claude, lance aux États-Unis une version d'essai « finances personnelles » : on y connecte ses comptes et ses cartes, puis on pose ses questions d'argent en langage courant. Claude peut lire, pas agir : il ne déplace ni n'investit rien. Une fintech française y voit déjà l'étape suivante, passer de « lire » à « agir ».",
+     "concretement": "L'exemple donné par Anthropic : en fin de mois, on demande « Où est passé mon argent ? ». Claude additionne les dépenses de tous les comptes, les range par catégorie, repère un abonnement renouvelé et annonce ce qui restera après les prélèvements prévus avant la paie.",
+     "origine_exemple": "article",
+     "lien": "https://www.presse-citron.net/claude-gere-maintenant-vos-finances-personnelles-pourquoi-vous-ne-pourrez-pas-lutiliser-en-france/",
+     "source": "Presse-citron"
+    },
+    {
+     "titre": "Parler à Claude pour transformer ses idées en vrac en document propre",
+     "pour": "Côme",
+     "usage": "outil",
+     "fait": "Un journaliste de Frandroid raconte son usage préféré : il donne d'abord ses notes en vrac à Claude, puis lui parle librement avec le mode vocal de l'application. L'IA range tout au fur et à mesure dans un document clair, sans les hésitations ni les répétitions de l'oral.",
+     "concretement": "Par exemple, en sortant d'un entretien d'embauche, tu dictes dans le métro tout ce dont tu te souviens, et tu retrouves une fiche propre : les questions posées, les réponses à améliorer, les points à relancer.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.frandroid.com/culture-tech/intelligence-artificielle/anthropic-claude-ai/3311843_jai-transforme-mes-pensees-chaotiques-en-document-parfait-voici-mon-usage-prefere-de-claude",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "L'appli de recettes du New York Times adapte maintenant vos recettes",
+     "pour": "Vous deux",
+     "usage": "quotidien",
+     "fait": "NYT Cooking a ajouté un assistant IA : on lui demande de remplacer un ingrédient, de changer le nombre de parts ou de faire sans le bon moule, et il crée une nouvelle version sans toucher à la recette d'origine. La journaliste de The Verge l'a trouvé utile, mais il a failli lui faire mettre la moitié du beurre nécessaire dans un gâteau.",
+     "concretement": "L'assistant a appris des commentaires des lecteurs : au lieu de parcourir des centaines d'avis pour savoir par quoi remplacer un ingrédient introuvable, on pose la question. La leçon vaut pour toutes les IA de cuisine : vérifier les quantités avant d'enfourner.",
+     "origine_exemple": "article",
+     "lien": "https://www.theverge.com/tech/1029489/nyt-cooking-ai-assistant-review",
+     "source": "The Verge"
+    },
+    {
+     "titre": "Chez Anthropic, l'IA accélère déjà la fabrication de l'IA",
+     "pour": "Côme",
+     "usage": "entretien",
+     "fait": "Selon l'organisme indépendant METR, après 11 semaines d'enquête chez Anthropic, ses modèles progressent environ deux fois plus vite qu'il y a un an, et l'essentiel de cette accélération vient de l'IA elle-même. Les salariés qui utilisent le modèle interne le plus puissant se disent environ 12 fois plus productifs. Anthropic a pu masquer des passages du rapport.",
+     "concretement": "Par exemple, en entretien, à la question « Que va changer l'IA dans votre métier ? », tu peux citer ce rapport avec un regard d'analyste : le gain de productivité y est déclaré par les salariés eux-mêmes, pas mesuré.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.theverge.com/ai-artificial-intelligence/1029126/anthropic-metr-report-accelerating-ai-development",
+     "source": "The Verge"
+    }
+   ]
+  }
+ ]
+}
