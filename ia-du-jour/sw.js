@@ -1,5 +1,5 @@
 // L'IA du jour — service worker. Changer CACHE à chaque publication du code de l'app.
-const CACHE = 'ia-du-jour-v2';
+const CACHE = 'ia-du-jour-v3';
 const ASSETS = ['./', './index.html', './app.js', './lecture.js', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e =>
@@ -33,4 +33,28 @@ self.addEventListener('fetch', e => {
       return res;
     }).catch(() => caches.match(e.request).then(r => r || caches.match('./index.html')))
   );
+});
+
+// Notifications de l'app : la routine envoie { title, body, url } chaque matin.
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch { /* message illisible : notification générique */ }
+  e.waitUntil(self.registration.showNotification(d.title || "L'IA du jour", {
+    body: d.body || "L'édition du jour est en ligne.",
+    icon: './icon.svg', badge: './icon.svg', tag: 'ia-du-jour', lang: 'fr',
+    data: { url: d.url || self.registration.scope },
+  }));
+});
+
+// Un toucher ouvre l'édition : dans l'app déjà ouverte s'il y en a une, sinon dans une nouvelle.
+// Seules les adresses de l'app sont acceptées.
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const voulue = e.notification.data?.url || '';
+  const url = voulue.startsWith(self.registration.scope) ? voulue : self.registration.scope;
+  e.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then(fenetres => {
+    const ouverte = fenetres.find(f => f.url.startsWith(self.registration.scope));
+    if (ouverte) return ouverte.navigate(url).then(f => (f || ouverte).focus());
+    return clients.openWindow(url);
+  }));
 });

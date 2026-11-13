@@ -39,6 +39,6 @@
     {"nom": "Revue Banque, L'Agefi", "raison": "pas de flux (404) — trou : aucune source bancaire en français"},
     {"nom": "Finyear", "raison": "flux mal formé"}
   ],
-  "_domaines_en_plus": "Sites des articles quand le flux est hébergé ailleurs (miroirs GitHub d'Anthropic et Mistral) : `collecte.py page` doit pouvoir les lire. GitHub (pour pousser les éditions) est déjà dans la liste par défaut.",
-  "domaines_en_plus": ["www.anthropic.com", "mistral.ai"]
+  "_domaines_en_plus": "Sites des articles quand le flux est hébergé ailleurs (miroirs GitHub d'Anthropic et Mistral) : `collecte.py page` doit pouvoir les lire. acdb92.github.io pour vérifier que l'édition est en ligne ; les services de notification d'Apple (iPhone), de Google (Chrome) et de Mozilla (Firefox). GitHub (pour pousser les éditions) est déjà dans la liste par défaut.",
+  "domaines_en_plus": ["www.anthropic.com", "mistral.ai", "acdb92.github.io", "web.push.apple.com", "fcm.googleapis.com", "updates.push.services.mozilla.com"]
 }

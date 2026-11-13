@@ -225,6 +225,83 @@ async function afficherArchive() {
   }));
 }
 
+// ── Notifications de l'app (Web Push) ───────────────────────────────────────
+// Pas de serveur pour recevoir les abonnements : chaque téléphone donne sa « clé » (l'abonnement),
+// copiée une fois dans les réglages de la routine. La clé publique VAPID ci-dessous est publique ;
+// sa jumelle privée vit dans l'environnement de la routine, jamais dans le dépôt.
+const CLE_VAPID = 'BCQ4DD5DKNmSP8HGtor_1tMe7dhvU4wcw7DfqJYqrlgJY8Jia6mFS4rKnpKjMWIVz3JOwnBInhx0sMGzzeoG-bI';
+
+function octets(b64url) {
+  const b = atob(b64url.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - b64url.length % 4) % 4));
+  return Uint8Array.from(b, c => c.charCodeAt(0));
+}
+
+const iPhone = () => /iPhone|iPad|iPod/.test(navigator.userAgent);
+const installee = () => navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+
+async function etatNotifications() {
+  if (!('serviceWorker' in navigator) || !isSecureContext) return 'impossible';
+  if (iPhone() && !installee()) return 'installer';
+  if (!('PushManager' in window) || !('Notification' in window)) return 'impossible';
+  if (Notification.permission === 'denied') return 'refusees';
+  const reg = await navigator.serviceWorker.ready;
+  return (await reg.pushManager.getSubscription()) ? 'actives' : 'proposer';
+}
+
+async function transmettre(personne) {
+  const reg = await navigator.serviceWorker.ready;
+  const abo = await reg.pushManager.getSubscription();
+  if (!abo) return afficherNotifications();
+  const texte = `PUSH_ABONNEMENT_${personne.toUpperCase()}=${JSON.stringify(abo.toJSON())}`;
+  try {
+    if (navigator.share) await navigator.share({ title: 'Clé de notification — L’IA du jour', text: texte });
+    else { await navigator.clipboard.writeText(texte); toast('Clé copiée'); }
+  } catch (e) {
+    if (e?.name !== 'AbortError') { await navigator.clipboard.writeText(texte).catch(() => {}); toast('Clé copiée'); }
+  }
+}
+
+async function activer() {
+  if (await Notification.requestPermission() !== 'granted') return afficherNotifications();
+  const reg = await navigator.serviceWorker.ready;
+  await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: octets(CLE_VAPID) });
+  await afficherNotifications(true);
+}
+
+function bouton(texte, action, classe = 'partager') {
+  const b = el('button', { class: classe, type: 'button' }, texte);
+  b.addEventListener('click', () => action().catch(e => { console.error(e); toast('Impossible sur cet appareil'); }));
+  return b;
+}
+
+async function afficherNotifications(vientDActiver = false) {
+  const zone = $('notifs');
+  const e = await etatNotifications();
+  zone.hidden = e === 'impossible';
+  zone.className = 'notifs';
+  if (e === 'installer') {
+    zone.replaceChildren(el('h2', {}, '🔔 Une notification chaque matin'),
+      el('p', {}, 'Sur iPhone, les notifications ne marchent que depuis l’écran d’accueil : touchez Partager, puis « Sur l’écran d’accueil », et ouvrez l’app depuis son icône.'));
+  } else if (e === 'refusees') {
+    zone.replaceChildren(el('p', {}, '🔕 Notifications refusées sur ce téléphone : les réactiver dans les réglages du téléphone, à « L’IA du jour ».'));
+  } else if (e === 'proposer') {
+    zone.replaceChildren(el('h2', {}, '🔔 Une notification chaque matin'),
+      el('p', {}, 'Le titre de la une, dès que l’édition est en ligne. Aucune appli à installer.'),
+      el('div', { class: 'boutons' }, bouton('Activer les notifications', activer, 'lire')));
+  } else if (e === 'actives') {
+    if (vientDActiver) {
+      zone.replaceChildren(el('h2', {}, '🔔 Activées. Dernière étape'),
+        el('p', {}, 'Envoyez la clé de ce téléphone à Côme, qui la colle une fois dans les réglages de la routine. À qui est ce téléphone ?'),
+        el('div', { class: 'boutons' }, bouton('Téléphone de Côme', () => transmettre('Come'), 'lire'),
+          bouton('Téléphone d’Alix', () => transmettre('Alix'), 'lire')));
+    } else {
+      zone.className = 'notifs discret';
+      const lien = bouton('Renvoyer la clé', async () => afficherNotifications(true), 'lien');
+      zone.replaceChildren(el('p', {}, '🔔 Notifications activées sur ce téléphone · ', lien));
+    }
+  }
+}
+
 // ── Navigation ──────────────────────────────────────────────────────────────
 
 function montrer(vue) {
@@ -276,4 +353,6 @@ async function demarrer() {
 }
 
 demarrer().catch(erreur);
-if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('./sw.js');
+if ('serviceWorker' in navigator && isSecureContext) {
+  navigator.serviceWorker.register('./sw.js').then(() => afficherNotifications()).catch(console.error);
+}

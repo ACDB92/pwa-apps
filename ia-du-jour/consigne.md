@@ -28,19 +28,33 @@ du matin d'un foyer, lue dans une petite app web : **5 sujets au plus**, lus en 
 
 ## Les étapes
 
-1. `python3 collecte.py candidats` → `candidats.json` (articles des dernières 24 h, jamais
+Toutes les commandes se lancent **depuis le dossier de ce fichier**. Tu ne crées ni ne changes
+de branche toi-même, tu ne commites ni ne pousses rien à la main : `branche.sh` s'en charge.
+
+0. `python3 -c "import cryptography" || pip install cryptography` (nécessaire aux notifications).
+1. `./branche.sh recuperer` → `editions/` reprend les éditions déjà publiées (elles vivent sur
+   la branche `claude/ia-du-jour`). C'est la mémoire de ce qui est déjà paru.
+2. `python3 collecte.py candidats` → `candidats.json` (articles des dernières 24 h, jamais
    publiés : les liens déjà parus dans `editions/` sont écartés). Les flux en panne sont
    listés : ne pas s'arrêter pour autant.
-2. Lire les candidats et choisir **5 sujets au plus**, selon les critères ci-dessous.
-3. Pour chaque sujet retenu dont le texte du flux est court ou incomplet,
+3. Lire les candidats et choisir **5 sujets au plus**, selon les critères ci-dessous.
+4. Pour chaque sujet retenu dont le texte du flux est court ou incomplet,
    `python3 collecte.py page <lien>` : les chiffres se vérifient sur ce texte.
-4. Écrire `edition.json` (format plus bas).
-5. `python3 edition.py verifier edition.json` — **tant qu'il refuse, corriger ou retirer le
-   sujet en cause**. Ne jamais contourner le contrôle.
-6. `python3 edition.py publier edition.json` → contrôle une dernière fois, puis écrit
+5. Écrire `edition.json` (format plus bas), daté du jour à Paris.
+6. `python3 edition.py verifier edition.json` — **tant qu'il refuse, corriger ou retirer le
+   sujet en cause**. Ne jamais contourner le contrôle. Relire ensuite ce qu'il ne voit pas :
+   jargon, prénom ou nom d'entreprise inventé dans un exemple.
+7. `python3 edition.py publier edition.json` → contrôle une dernière fois, puis écrit
    l'édition dans `editions/AAAA-MM.json` et met `editions/index.json` à jour.
-7. Commiter `editions/` seul (« IA du jour — AAAA-MM-JJ »), et pousser sur la branche que
-   désigne la routine.
+8. `./branche.sh pousser` → commite `editions/` seul sur `claude/ia-du-jour` et le pousse.
+9. `gh workflow run pages.yml --ref main` → lance la mise en ligne. Si la commande échoue,
+   continuer : le déploiement vérifie de lui-même toutes les 15 minutes de 7 h à 10 h.
+10. `python3 notifier.py` → attend que l'édition soit en ligne (30 min au plus), puis envoie la
+    notification de l'app à chaque téléphone abonné. S'il échoue, le signaler dans le compte rendu ; ne pas notifier autrement.
+
+**Le compte rendu de fin** : la date, le nombre de sujets, les flux en panne, et chaque étape
+qui a échoué, et les téléphones dont l'abonnement a expiré. Jamais le contenu de
+`MOTS_INTERDITS`, de `VAPID_PRIVEE` ni des `PUSH_ABONNEMENT_*`.
 
 ## Choisir les sujets
 
