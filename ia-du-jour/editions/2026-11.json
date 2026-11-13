@@ -3,56 +3,56 @@
   {
    "date": "2026-11-13",
    "rien_de_notable": false,
-   "publie_le": "2026-11-13T14:14+00:00",
+   "publie_le": "2026-11-13T15:18+00:00",
    "sujets": [
     {
-     "titre": "Le patron de Nvidia, l'entreprise au cœur de l'IA, quitte son poste",
-     "pour": "Vous deux",
-     "usage": "general",
-     "fait": "Jensen Huang dirigeait Nvidia depuis près de 33 ans. Nvidia fabrique les puces sur lesquelles tournent presque toutes les IA. Après un scandale sur sa vie privée qui inquiétait les investisseurs, il démissionne. La directrice financière, Colette Kress, assure l'intérim le temps de trouver un successeur.",
-     "concretement": "Par exemple, si l'on vous demande pourquoi le prix des IA pourrait bouger cette année, c'est un bon exemple : quand le principal fournisseur de puces vacille, tous ceux qui en dépendent retiennent leur souffle.",
-     "origine_exemple": "illustration",
-     "lien": "https://siecledigital.fr/2026/11/13/le-patron-de-nvidia-contraint-a-la-demission-apres-un-scandale-aux-ramifications-internationales/",
-     "source": "Siècle Digital"
-    },
-    {
-     "titre": "Chez Starling, on peut programmer un virement en parlant à l'appli",
-     "pour": "Alix",
-     "usage": "banque",
-     "fait": "La banque en ligne britannique Starling lance une fonction appuyée sur l'IA : ses clients particuliers mettent en place un paiement simplement en le demandant à voix haute dans l'application.",
-     "concretement": "Par exemple, au lieu de chercher l'IBAN d'un ami et de remplir trois écrans, on dit à l'appli « rembourse à mon frère le dîner de samedi », et elle prépare le virement à valider.",
-     "origine_exemple": "illustration",
-     "lien": "https://www.finextra.com/newsarticle/48748/starling-unveils-ai-powered-talk-to-transact-feature?utm_medium=rssfinextra&utm_source=finextrafeed",
-     "source": "Finextra (IA)"
-    },
-    {
-     "titre": "Poser ses questions de chiffres directement dans Slack",
-     "pour": "Côme",
-     "usage": "data-bi",
-     "fait": "Databricks rend disponible Genie dans Slack : on écrit à l'assistant en message privé ou on le cite dans un canal, et il répond avec les données de l'entreprise, graphiques compris. Chaque question respecte les droits d'accès de celui qui la pose.",
-     "concretement": "L'exemple de Databricks : une manager demande dans Slack pourquoi la croissance a ralenti le mois dernier. Aujourd'hui, quelqu'un met deux heures à croiser le tableau de bord, le chiffre de la finance et les notes de réunion ; Genie répond dans le fil de discussion.",
-     "origine_exemple": "article",
-     "lien": "https://www.databricks.com/blog/genie-slack-now-generally-available-governed-ai-cowork-right-where-work-happens",
-     "source": "Databricks"
-    },
-    {
-     "titre": "Black Friday : les chatbots recommandent parfois de faux sites marchands",
+     "titre": "Une panne géante de Microsoft coupe les mails de millions d'utilisateurs",
      "pour": "Vous deux",
      "usage": "quotidien",
-     "fait": "Une étude a posé à ChatGPT, Gemini et Perplexity des questions d'achat sur 151 marques. Les trois ont parfois cité des sites à risque : des contrefaçons, des copies de vraies boutiques ou d'anciennes adresses rachetées par d'autres. C'était le cas dans 15 % des réponses de Perplexity, 8 % pour ChatGPT et 4 % pour Gemini.",
-     "concretement": "Par exemple, si un chatbot vous donne « le site officiel » d'une marque pour une bonne affaire du Black Friday, tapez plutôt l'adresse vous-même ou passez par la page de la marque.",
+     "fait": "Depuis jeudi soir, le service de messagerie professionnelle de Microsoft 365 est perturbé dans le monde entier. Vendredi après-midi, tout revient peu à peu, mais avec des rechutes. Microsoft parle de serveurs défaillants qui ont reporté toute la charge sur les autres.",
+     "concretement": "Par exemple, une équipe qui ne reçoit plus ses courriels ni ses invitations de réunion doit se rabattre sur le téléphone. Ayez sous la main un second moyen de joindre vos collègues et vos clients.",
      "origine_exemple": "illustration",
-     "lien": "https://www.theverge.com/ai-artificial-intelligence/1032020/gemini-chatgpt-perplexity-shopping-test-risky-fake-websites-citations",
-     "source": "The Verge"
+     "lien": "https://www.numerama.com/tech/2374177-les-mesures-prises-nont-pas-apporte-le-soulagement-attendu-le-journal-de-bord-de-microsoft-revele-ses-tatonnements-pendant-sa-panne-geante.html",
+     "source": "Numerama"
     },
     {
-     "titre": "La recherche Google comprend mieux les questions compliquées",
+     "titre": "Les embauches de jeunes baissent de 28 % là où l'IA est très présente",
+     "pour": "Côme",
+     "usage": "entretien",
+     "fait": "Selon la Banque de France, les embauches en CDI des 21-29 ans sont inférieures d'environ 28 % à leur niveau de novembre 2022 dans les métiers les plus exposés à l'IA. L'écart n'est que de 8 % dans les métiers les moins exposés.",
+     "concretement": "Par exemple, en entretien, tu peux montrer que tu sais vérifier le travail d'une IA : repérer un chiffre faux dans un tableau, c'est justement ce que les recruteurs cherchent chez un débutant.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.journaldunet.com/intelligence-artificielle/1557941-les-entreprises-qui-ne-recrutent-plus-de-juniors-organisent-leur-penurie-de-seniors/",
+     "source": "Journal du Net"
+    },
+    {
+     "titre": "Une compagnie aérienne interdit aux assistants IA de réserver à votre place",
+     "pour": "Alix",
+     "usage": "banque",
+     "fait": "United Airlines restreint l'accès de ses services aux assistants IA qui réservent des vols pour les clients. Elle cite les risques liés au partage des identifiants. Les banques, elles aussi, ont demandé à leurs clients de ne pas donner leurs mots de passe à ces assistants.",
+     "concretement": "Par exemple, un client qui confie ses identifiants bancaires à un assistant IA s'expose à des opérations non voulues. Tes clients du secteur bancaire vont vouloir une règle claire sur ce point.",
+     "origine_exemple": "illustration",
+     "lien": "https://techcrunch.com/2026/11/12/united-airlines-blocks-ai-agents-from-booking-flights-citing-cybersecurity-risks/",
+     "source": "TechCrunch"
+    },
+    {
+     "titre": "Dans les banques, peu repensent leurs processus de bout en bout avec l'IA",
+     "pour": "Alix",
+     "usage": "banque",
+     "fait": "Selon une enquête d'American Banker, seuls 13 % des professionnels de la banque disent que leur établissement refait le plus souvent ses processus de travail de bout en bout en adoptant l'IA. L'article cite Citi, qui en redessine une centaine.",
+     "concretement": "Par exemple, ajouter une IA à une étape isolée du traitement d'un dossier gagne peu de temps si les autres étapes restent identiques. C'est un sujet de mission pour toi.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.americanbanker.com/news/citi-is-redesigning-100-processes-what-s-stopping-others",
+     "source": "American Banker"
+    },
+    {
+     "titre": "Bing permet de désactiver les réponses générées par l'IA",
      "pour": "Vous deux",
      "usage": "outil",
-     "fait": "Google déploie dans le monde entier un nouveau modèle d'IA pour son moteur de recherche, Gemini 4 Hydrogen. Il saisit mieux l'intention derrière une question longue ou complexe, et répond 2,5 fois plus vite que le modèle rapide précédent, selon Google.",
-     "concretement": "Par exemple, au lieu de trois recherches séparées, vous pouvez taper la question entière : « quel train pour Nantes vendredi soir si on veut arriver avant le dîner et rentrer dimanche ».",
+     "fait": "Microsoft laisse désormais les utilisateurs de son moteur de recherche Bing désactiver les réponses écrites par l'IA. Google, lui, impose ses résumés par IA dans ses résultats.",
+     "concretement": "Par exemple, si vous préférez lire vous-mêmes les sources avant de citer un chiffre, vous pouvez retrouver des résultats de recherche classiques.",
      "origine_exemple": "illustration",
-     "lien": "https://siecledigital.fr/2026/11/13/google-deploie-une-mise-a-jour-majeure-de-son-moteur-de-recherche-grace-a-gemini-4/",
+     "lien": "https://siecledigital.fr/2026/11/13/microsoft-prend-le-contre-pied-de-google-en-permettant-de-desactiver-les-reponses-ia-dans-bing/",
      "source": "Siècle Digital"
     }
    ]
