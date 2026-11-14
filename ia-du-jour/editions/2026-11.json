@@ -1,6 +1,128 @@
 {
  "editions": [
   {
+   "date": "2026-11-14",
+   "type": "jour",
+   "rien_de_notable": false,
+   "publie_le": "2026-11-14T06:38+00:00",
+   "sujets": [
+    {
+     "titre": "ChatGPT peut désormais payer vos achats à votre place",
+     "pour": "Alix",
+     "usage": "banque",
+     "fait": "OpenAI lance ChatGPT Wallet : ses agents (des assistants qui agissent seuls) peuvent choisir un achat puis le régler. L'utilisateur valide le panier avec Face ID ou une empreinte. L'option démarre chez une partie des abonnés Pro aux États-Unis.",
+     "concretement": "Le paiement passe par un jeton de paiement, un code qui remplace le vrai numéro de carte : ni l'assistant ni le commerçant ne le voient. Les protections de la carte, comme la contestation d'un paiement, restent valables.",
+     "origine_exemple": "article",
+     "lien": "https://techcrunch.com/2026/11/13/chatgpts-new-wallet-lets-ai-agents-shop-and-check-out-for-you/",
+     "source": "TechCrunch"
+    },
+    {
+     "titre": "ChatGPT peut interroger les chiffres d'une entreprise via Databricks",
+     "pour": "Côme",
+     "usage": "data-bi",
+     "fait": "OpenAI et Databricks s'associent : un module de ChatGPT interroge les données de l'entreprise en appliquant ses propres définitions du « chiffre d'affaires » ou du « client actif ». Chacun ne voit que ce qu'il a le droit de voir, et chaque réponse renvoie à sa source.",
+     "concretement": "Un chef de produit demande où en est l'adoption hebdomadaire par rapport à l'objectif, selon la formule d'abonnement. ChatGPT lance la requête et rend des graphiques, sans passer par un analyste. Ton métier se déplace vers la définition fiable des indicateurs.",
+     "origine_exemple": "article",
+     "lien": "https://www.databricks.com/blog/openai-and-databricks-enterprise-ai-your-governed-data",
+     "source": "Databricks"
+    },
+    {
+     "titre": "L'IA pèse déjà un quart de la croissance du crédit en zone euro",
+     "pour": "Alix",
+     "usage": "banque",
+     "fait": "Selon Lane, de la Banque centrale européenne, l'IA représente déjà un quart de la croissance du crédit aux entreprises de la zone euro.",
+     "concretement": "Par exemple, quand une entreprise emprunte pour financer ses projets d'IA, sa banque participe à ce mouvement. C'est un fait à citer pour montrer que l'IA pèse déjà sur la finance, et pas seulement sur la technologie.",
+     "origine_exemple": "illustration",
+     "lien": "https://news.google.com/rss/articles/CBMirgFBVV95cUxQWFcxMTBza2Y2T2t6SnNmRm8tQk1EbU1ON1YxVl9ZTU9GR0x1Z1lhdDlTUkdDWHd5Y3FDb3dybDg5dzhGNldBenFEbVllbEoyeDFPQjZFY1BfY3FRN0plVXNYZ2VOSDBacXdfWnhGWkhmU2Z1a1RrZ0tIdXJGTUVJZ0NrVWJNcm9Kd1hCYlBSa3FmQVRlLVdZVks4X2pxLXc3UE5ad2lSQlVFaV95eVE?oc=5",
+     "source": "Le Singulier"
+    },
+    {
+     "titre": "Des milliers d'apps créées avec Grok étaient ouvertes à tous",
+     "pour": "Vous deux",
+     "usage": "quotidien",
+     "fait": "L'entreprise de sécurité Claroc a trouvé plus de 35 000 applications créées avec l'IA Grok que n'importe qui pouvait ouvrir grâce à leur lien, certaines avec des informations confidentielles. Un problème semblable avait touché Meta en octobre.",
+     "concretement": "Par exemple, vous créez une petite application pour votre équipe et n'en partagez le lien qu'avec un collègue : l'adresse peut quand même être repérée par d'autres. Mieux vaut n'y mettre aucune donnée sensible.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.presse-citron.net/avertissement-ia-fonctionnalite-donnees-confidentielles/",
+     "source": "Presse-citron"
+    }
+   ],
+   "autres": [
+    {
+     "titre": "Une panne géante de Microsoft 365 bloque les mails professionnels pendant une journée",
+     "lien": "https://www.numerama.com/tech/2374177-les-mesures-prises-nont-pas-apporte-le-soulagement-attendu-le-journal-de-bord-de-microsoft-revele-ses-tatonnements-pendant-sa-panne-geante.html",
+     "source": "Numerama"
+    },
+    {
+     "titre": "Claude, l'assistant d'Anthropic, subit une panne mondiale",
+     "lien": "https://www.frandroid.com/culture-tech/intelligence-artificielle/anthropic-claude-ai/3321939_claude-est-en-panne-les-services-danthropic-ne-repondent-plus",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "Google lance des lunettes qui répondent à « Hey Gemini »",
+     "lien": "https://www.frandroid.com/marques/google/3321827_apres-hey-google-preparez-vous-a-dire-hey-gemini-mais-pas-encore-depuis-votre-smartphone",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "L'IA devient la première inquiétude de la Fed pour le système financier",
+     "lien": "https://news.google.com/rss/articles/CBMimAJBVV95cUxOZ2xDUTVKaVdSeGFnekV6S0hqQVBLVmNqWDFxQk5rUHdTZjItc25fWDQ1NU0yZEtaNnJxMm1JSmdBX3M0c1BiQkloN2RQZThUYnl1dTc1YUNYeVN3U3JIOU9HQnlFTHNGS3BrYkRyYUp5N3p3ZlY3SlA3QXhqdjhtV2FEZVhpVUxPRU9oUVQ2RWZndmUzREt1LTBsUW1Qei1XcHlHOU4tQUsyT1p0ZVdKbUI3SFA1R2hGM2xpTFU3R2hsT2ZPeW5JVDJBajFJV1hpMzhxOTFrWFNvWDVNamN6NWMybTA2ODN2ZlVPb24tR1BabTVXVjduZ25LWE9ydjh3VEVXZGZYM2psVFVRVDlTRVJucHprQ0d60gGYAkFVX3lxTE5nbENRNUppV1J4YWd6RXpLSGpBUEtWY2pYMXFCTmtQd1NmMi1zbl9YNDU1TTJkS1o2cnEybUlKZ0FfczRzUGJCSWg3ZFBlOFRieXV1NzVhQ1h5U3dTckg5T0dCeUVMc0ZLcGtiRHJhSnk3endmVjdKUDdBeGp2OG1XYURlWGlVTE9FT2hRVDZFZmd2ZTNES3UtMGxRbVB6LVdweUc5Ti1BSzJPWnRlV0ptQjdIUDVHaEYzbGlMVTdHaGxPZk95bklUMkFqMUlXWGkzOHE5MWtYU29YNU1qY3o1YzJtMDY4M3ZmVU9vbi1HUFptNVdWN25nbktYT3J2OHdURVdkZlgzamxUVVFUOVNFUm5wemtDR3o?oc=5",
+     "source": "Boursorama"
+    },
+    {
+     "titre": "Banque de France : des usages de l'IA générative déjà en service",
+     "lien": "https://news.google.com/rss/articles/CBMisAFBVV95cUxOQ3pQOEJGV2c4aDRiR1RxYUthaDV1Y0NUQ0IwZlJySDNfMTY5UUt5MUpTTjQ1Skl0d1N0S3EtdnUwdkhRM2lNb3V2R01MQ0tBRUcyWWo4UExPR3pQMk9ObjlQbldfcXRFcEZyc2dybWdWaGxpLWtUalo5cDZIZUZrTlpVc2wwVUlWNDcwbHZkNjJGQzRvUk1fZnZldmJodXZkZE5NQ3ZqSmpuZDZrTF9rdQ?oc=5",
+     "source": "Archimag"
+    },
+    {
+     "titre": "ByteDance, maison mère de TikTok, prépare son propre agent IA",
+     "lien": "https://siecledigital.fr/2026/11/13/apres-tiktok-bytedance-veut-devenir-un-acteur-majeur-des-agents-ia/",
+     "source": "Siècle Digital"
+    },
+    {
+     "titre": "Northern Trust lance un agent d'accueil des clients avec Microsoft",
+     "lien": "https://news.google.com/rss/articles/CBMilgFBVV95cUxOMjVvaWxUSkhxdy1icGZqQVdLbVRIRmxiVUdMVTBHRjVvekpBdTVGWkR4WVNLUk5pOThvaVBxOHgxMEFkSTJJNWVoQmZFQmFKYnN6YmNyT1ZZc0FvcTVnQmF5RFpvcGVacWREbmFQUnpxQndjZ3IyQm5ZZklvMG5SNVJQZmZqcVFrcWlxVzNvaDYxUThQaWc?oc=5",
+     "source": "Brief IA"
+    },
+    {
+     "titre": "Anthropic craint des IA capables de se copier seules sur des appareils connectés",
+     "lien": "https://www.frandroid.com/produits-android/tv-connectee-produits/boitier-multimedia/3321541_box-android-tv-pourquoi-anthropic-craint-des-vers-dia-capables-de-se-repliquer-seuls",
+     "source": "Frandroid"
+    }
+   ],
+   "lexique": [
+    {
+     "terme": "Agent IA",
+     "theme": "ia",
+     "definition": "Une IA qui ne se contente pas de répondre : elle enchaîne seule plusieurs actions pour atteindre un but, comme chercher, comparer puis commander.",
+     "exemple": "Vous demandez à un agent de trouver un train et de réserver la place la moins chère, et il s'en occupe jusqu'au bout."
+    },
+    {
+     "terme": "Données d'entraînement",
+     "theme": "ia",
+     "definition": "Les textes, images ou chiffres sur lesquels une IA a appris. Leur qualité et leur variété déterminent en grande partie ce qu'elle sait faire, et ses erreurs.",
+     "exemple": "Une IA entraînée surtout sur des textes anciens comprend mal le langage des réseaux sociaux d'aujourd'hui."
+    },
+    {
+     "terme": "Entrepôt de données",
+     "theme": "data-bi",
+     "definition": "Une grande base où une entreprise rassemble, nettoie et range les chiffres venus de tous ses services, pour que chacun travaille sur les mêmes données.",
+     "exemple": "Les ventes, la comptabilité et le service client y déposent leurs chiffres, et les tableaux de bord y puisent."
+    },
+    {
+     "terme": "Tokenisation",
+     "theme": "banque",
+     "definition": "Remplacer une donnée sensible, comme un numéro de carte, par un code sans valeur ailleurs. Si le code est volé, il ne permet pas de payer.",
+     "exemple": "Le site marchand reçoit un code à la place du numéro de la carte, donc un pirate n'obtient rien d'utile."
+    },
+    {
+     "terme": "Authentification à deux facteurs",
+     "theme": "quotidien",
+     "definition": "Une double vérification pour se connecter ou payer : un mot de passe, puis une preuve supplémentaire comme un code reçu ou une empreinte.",
+     "exemple": "Après avoir saisi votre mot de passe, votre téléphone vous demande de confirmer avec votre visage."
+    }
+   ]
+  },
+  {
    "date": "2026-11-13",
    "type": "jour",
    "rien_de_notable": false,
