@@ -1,6 +1,101 @@
 {
  "editions": [
   {
+   "date": "2026-11-15",
+   "type": "semaine",
+   "rien_de_notable": false,
+   "publie_le": "2026-11-15T06:34+00:00",
+   "sujets": [
+    {
+     "titre": "ChatGPT peut désormais payer vos achats à votre place",
+     "pour": "Alix",
+     "usage": "banque",
+     "fait": "OpenAI lance ChatGPT Wallet : ses agents (des assistants qui agissent seuls) peuvent choisir un achat puis le régler. L'utilisateur valide le panier avec Face ID ou une empreinte. L'option démarre chez une partie des abonnés Pro aux États-Unis.",
+     "concretement": "Le paiement passe par un jeton de paiement, un code qui remplace le vrai numéro de carte : ni l'assistant ni le commerçant ne le voient. Les protections de la carte, comme la contestation d'un paiement, restent valables.",
+     "origine_exemple": "article",
+     "lien": "https://techcrunch.com/2026/11/13/chatgpts-new-wallet-lets-ai-agents-shop-and-check-out-for-you/",
+     "source": "TechCrunch",
+     "repris_du": "2026-11-14"
+    },
+    {
+     "titre": "ChatGPT peut interroger les chiffres d'une entreprise via Databricks",
+     "pour": "Côme",
+     "usage": "data-bi",
+     "fait": "OpenAI et Databricks s'associent : un module de ChatGPT interroge les données de l'entreprise en appliquant ses propres définitions du « chiffre d'affaires » ou du « client actif ». Chacun ne voit que ce qu'il a le droit de voir, et chaque réponse renvoie à sa source.",
+     "concretement": "Un chef de produit demande où en est l'adoption hebdomadaire par rapport à l'objectif, selon la formule d'abonnement. ChatGPT lance la requête et rend des graphiques, sans passer par un analyste. Ton métier se déplace vers la définition fiable des indicateurs.",
+     "origine_exemple": "article",
+     "lien": "https://www.databricks.com/blog/openai-and-databricks-enterprise-ai-your-governed-data",
+     "source": "Databricks",
+     "repris_du": "2026-11-14"
+    },
+    {
+     "titre": "L'IA pèse déjà un quart de la croissance du crédit en zone euro",
+     "pour": "Alix",
+     "usage": "banque",
+     "fait": "Selon Lane, de la Banque centrale européenne, l'IA représente déjà un quart de la croissance du crédit aux entreprises de la zone euro.",
+     "concretement": "Par exemple, quand une entreprise emprunte pour financer ses projets d'IA, sa banque participe à ce mouvement. C'est un fait à citer pour montrer que l'IA pèse déjà sur la finance, et pas seulement sur la technologie.",
+     "origine_exemple": "illustration",
+     "lien": "https://news.google.com/rss/articles/CBMirgFBVV95cUxQWFcxMTBza2Y2T2t6SnNmRm8tQk1EbU1ON1YxVl9ZTU9GR0x1Z1lhdDlTUkdDWHd5Y3FDb3dybDg5dzhGNldBenFEbVllbEoyeDFPQjZFY1BfY3FRN0plVXNYZ2VOSDBacXdfWnhGWkhmU2Z1a1RrZ0tIdXJGTUVJZ0NrVWJNcm9Kd1hCYlBSa3FmQVRlLVdZVks4X2pxLXc3UE5ad2lSQlVFaV95eVE?oc=5",
+     "source": "Le Singulier",
+     "repris_du": "2026-11-14"
+    },
+    {
+     "titre": "Les embauches de juniors chutent de 28 % dans les métiers exposés à l'IA",
+     "pour": "Côme",
+     "usage": "entretien",
+     "fait": "Les embauches de juniors en CDI baissent de 28 % sur les métiers exposés à l'IA. Un article du Journal du Net y voit un risque : sans débutants, les entreprises manqueront d'experts plus tard.",
+     "concretement": "Par exemple, en entretien, tu peux montrer que tu sais faire ce que l'IA ne fait pas seule : choisir la bonne question et vérifier la réponse.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.journaldunet.com/intelligence-artificielle/1557941-les-entreprises-qui-ne-recrutent-plus-de-juniors-organisent-leur-penurie-de-seniors/",
+     "source": "Journal du Net",
+     "repris_du": "2026-11-13"
+    },
+    {
+     "titre": "Jensen Huang quitte la direction de Nvidia, le géant des puces d'IA",
+     "pour": "Vous deux",
+     "usage": "general",
+     "fait": "Le patron de Nvidia, qui dirigeait l'entreprise depuis près de 33 ans, démissionne après un scandale. La directrice financière assure l'intérim le temps de trouver un successeur.",
+     "concretement": "Par exemple, un fournisseur dont dépendent presque tous les services d'IA change de capitaine : cela peut peser sur les prix et les délais de ces services.",
+     "origine_exemple": "illustration",
+     "lien": "https://siecledigital.fr/2026/11/13/le-patron-de-nvidia-contraint-a-la-demission-apres-un-scandale-aux-ramifications-internationales/",
+     "source": "Siècle Digital",
+     "repris_du": "2026-11-13"
+    }
+   ],
+   "lexique": [
+    {
+     "terme": "Apprentissage supervisé",
+     "theme": "ia",
+     "definition": "Méthode où l'on montre à une IA beaucoup d'exemples déjà corrigés par des humains, pour qu'elle apprenne à reconnaître la bonne réponse toute seule.",
+     "exemple": "Montrer à une IA des milliers de courriels déjà classés « utile » ou « indésirable » pour qu'elle trie ensuite les nouveaux."
+    },
+    {
+     "terme": "Qualité des données",
+     "theme": "data-bi",
+     "definition": "Mesure de la fiabilité des données : sont-elles complètes, à jour, sans doublon ni erreur ? Un tableau de bord n'est fiable que si elles le sont.",
+     "exemple": "Un tableau de bord de ventes affiche un total faux parce que les mêmes clients sont saisis deux fois."
+    },
+    {
+     "terme": "Blanchiment d'argent",
+     "theme": "banque",
+     "definition": "Opération qui fait passer de l'argent d'origine illégale pour de l'argent légitime. Les banques doivent surveiller les mouvements suspects et les signaler.",
+     "exemple": "Une banque alerte les autorités après une série de petits virements fractionnés venus de comptes sans lien apparent."
+    },
+    {
+     "terme": "Chiffrement de bout en bout",
+     "theme": "quotidien",
+     "definition": "Protection d'un message pour que seuls l'expéditeur et le destinataire puissent le lire, pas même l'entreprise qui fait circuler le message.",
+     "exemple": "Une messagerie qui garde vos conversations illisibles pour tout le monde, y compris pour son propre éditeur."
+    },
+    {
+     "terme": "Réseau de neurones",
+     "theme": "ia",
+     "definition": "Type de programme inspiré du cerveau, fait de nombreuses petites unités reliées entre elles, qui apprend à repérer des motifs dans des textes, des images ou des chiffres.",
+     "exemple": "Un programme qui apprend à reconnaître un chat sur des photos en comparant beaucoup d'images."
+    }
+   ]
+  },
+  {
    "date": "2026-11-14",
    "type": "jour",
    "rien_de_notable": false,
