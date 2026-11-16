@@ -1,6 +1,118 @@
 {
  "editions": [
   {
+   "date": "2026-11-16",
+   "type": "jour",
+   "rien_de_notable": false,
+   "publie_le": "2026-11-16T06:33+00:00",
+   "sujets": [
+    {
+     "titre": "Google lance Gemini Finance, une IA qui lit vos comptes bancaires",
+     "pour": "Alix",
+     "usage": "banque",
+     "fait": "Google lance Gemini Finance, une IA qui analyse vos comptes bancaires, dans le même esprit que ce que propose déjà ChatGPT.",
+     "concretement": "Par exemple, un client demande en une phrase où part son argent chaque mois, et l'assistant répond à sa place au lieu de lui faire fouiller ses relevés. Pour une banque, cela change la relation avec le client.",
+     "origine_exemple": "illustration",
+     "lien": "https://news.google.com/rss/articles/CBMiwwFBVV95cUxQVXZndWVaMHN3SXRGMzRZS0lMNzNMQjg1NFpFdWhVVTExZ0lJdHQ4SjdRU20xZy1IMzVjekQxQnlraFZkcjV2Sm1ORHZFVFRpTU1KVm5fVmpFUG4tVmlSTTcxb21zQURYeE1tY0VIODlvZUE5bXJrMFRtUVVldjFUVVhzZHVnMjRPYkpHMmsxUXhqZ3dwUEJ1dkNXVEhsVG1YTy1jNmV4WUltY0lhWmFEOXloaHB0ZXJIRmZhY1Jaazd5cUk?oc=5",
+     "source": "Clubic"
+    },
+    {
+     "titre": "Pour la banque centrale américaine, l'IA inquiète d'abord pour la stabilité financière",
+     "pour": "Côme",
+     "usage": "entretien",
+     "fait": "Selon un rapport de la Fed (la banque centrale américaine), l'IA est désormais la principale source de préoccupation en matière de stabilité financière.",
+     "concretement": "Par exemple, en entretien, tu peux citer ce rapport pour montrer que tu sais que l'IA n'est pas qu'un gain de temps : elle crée aussi des risques pour tout le système, que les entreprises doivent encadrer.",
+     "origine_exemple": "illustration",
+     "lien": "https://news.google.com/rss/articles/CBMi2wFBVV95cUxQYVNjVEFDcXRCTjdRZk1IbVB2dVViaVVSeDhIWUgzZHMxWU1FUVNhR2RYTUt0VlNXMWtBdjIwVDM3UWdyUDIzMFVYNFBmV0VTWHhTci1vMEppWW5QeDR2VVo5dUtrRnhMcWxZcnVKZGRBM2N5LXZvX0ZrNnBmNEtYdUhHTlJBcDhVV04yM2lJaXRTR05iclN1UkkybnZtalBGTXE2WnEwZm1wUF9BMHJmWHZlQkpjSmJ5UUtOazEtUW81aWpwZU5FVnJOZXRRRjNMMkZMRG9WdjhzZjA?oc=5",
+     "source": "Business AM"
+    },
+    {
+     "titre": "Une banque française perd environ 100 millions d'euros dans une cyberattaque liée à l'IA",
+     "pour": "Alix",
+     "usage": "banque",
+     "fait": "Une banque française a perdu environ 100 millions d'euros dans une cyberattaque « très probablement » facilitée par l'IA, selon la presse spécialisée.",
+     "concretement": "Par exemple, face à un client du secteur, tu peux souligner que les mêmes outils qui aident les équipes aident aussi les pirates, et que la sécurité des paiements devient un sujet de conseil à part entière.",
+     "origine_exemple": "illustration",
+     "lien": "https://news.google.com/rss/articles/CBMi8wFBVV95cUxPbWxkZ29wYl83WWdIbnA0MmFSVE1ZdFJ2NmRQUE9IT1FLQ3IyTm5fX0pZaWtVQ292SnRZaExMdHB4YW9UMWpYME1MSXhHVHl0VG5HUkExRXp2VG9rTEljcXgyTUtjWkFHeUEya0Z5NWJiR0VmN01LcU95WlZGSlJwbThEbjM3aGdVcmE2dEIya0dzdzBOOVJ6X0otaEdYWmE5Rm1wdVl5OTVDSVRmQVlNMzhyc25Uc01yM2poUlFQdXBNckRtcWFXdDctdldyQTZyOXNPUjRWMk1zWGRueGZ2aXFHZXlpN1IzT011VWJtNmJEZzg?oc=5",
+     "source": "Notebookcheck.fr"
+    },
+    {
+     "titre": "Apple lance une étude pour voir comment on se sert de l'IA pour sa santé",
+     "pour": "Vous deux",
+     "usage": "quotidien",
+     "fait": "Apple invite jusqu'à 200 000 personnes aux États-Unis à poser des questions de santé dans une nouvelle app d'étude, avec des réponses fondées sur des revues médicales. Les participants notent les réponses. Apple dit que les données ne servent pas à entraîner d'IA.",
+     "concretement": "Par exemple, avant un rendez-vous chez le médecin, vous pourriez un jour demander à votre téléphone de préparer vos questions. Pour l'instant, l'étude n'est ouverte qu'aux États-Unis.",
+     "origine_exemple": "illustration",
+     "lien": "https://techcrunch.com/2026/11/15/apple-launches-new-app-to-study-how-people-use-ai-for-health/",
+     "source": "TechCrunch"
+    }
+   ],
+   "autres": [
+    {
+     "titre": "Anne Boden prépare une banque fondée sur l'IA",
+     "lien": "https://news.google.com/rss/articles/CBMiggFBVV95cUxOd05TcTNyeWNteHJrcE1zS0VOUGlOeWV3b2pXSXc0Nk5mQlF3Z2VXNllqY3U2R2hETDZBZUxsdk5temNtRHJkaWtkbmZvSUdrYmpmczhKS3JzZXpoalJLbFdpY2htYUR2TmxjUmNTUDJFR0lpMWF2NWtOU1U2czB0a0xR?oc=5",
+     "source": "Brief IA"
+    },
+    {
+     "titre": "Fintech : plus de 100 startups misent sur l'IA pour leurs tâches administratives",
+     "lien": "https://news.google.com/rss/articles/CBMimwFBVV95cUxNdUk4a3RSamxoX1pBYVdXSVljYmZBQWxDenR2bWQ1T0FLUXlEZkZ4aFdRVHRwQU1sVHN6VkRuUlZNc2NCRDd5Qno1cEhjbDZBUXZubzF4NjR0aEV4NEZkek52OGtPdkp2cmZpTVBrS0FzdzNhbVNLOFh6cWUtdFQ2dkhqVjJRajhMbl9faUJJZnJvVnR0UW8wZ3A5aw?oc=5",
+     "source": "Brief IA"
+    },
+    {
+     "titre": "OpenAI affiche de très lourdes pertes",
+     "lien": "https://news.google.com/rss/articles/CBMicEFVX3lxTFBZbDgxMjhYY0hIa1M4R01vT3RmSG9wR04zM1FiU0JCbFRGN2g3S3JlUmlyOUgwb2hYbUo3bVpmRFZyMnVOSl9FdXlGYkhLOURzU2xldER1SG5Uc2pBeF82QmRDSEphUjRiOHNHU0RtWGE?oc=5",
+     "source": "Cafétech"
+    },
+    {
+     "titre": "Aux États-Unis, le Congrès veut durcir les règles d'exportation des puces d'IA",
+     "lien": "https://www.theverge.com/ai-artificial-intelligence/1033984/congress-export-rules-ai-chips-china",
+     "source": "The Verge"
+    },
+    {
+     "titre": "La Chine veut faire émerger une génération native de l'intelligence artificielle",
+     "lien": "https://news.google.com/rss/articles/CBMi6wFBVV95cUxOeXk2VU9YbXhmZmdrNlE2TGpuejY1Mmp5QXhEODItUElaN1RiMTNSMFo3T2hUeE9VWEJnVTMxSHFGWDFHblRva0cxRWl1c0xPdzhDbFpzSGo3aXBUYmVFeGF6TEtnZDZRUkJNQW1JTjNLYXJiOGJiTTctN1FMU3pDa2ZBWU83NFRoejhCUTFBaFh0QXQ5cjN1blZSQUhYN3JEaHpLWGMxVzRQZzk4UUNXS2x6bFVFWEd0cUdqSUo3c2VmRXZ6TEJvcDFsMl85aHVCYmNDRXpJZVpSNjR2THllUk1ibExqZ1M3cTlF?oc=5",
+     "source": "Zonebourse Suisse"
+    },
+    {
+     "titre": "Jensen Huang envisagerait un retour à la tête de Nvidia",
+     "lien": "https://news.google.com/rss/articles/CBMilwFBVV95cUxPd05tSHY2VnVWM3d4RkhVNXljQVVNTHViUjFkM2UtV1lBYmRjcE5sNnQ3QmJwNWxVUk1BV1R1R1ZPU2hTTlA0a3FwWVQxcDlkMWFaczUzZG01Sno5TGZHUXlZTC04X05MUnNnSFRTX1JxZTRyaFVjeVlKTTBhMnBFV1hIOFJpZnd6Z19jMk0xMXZqOTRZcDg4?oc=5",
+     "source": "7sur7.be"
+    }
+   ],
+   "lexique": [
+    {
+     "terme": "IA générative",
+     "theme": "ia",
+     "definition": "Une IA capable de produire du contenu nouveau (texte, image, son) à partir d'une simple demande écrite, au lieu de seulement classer ou trier des données.",
+     "exemple": "Demander à un assistant de rédiger un brouillon de mail à partir de trois idées en vrac."
+    },
+    {
+     "terme": "Jeu de données",
+     "theme": "data-bi",
+     "definition": "Un ensemble organisé d'informations, souvent un grand tableau, sur lequel on fait des analyses ou on entraîne une IA.",
+     "exemple": "Un fichier qui liste toutes les commandes d'une boutique, avec la date, le produit et la ville."
+    },
+    {
+     "terme": "Risque systémique",
+     "theme": "banque",
+     "definition": "Le risque qu'un problème touchant un acteur ou une technologie se propage à tout le système financier, comme une chaîne de dominos.",
+     "exemple": "Si presque toutes les banques utilisent le même outil et qu'il se trompe, l'erreur peut se répéter partout en même temps."
+    },
+    {
+     "terme": "Ratio de solvabilité",
+     "theme": "banque",
+     "definition": "La part de fonds propres qu'une banque doit garder par rapport aux risques qu'elle porte, pour pouvoir absorber des pertes sans mettre les clients en danger.",
+     "exemple": "Un régulateur demande à une banque de renforcer ses réserves avant d'accorder davantage de crédits risqués."
+    },
+    {
+     "terme": "Gestionnaire de mots de passe",
+     "theme": "quotidien",
+     "definition": "Une application qui crée et retient pour vous un mot de passe différent et solide pour chaque site, protégée par un seul mot de passe maître.",
+     "exemple": "Vous ouvrez l'application une fois par jour et elle remplit seule les identifiants de vos sites habituels."
+    }
+   ]
+  },
+  {
    "date": "2026-11-15",
    "type": "semaine",
    "rien_de_notable": false,
