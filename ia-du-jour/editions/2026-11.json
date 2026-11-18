@@ -1,6 +1,138 @@
 {
  "editions": [
   {
+   "date": "2026-11-18",
+   "type": "jour",
+   "rien_de_notable": false,
+   "publie_le": "2026-11-18T06:34+00:00",
+   "sujets": [
+    {
+     "titre": "Google rend gratuit son assistant IA qui agit à votre place",
+     "pour": "Vous deux",
+     "usage": "outil",
+     "fait": "Google rend gratuit « Tasks », un agent, c'est-à-dire une IA qui enchaîne les tâches seule. Il prépare des plans de repas, gère l'agenda et cherche dans vos e-mails les dépenses récurrentes. Aux États-Unis, il peut aussi appeler des commerces et acheter avec Google Pay.",
+     "concretement": "Par exemple, vous lui demandez de retrouver les abonnements que vous payez sans les utiliser : il fouille vos messages et dresse la liste.",
+     "origine_exemple": "article",
+     "lien": "https://www.theverge.com/tech/1035756/google-spark-ai-tasks-free",
+     "source": "The Verge"
+    },
+    {
+     "titre": "Seuls 6 % des employeurs voient l'IA concurrencer les humains",
+     "pour": "Côme",
+     "usage": "entretien",
+     "fait": "L'Observatoire de France Travail a interrogé plus de 16 000 établissements. Seuls 6 % des employeurs pensent que l'IA pourra concurrencer les humains dans les cinq prochaines années, mais 70 % de ceux qui l'utilisent déjà attendent de leurs salariés qu'ils sachent s'en servir.",
+     "concretement": "Par exemple, en entretien, tu peux dire que savoir utiliser l'IA devient un critère d'embauche, notamment dans l'informatique, la communication et la banque-assurance.",
+     "origine_exemple": "article",
+     "lien": "https://www.presse-citron.net/ia-menace-emplois-france-travail-employeurs/",
+     "source": "Presse-citron"
+    },
+    {
+     "titre": "Un responsable de la Fed craint des retraits massifs déclenchés par des IA",
+     "pour": "Alix",
+     "usage": "banque",
+     "fait": "Michael Barr, gouverneur de la Fed (la banque centrale américaine), met en garde : des agents IA, des IA qui agissent seules, pourraient déclencher des retraits massifs dans les banques en quelques minutes.",
+     "concretement": "Par exemple, si des assistants IA conseillent tous au même moment de retirer l'argent d'une banque, la panique irait bien plus vite qu'avec des clients qui font la queue au guichet.",
+     "origine_exemple": "illustration",
+     "lien": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxPVHFKRnNmN0g2SThKcGRqeUpsRkxsQlBwTVpxLUlzUmNfX0h4Y3Q0YWNlVnAzQzRteUNhZVhNZ1NVWlR1RnlJdno2WjZnWXA5Vi1xVU9FZWZlWGVNSk1HTmRzdnVEbVRsYTlGclR3cUw0YWFBYlVGcFk0QW9JVGl3M044RHF0cDQxS3p2ZDY2WmNHalFFX3lwbjBKb1duOV95dWZ1bEV2T1FvbnJpLUEzWDVGU0pXaTVOSjhzd0w0Ylppdw?oc=5",
+     "source": "CoinDesk"
+    },
+    {
+     "titre": "Apple préviendra les utilisateurs de Mac quand une IA prend le contrôle",
+     "pour": "Vous deux",
+     "usage": "outil",
+     "fait": "Apple va mieux informer les utilisateurs de Mac des droits qu'ils accordent aux agents IA, des IA qui agissent seules sur l'ordinateur. Un signal visuel indiquera quand un agent contrôle une application, et il sera possible d'exiger son accord à chaque fois.",
+     "concretement": "Par exemple, vous pourrez limiter une IA à un seul dossier de documents plutôt que de lui ouvrir tout l'ordinateur.",
+     "origine_exemple": "article",
+     "lien": "https://www.presse-citron.net/pour-proteger-ses-clients-apple-ferme-la-porte-aux-agents-ia-sur-mac/",
+     "source": "Presse-citron"
+    },
+    {
+     "titre": "Google garde vos conversations avec Gemini deux mois, même en mode temporaire",
+     "pour": "Vous deux",
+     "usage": "quotidien",
+     "fait": "Google conserve désormais environ deux mois les conversations temporaires avec Gemini, contre 72 heures auparavant. Deux réglages séparés permettent en revanche de garder l'historique sans que ces échanges servent à entraîner l'IA de Google.",
+     "concretement": "Par exemple, une question personnelle posée en mode temporaire reste stockée bien plus longtemps qu'avant : mieux vaut la réserver aux sujets anodins.",
+     "origine_exemple": "illustration",
+     "lien": "https://techcrunch.com/2026/11/17/google-to-keep-gemini-chats-for-two-months-up-from-72-hours-even-with-history-off/",
+     "source": "TechCrunch"
+    }
+   ],
+   "autres": [
+    {
+     "titre": "Nvidia dépasse les attentes malgré le départ de son patron",
+     "lien": "https://www.frandroid.com/marques/nvidia/3327609_nvidia-pulverise-les-attentes-avec-1158-milliards-de-dollars-malgre-la-chute-de-jensen-huang",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "Microsoft présente plusieurs modèles d'IA maison face à OpenAI et Claude",
+     "lien": "https://www.frandroid.com/culture-tech/intelligence-artificielle/microsoft-copilot/3327595_microsoft-degaine-7-modeles-dia-maison-pour-concurrencer-openai-et-claude",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "OpenAI signe un accord avec 17 médias français",
+     "lien": "https://siecledigital.fr/2026/11/17/openai-signe-un-accord-avec-17-medias-francais-dont-le-parisien-et-les-echos/",
+     "source": "Siècle Digital"
+    },
+    {
+     "titre": "OVHcloud présente Olala, sa première IA française",
+     "lien": "https://siecledigital.fr/2026/11/17/ovhcloud-devoile-olala-sa-premiere-ia-francaise-pour-concurrencer-les-geants-americains/",
+     "source": "Siècle Digital"
+    },
+    {
+     "titre": "LinkedIn traque les commentaires écrits par une IA",
+     "lien": "https://siecledigital.fr/2026/11/17/linkedin-part-a-la-chasse-aux-commentaires-generes-par-intelligence-artificielle/",
+     "source": "Siècle Digital"
+    },
+    {
+     "titre": "Google Messages adaptera ses réponses suggérées au ton de la conversation",
+     "lien": "https://www.frandroid.com/marques/google/3325731_google-messages-veut-adapter-ses-reponses-intelligentes-au-ton-de-vos-conversations",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "Gemini transforme vos notes en site interactif en un clic",
+     "lien": "https://www.frandroid.com/marques/google/3325769_google-gemini-transforme-vos-simples-notes-en-site-web-interactif-en-un-clic",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "JPMorgan teste des agents IA sur une opération de change simulée",
+     "lien": "https://news.google.com/rss/articles/CBMilwFBVV95cUxQczRMWk43VTJLWkNKdGZDV1p3V3B1TGdRS3huU21GNTV3M0M0aVhiRlItT0RmTkJjVFg0NTFFUy1PaUJhNlR4Z1NSWXVYbFZybDBrWEo2NjhRdGppYmpFdUlrakdZX0xKc2JSRXBIc1B0UXh2YzYySUI0bkJFdDBUS0R3enpYdzFBQ1Y5WEZyZjFEWll1aU5B?oc=5",
+     "source": "Unite.AI"
+    }
+   ],
+   "lexique": [
+    {
+     "terme": "Explicabilité",
+     "theme": "ia",
+     "definition": "Capacité à expliquer pourquoi une IA a donné telle réponse ou pris telle décision. Sans elle, il est difficile de lui faire confiance ou de la contrôler.",
+     "exemple": "Une banque refuse un crédit grâce à une IA : l'explicabilité permet de dire au client quels éléments ont pesé."
+    },
+    {
+     "terme": "Corrélation",
+     "theme": "data-bi",
+     "definition": "Lien statistique entre deux séries de chiffres qui évoluent ensemble. Cela ne prouve pas que l'une cause l'autre.",
+     "exemple": "Les ventes de glaces et les coups de soleil montent en même temps, sans que les glaces brûlent la peau."
+    },
+    {
+     "terme": "Risque opérationnel",
+     "theme": "banque",
+     "definition": "Risque de perte causé par une panne, une erreur humaine, une fraude ou un défaut de processus, plutôt que par les marchés ou les clients.",
+     "exemple": "Une panne informatique empêche une banque de traiter les virements pendant une matinée."
+    },
+    {
+     "terme": "Informatique en nuage",
+     "theme": "quotidien",
+     "definition": "Stocker des fichiers et faire tourner des programmes sur des serveurs distants, accessibles par Internet, plutôt que sur son propre appareil.",
+     "exemple": "Vos photos sont sauvegardées en ligne et se retrouvent sur votre nouveau téléphone."
+    },
+    {
+     "terme": "Hypertrucage",
+     "theme": "ia",
+     "definition": "Image, vidéo ou voix fabriquée par une IA pour imiter une vraie personne de façon très crédible.",
+     "exemple": "Une fausse vidéo montre un dirigeant annoncer une décision qu'il n'a jamais prise."
+    }
+   ]
+  },
+  {
    "date": "2026-11-17",
    "type": "jour",
    "rien_de_notable": false,
