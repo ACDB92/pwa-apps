@@ -1,6 +1,133 @@
 {
  "editions": [
   {
+   "date": "2026-11-19",
+   "type": "jour",
+   "rien_de_notable": false,
+   "publie_le": "2026-11-19T06:34+00:00",
+   "sujets": [
+    {
+     "titre": "Anthropic, créatrice de Claude, entre en Bourse jeudi",
+     "pour": "Vous deux",
+     "usage": "general",
+     "fait": "Anthropic, l'entreprise derrière l'assistant Claude, entre au Nasdaq jeudi. Sa valeur pourrait atteindre 1 410 milliards de dollars, alors qu'elle ne dégage pas encore de bénéfice d'exploitation.",
+     "concretement": "Par exemple, tout épargnant peut demander à acheter une petite part de l'entreprise. C'est un bon repère pour comprendre combien l'IA coûte à fabriquer et pourquoi les banques s'y intéressent.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.frandroid.com/culture-tech/intelligence-artificielle/anthropic-claude-ai/3328383_anthropic-claude-le-rival-de-chatgpt-entre-en-bourse-ce-quil-faut-savoir-avant-16-h",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "Citi fait payer aux clients les erreurs de leurs assistants IA",
+     "pour": "Alix",
+     "usage": "banque",
+     "fait": "La banque Citi a changé ses conditions : un client qui confie ses accès à un assistant IA extérieur (un programme qui agit à sa place) est responsable de tout ce qu'il fait, même s'il est piraté. JPMorgan et Bank of America ont annoncé des règles semblables le mois dernier.",
+     "concretement": "Par exemple, un client donne ses codes à une appli IA qui paie ses factures. Si elle vire de l'argent par erreur, la banque ne le rembourse pas. Tu peux t'en servir pour parler de responsabilité avec un client bancaire.",
+     "origine_exemple": "illustration",
+     "lien": "https://techcrunch.com/2026/11/18/more-banks-says-customers-using-ai-agents-are-on-their-own-even-if-they-get-hacked/",
+     "source": "TechCrunch"
+    },
+    {
+     "titre": "Moins d'offres d'emploi en France : les premiers effets possibles de l'IA",
+     "pour": "Côme",
+     "usage": "entretien",
+     "fait": "Selon une étude de la Coface, 25 000 offres d'emploi de moins que prévu ont été publiées à France Travail au troisième trimestre. Les offres en ressources humaines reculent de 42,8 % par rapport à la tendance, mais l'IA n'est pas encore prouvée comme cause.",
+     "concretement": "Les postes demandant moins d'un an d'expérience reculent de 14 %, et les entreprises n'ont pas encore licencié. Tu peux le citer en entretien, en précisant que le lien avec l'IA reste à confirmer.",
+     "origine_exemple": "article",
+     "lien": "https://siecledigital.fr/2026/11/17/25-000-offres-demploi-en-moins-en-france-une-etude-revele-les-premiers-degats-de-lia/",
+     "source": "Siècle Digital"
+    },
+    {
+     "titre": "Une IA qui pirate seule des sites, dont des français, repérée par Google",
+     "pour": "Vous deux",
+     "usage": "general",
+     "fait": "Des chercheurs de Google ont découvert un outil de piratage qui cherche les failles (des défauts de sécurité), prépare l'attaque et la lance sans intervention humaine. Plusieurs sites français ont été visés, notamment dans l'éducation et les médias.",
+     "concretement": "Par exemple, une entreprise qui tarde à installer une mise à jour devient une cible bien plus vite qu'avant, car l'outil repère tout seul les défauts qui viennent d'être corrigés.",
+     "origine_exemple": "illustration",
+     "lien": "https://siecledigital.fr/2026/11/18/une-ia-capable-de-mener-seule-des-cyberattaques-frappe-des-sites-francais-selon-google/",
+     "source": "Siècle Digital"
+    },
+    {
+     "titre": "Google ajoute un mode discret à son assistant IA de recherche",
+     "pour": "Vous deux",
+     "usage": "outil",
+     "fait": "Google ajoute des « fils temporaires » à son mode IA de recherche : la conversation n'apparaît ni dans l'historique ni dans les recommandations futures. On l'active depuis l'icône en haut à droite, dans toutes les langues.",
+     "concretement": "Par exemple, vous pouvez poser une question de santé ou préparer une surprise sans que Google associe ensuite le sujet à vos centres d'intérêt.",
+     "origine_exemple": "illustration",
+     "lien": "https://techcrunch.com/2026/11/18/googles-ai-feature-in-search-gets-its-own-incognito-mode/",
+     "source": "TechCrunch"
+    }
+   ],
+   "autres": [
+    {
+     "titre": "La BCE compare la ruée vers l'IA à la bulle internet",
+     "lien": "https://news.google.com/rss/articles/CBMiwwFBVV95cUxPWERrSG15Z2JmTEdGb0drNTl5TDhPSUQxMVZXdm1qRm82VUtIeFYzMlFHMGdDcWNLMTY3N09BeTBRZ2p2YVEwM2x6bDF0ejZrQTBEY1Q2M1pGR2NOYlpidHB6X1ozMWZKMTc5UFNrVk1JZDBGY285UEd5RWxhUlNqZm1SWFpxeHJsbDh2bTdMN0Vod3R0YTBDUC12QXhpS3VveXhfR1lBZjJ2LWduakx6eWhJS1RJUlBhR25CRVZIM0VkbkE?oc=5",
+     "source": "Euronews.com"
+    },
+    {
+     "titre": "Anthropic ne laissera plus que 30 jours aux éditeurs pour corriger les failles graves",
+     "lien": "https://www.numerama.com/tech/2377793-lia-trouve-les-failles-vraiment-trop-vite-anthropic-et-google-sonnent-la-fin-des-90-jours-de-grace-avant-la-divulgation.html",
+     "source": "Numerama"
+    },
+    {
+     "titre": "JPMorgan crée des agents IA capables d'exécuter des paiements seuls",
+     "lien": "https://news.google.com/rss/articles/CBMiigFBVV95cUxQam9hTkhma3hhb2VZZHFwZHBYalBnXzd6dTRIczJ1TDllZXFQc0swU2gyU2p4cjlHRWVrOGRWbk9EUGNWLWNFbjJLeDJtR2FWYTdobGVqYURwYm1GUjR2YVF3RVFJM3M4bkV3RG5zWERiUXhUOGNiaWN4eWdWTW1CVjFiNGkxMTJ2ZlE?oc=5",
+     "source": "FinanceFeeds"
+    },
+    {
+     "titre": "KPMG teste plus de 100 agents IA sur un audit en parallèle",
+     "lien": "https://news.google.com/rss/articles/CBMijwFBVV95cUxQWG4wVnZjMi1PYW5MYVBYVUhucjVsUk9Lb2U1UlcxR3hjbWV5dHJzdkduZHBERFA1Mkg0NDZFXzh2SXB5aGxfU1h0ek82ckN5c2FicUNBdTdlX05hcG1lOGpQbzkzQnRYbUw4czhmNTZKcTg2MTZiNzBFOXkzeDRESWMzRkxmbjZNYzZNRS1OWQ?oc=5",
+     "source": "Brief IA"
+    },
+    {
+     "titre": "Google Vids permet de créer gratuitement son double numérique en vidéo",
+     "lien": "https://www.frandroid.com/marques/google/3328431_google-vids-vous-pouvez-desormais-creer-gratuitement-votre-double-numerique-en-video",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "Plus de 3 Français sur 4 utilisent désormais l'IA générative",
+     "lien": "https://siecledigital.fr/2026/11/18/lia-generative-a-deja-conquis-plus-de-3-francais-sur-4-selon-une-nouvelle-etude/",
+     "source": "Siècle Digital"
+    },
+    {
+     "titre": "Nvidia écarte le retour de Jensen Huang et relève sa prévision",
+     "lien": "https://www.actuia.com/actualite/sans-jensen-huang-nvidia-releve-sa-prevision/",
+     "source": "ActuIA"
+    }
+   ],
+   "lexique": [
+    {
+     "terme": "Surapprentissage",
+     "theme": "ia",
+     "definition": "Défaut d'une IA qui a trop bien appris ses exemples : elle les récite à la perfection, mais se trompe dès qu'elle rencontre un cas nouveau.",
+     "exemple": "Un outil qui prédit les ventes a été réglé sur les données d'une seule année : il réussit très bien sur le passé et échoue l'année suivante."
+    },
+    {
+     "terme": "Donnée aberrante",
+     "theme": "data-bi",
+     "definition": "Valeur très éloignée des autres, qui vient souvent d'une erreur de saisie ou d'un cas rarissime. Elle peut fausser une moyenne ou un graphique.",
+     "exemple": "Dans un tableau de ventes, une commande saisie avec trois zéros de trop écrase tout le graphique du mois."
+    },
+    {
+     "terme": "Fonds propres",
+     "theme": "banque",
+     "definition": "L'argent que la banque possède vraiment, par opposition à celui qu'elle doit à ses clients ou à ses prêteurs. Il sert de coussin pour absorber les pertes.",
+     "exemple": "Si une banque subit des pertes sur des crédits impayés, ce sont d'abord ses fonds propres qui les encaissent, avant que l'argent des épargnants soit touché."
+    },
+    {
+     "terme": "Mise à jour de sécurité",
+     "theme": "quotidien",
+     "definition": "Correction envoyée par l'éditeur d'un logiciel ou d'un téléphone pour boucher un défaut que des pirates pourraient exploiter.",
+     "exemple": "Votre téléphone propose une mise à jour pendant la nuit : l'accepter évite qu'un défaut connu serve à entrer dans vos messages."
+    },
+    {
+     "terme": "Filigrane numérique",
+     "theme": "ia",
+     "definition": "Marque invisible glissée dans une image, un son ou un texte, qui permet de savoir qu'il a été produit par une IA.",
+     "exemple": "Une photo truquée circule sur les réseaux : grâce à la marque cachée, un outil de vérification peut indiquer qu'elle a été générée."
+    }
+   ]
+  },
+  {
    "date": "2026-11-18",
    "type": "jour",
    "rien_de_notable": false,
