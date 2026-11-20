@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Renfo du soir</title>
+<meta name="description" content="Ta séance de renforcement du soir : 20 minutes guidées à la voix, au poids du corps.">
+<meta name="theme-color" content="#FFF7EE">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── Accueil, suivi, réglages ─────────────────────────────────────────── -->
+<div id="app">
+  <header class="entete">
+    <h1>Renfo du soir</h1>
+    <div id="serie" class="serie" aria-live="polite"></div>
+  </header>
+
+  <main>
+    <section id="vue-soir" class="vue"></section>
+    <section id="vue-suivi" class="vue" hidden></section>
+    <section id="vue-reglages" class="vue" hidden></section>
+  </main>
+
+  <nav class="onglets" aria-label="Sections">
+    <button type="button" data-vue="soir" aria-current="page"><span aria-hidden="true">🌙</span>Ce soir</button>
+    <button type="button" data-vue="suivi"><span aria-hidden="true">📈</span>Suivi</button>
+    <button type="button" data-vue="reglages"><span aria-hidden="true">⚙️</span>Réglages</button>
+  </nav>
+</div>
+
+<!-- ── La séance, plein écran ───────────────────────────────────────────── -->
+<div id="seance" class="seance" hidden>
+  <div class="seance-haut">
+    <div class="barre"><div id="barre-remplie"></div></div>
+    <div class="seance-ligne">
+      <span id="phase" class="phase"></span>
+      <span id="reste-total" class="reste-total"></span>
+    </div>
+  </div>
+
+  <div class="seance-corps">
+    <p id="etiquette" class="etiquette"></p>
+    <h2 id="nom-exercice" class="nom-exercice"></h2>
+    <p id="variante" class="variante"></p>
+    <p id="muscles" class="muscles"></p>
+    <div id="schema-seance" class="schema-seance"></div>
+    <div id="chrono" class="chrono" aria-live="off">0</div>
+    <ul id="consignes" class="consignes"></ul>
+    <p id="repere" class="repere"></p>
+    <p id="erreur" class="erreur"></p>
+    <p id="ensuite" class="ensuite"></p>
+  </div>
+
+  <div class="seance-commandes">
+    <button type="button" id="b-arreter" class="rond" aria-label="Arrêter la séance">✕</button>
+    <button type="button" id="b-pause" class="rond grand" aria-label="Pause">⏸</button>
+    <button type="button" id="b-passer" class="rond" aria-label="Passer à l’étape suivante">⏭</button>
+  </div>
+</div>
+
+<!-- ── Fin de séance ────────────────────────────────────────────────────── -->
+<div id="fin" class="fin" hidden></div>
+
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

@@ -11,6 +11,7 @@ est un miroir « dist » écrasé à chaque mise à jour.
 | Calcul Mental | https://acdb92.github.io/pwa-apps/calcul-mental/ |
 | Coup d'œil | https://acdb92.github.io/pwa-apps/coup-d-oeil/ |
 | Coup de vent | https://acdb92.github.io/pwa-apps/coup-de-vent/ |
+| Renfo du soir | https://acdb92.github.io/pwa-apps/renfo-du-soir/ |
 
 Chaque push sur `main` redéploie (workflow `.github/workflows/pages.yml`).
 Procédure de mise à jour : voir `Projects/ttmc-pwa/README.md` dans `AC_perso`.

@@ -1,0 +1,15 @@
+{
+  "name": "Renfo du soir",
+  "short_name": "Renfo",
+  "description": "Ta séance de renforcement du soir : 20 minutes guidées à la voix, au poids du corps.",
+  "lang": "fr",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFF7EE",
+  "theme_color": "#FFF7EE",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
