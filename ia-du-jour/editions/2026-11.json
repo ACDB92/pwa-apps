@@ -1,6 +1,128 @@
 {
  "editions": [
   {
+   "date": "2026-11-20",
+   "type": "jour",
+   "rien_de_notable": false,
+   "publie_le": "2026-11-20T06:34+00:00",
+   "sujets": [
+    {
+     "titre": "Anthropic, créateur de Claude, réalise la plus grosse entrée en Bourse de l'histoire",
+     "pour": "Vous deux",
+     "usage": "general",
+     "fait": "L'entreprise a levé 81,3 milliards de dollars en vendant ses actions au public, à 83 dollars pièce. C'est la première entreprise spécialisée dans les grands modèles d'IA à entrer en Bourse, et le record dépasse celui de SpaceX.",
+     "concretement": "Par exemple, quand une telle entreprise est cotée, ses pertes et ses dépenses deviennent publiques : n'importe qui peut les lire dans ses comptes.",
+     "origine_exemple": "illustration",
+     "lien": "https://siecledigital.fr/2026/11/19/anthropic-realise-la-plus-grosse-introduction-en-bourse-de-lhistoire-et-pulverise-le-record-de-spacex/",
+     "source": "Siècle Digital"
+    },
+    {
+     "titre": "Un agent IA cherche seul pourquoi les données cassent et propose le correctif",
+     "pour": "Côme",
+     "usage": "data-bi",
+     "fait": "Databricks ouvre en test public Genie ZeroOps, un agent (une IA qui enchaîne les tâches seule) qui détecte les pannes des chaînes de traitement de données, cherche la cause et propose un correctif. Pendant les essais privés, il a observé plus de 80 000 incidents réels chez des clients.",
+     "concretement": "Par exemple, une table cesse de se mettre à jour la nuit et un tableau de bord affiche un mauvais chiffre : l'agent trouve l'étape fautive, mais ne change rien sans accord d'une personne.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.databricks.com/blog/genie-zeroops-now-public-beta-autonomous-agent-fixes-data-pipelines-lessons-80000-customer",
+     "source": "Databricks"
+    },
+    {
+     "titre": "Les banques ferment largement leurs portes aux agents IA, pour l'instant",
+     "pour": "Alix",
+     "usage": "banque",
+     "fait": "Selon American Banker, les banques bloquent pour le moment les agents IA venus de l'extérieur (des IA qui agissent à la place d'un client). Certains banquiers jugent que cela ne durera pas et y voient une occasion de jouer un rôle direct dans ce nouveau commerce.",
+     "concretement": "Par exemple, un client demande à son assistant de payer une facture : la banque doit décider si elle laisse passer cet ordre venu d'une machine, et à quelles conditions.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.americanbanker.com/payments/news/can-banks-provide-the-added-security-ai-assistants-require",
+     "source": "American Banker"
+    },
+    {
+     "titre": "ChatGPT écrit maintenant votre dictée pendant que vous parlez",
+     "pour": "Vous deux",
+     "usage": "outil",
+     "fait": "OpenAI déploie dans le monde entier la dictée en direct : le texte s'affiche à mesure que vous parlez, au lieu d'attendre la fin de l'enregistrement. Elle est disponible sur tous les forfaits, sur le web, l'ordinateur et le téléphone.",
+     "concretement": "Par exemple, vous dictez un long message en marchant, puis vous corrigez le texte avant de l'envoyer.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.theverge.com/ai-artificial-intelligence/1037634/openai-chatgpt-live-dictation",
+     "source": "The Verge"
+    },
+    {
+     "titre": "Google prépare des recherches IA privées, sans trace dans votre compte",
+     "pour": "Vous deux",
+     "usage": "quotidien",
+     "fait": "Un bouton en forme de crayon va permettre de garder une discussion avec le mode IA de Google hors de votre compte et de votre historique. Google dit que ces échanges ne serviront pas à améliorer son IA, mais ne parle pas de publicité.",
+     "concretement": "Par exemple, vous posez une question de santé ou une idée de cadeau sans que la suite de vos recherches s'en ressente.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.frandroid.com/marques/google/3329827_google-va-vous-permettre-de-faire-vos-recherches-ia-sans-laisser-de-traces",
+     "source": "Frandroid"
+    }
+   ],
+   "autres": [
+    {
+     "titre": "Gemini peut désormais utiliser un Mac à votre place, d'abord aux États-Unis",
+     "lien": "https://techcrunch.com/2026/11/19/google-gives-gemini-the-ability-to-use-your-mac-for-you/",
+     "source": "TechCrunch"
+    },
+    {
+     "titre": "Canva ajoute un bouton pour couper ses fonctions d'IA",
+     "lien": "https://www.theverge.com/ai-artificial-intelligence/1037126/canva-ai-features-off-button",
+     "source": "The Verge"
+    },
+    {
+     "titre": "L'assistant de Meta mélangerait les conversations et exposerait des données privées",
+     "lien": "https://techcrunch.com/2026/11/19/metas-ai-agent-muse-is-mixing-up-conversations-and-exposing-private-data-report-says/",
+     "source": "TechCrunch"
+    },
+    {
+     "titre": "TikTok lance un site pour démasquer les vidéos créées par IA",
+     "lien": "https://www.frandroid.com/culture-tech/intelligence-artificielle/3331997_tiktok-lance-un-site-pour-demasquer-les-videos-ia",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "Le régulateur européen des banques alerte sur les fraudes accrues par l'IA",
+     "lien": "https://news.google.com/rss/articles/CBMi4gFBVV95cUxNUVBfWEFGWEt5NHRTYWhlUGtiMXJGOFBmZWlOdmtmR1BUU2w0bFNubl85X2RQanI5eXppS1U2aGpKVlU4ZFZGZThrcDJmVmlXdWwtS2ExV3ZMaXlUV1Z1dm1KbEpyTDZZVGVEbWFNSW9CMTV2SHR6SjFpUXUwZndlcGc2Rnp0RGNhczUzZjBua09YU1JVSzhWQ09IMkpKSnlQeEdLSXUyQ3RSblRCWmtMNnJWeGZZNFdKcXdKeFVsT2ZWWVIzZjd0aGJuVmNFOE11a0RrQVhjUnlqX3B1M1FYc0tn?oc=5",
+     "source": "MoneyVox"
+    },
+    {
+     "titre": "L'IA d'OVHcloud peut se télécharger sur un ordinateur ordinaire",
+     "lien": "https://www.frandroid.com/culture-tech/intelligence-artificielle/3331975_on-peut-telecharger-lia-dovh-taillee-pour-8-go-de-ram-ce-que-valent-ses-scores-face-a-mistral",
+     "source": "Frandroid"
+    }
+   ],
+   "lexique": [
+    {
+     "terme": "Données synthétiques",
+     "theme": "ia",
+     "definition": "Des données fabriquées par ordinateur, qui imitent des données réelles. On s'en sert pour entraîner une IA sans exposer d'informations personnelles.",
+     "exemple": "Une équipe teste un nouvel outil avec de faux dossiers clients qui ressemblent aux vrais."
+    },
+    {
+     "terme": "Lignage des données",
+     "theme": "data-bi",
+     "definition": "Le chemin suivi par une donnée, de sa source jusqu'au tableau de bord : d'où elle vient et quelles transformations elle a subies.",
+     "exemple": "Un chiffre paraît faux dans un rapport : le lignage permet de remonter à l'étape qui l'a abîmé."
+    },
+    {
+     "terme": "Introduction en Bourse",
+     "theme": "banque",
+     "definition": "Le moment où une entreprise vend ses actions au public pour la première fois, afin de lever de l'argent. Elle devient alors cotée.",
+     "exemple": "Une entreprise familiale ouvre son capital à des milliers d'épargnants pour financer sa croissance."
+    },
+    {
+     "terme": "Test de résistance",
+     "theme": "banque",
+     "definition": "Un exercice imposé aux banques : on simule une crise grave pour vérifier qu'elles tiendraient le choc.",
+     "exemple": "Le régulateur imagine une chute brutale de l'immobilier et regarde si la banque garde assez de réserves."
+    },
+    {
+     "terme": "Navigation privée",
+     "theme": "quotidien",
+     "definition": "Un mode qui n'enregistre pas votre historique sur l'appareil. Il ne vous rend pas invisible pour autant : le site visité ou votre fournisseur d'accès peuvent toujours voir votre activité.",
+     "exemple": "Vous cherchez une idée de cadeau sur l'ordinateur familial sans que la surprise soit gâchée."
+    }
+   ]
+  },
+  {
    "date": "2026-11-19",
    "type": "jour",
    "rien_de_notable": false,
