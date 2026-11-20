@@ -81,24 +81,25 @@ export const FAMILLES = {
     ancre: 'pied',
     poses: [{ ...PLANCHE_COUDES }, { ...PLANCHE_HAUTE }],
   },
-  superman: {
-    zone: 'haut', nom: 'Superman alterné', muscles: 'dos, lombaires, fessiers', cible: ['tronc'],
+  birddog: {
+    zone: 'haut', nom: 'Bird dog en ours', muscles: 'dos, fessiers, gainage', cible: ['tronc', 'fesse'],
     depart: 0,
     variantes: [
-      'Superman alterné',
-      'Superman alterné, 2 s tenu en haut',
-      'Superman alterné lent (3 s pour monter)',
-      'Nageur (alternance rapide, bras et jambes décollés)',
+      'Bird dog en ours, bras seul',
+      'Bird dog en ours, bras et jambe opposés',
+      'Bird dog en ours, 2 s tenu en haut',
+      'Bird dog en ours lent (3 s pour allonger)',
     ],
-    consignes: ['Allongé sur le ventre, bras tendus devant', 'Lève le bras droit et la jambe gauche, tendus, puis repose', 'Puis le bras gauche et la jambe droite, et ainsi de suite'],
-    voix: 'Bras et jambe opposés, le regard vers le sol.',
-    repere: 'Monte en 1 s, redescends lentement · arrête-toi si le bas du dos tire',
-    erreur: 'Lever la tête ou tourner le bassin pour monter plus haut.',
-    ancre: 'hanche',
-    // bras proche + jambe éloignée levés, puis l'inverse
+    consignes: ['Mains sous les épaules, sur la pointe des pieds, genoux décollés de 3 cm', 'Allonge le bras droit devant et la jambe gauche derrière, tendus', 'Reviens, puis change de côté : le dos reste plat, les genoux ne touchent pas'],
+    voix: 'Les genoux décollés, le dos plat.',
+    repere: 'Allonge en 2 s, reviens en 2 s · arrête-toi si le bassin bascule ou si un genou touche',
+    erreur: 'Le bassin qui tourne ou le dos qui se creuse quand la jambe s’allonge.',
+    ancre: 'main',
+    // appui sur les mains et la pointe des pieds, genoux décollés ; le bras éloigné et la jambe
+    // proche s'allongent (opposés), puis on revient
     poses: [
-      { t: -2, tete: 3, b: [-24, 0], ab: [-24, 0], c: [180, -160], tb: [180, -160] },
-      { t: -2, tete: 3, b: [0, -24], ab: [0, -24], c: [-160, 180], tb: [-160, 180] },
+      { t: 6, b: [90, 90], ab: [90, 90], c: [92, 92], tb: [150, 150] },
+      { t: 6, b: [90, -10], ab: [90, -10], c: [-176, 92], tb: [-176, 150] },
     ],
   },
 
@@ -237,7 +238,7 @@ export const FAMILLES = {
  * soir : elle passe le soir du bas.
  */
 export const CIRCUITS = {
-  haut: ['pompes', 'crunch', 'commando', 'jambes', 'superman'],
+  haut: ['pompes', 'crunch', 'commando', 'jambes', 'birddog'],
   bas: ['squat', 'mountain', 'fentes', 'planche', 'pont'],
 };
 
