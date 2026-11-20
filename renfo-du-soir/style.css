@@ -89,7 +89,8 @@ h1, h2, h3 { line-height: 1.15; margin: 0; }
 .bouton-texte { border: 0; background: none; color: var(--zone); font-weight: 700; padding: 6px 0; text-decoration: underline; text-underline-offset: 3px; }
 
 /* ── Schémas ────────────────────────────────────────────────────────────── */
-.membre { fill: none; stroke-width: 5.5; stroke-linecap: round; stroke-linejoin: round; }
+.membre { fill: none; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+.membre.tronc { stroke-width: 8.5; }
 .membre.loin { opacity: .38; }
 .sol { stroke: #D8CDBF; stroke-width: 2; stroke-linecap: round; }
 .cible path { fill: none; stroke-width: 12; stroke-linecap: round; opacity: .75; }

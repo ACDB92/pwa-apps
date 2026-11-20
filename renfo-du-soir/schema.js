@@ -34,6 +34,21 @@ export function articulations(pose) {
   return { hanche: h, milieu, epaule: e, centreTete, membres };
 }
 
+const normal360 = a => ((a % 360) + 360) % 360;
+
+/**
+ * Les angles articulaires d'une pose vue de profil, tournée vers la droite (fonction pure) :
+ *   genou : flexion, 0 = jambe tendue, positif = plié vers l'arrière (négatif = genou à l'envers)
+ *   hanche : angle tronc-cuisse, 180 = debout ; moins = cuisse vers la poitrine, plus = cuisse en arrière
+ */
+export function angles(pose) {
+  const bas = pose.t - (pose.dos || 0) / 2;
+  return [0, 1].map(i => ({
+    genou: ecart(pose.c[i], pose.tb[i]),
+    hanche: normal360(pose.c[i] - bas),
+  }));
+}
+
 /**
  * Pose calée : point le plus bas au sol (ou centrée en hauteur pour une vue de dessus), point d'ancre
  * à l'abscisse `x`.
@@ -54,9 +69,18 @@ export function caler(pose, ancre, x, vue) {
   };
 }
 
-/** Interpolation de deux poses (angles), `k` de 0 à 1. */
+/** L'écart d'angle le plus court de `x` à `y`, entre -180 et 180. */
+export function ecart(x, y) {
+  return ((((y - x) % 360) + 540) % 360) - 180;
+}
+
+/**
+ * Interpolation de deux poses (angles), `k` de 0 à 1. Chaque angle tourne par le chemin le plus
+ * court : passer de 180° à -172° fait 8°, pas un tour presque complet par l'avant du corps (le bug
+ * du superman et du bird dog, signalé après la première séance du 20/11).
+ */
 export function melanger(a, b, k) {
-  const m = (x, y) => x + (y - x) * k;
+  const m = (x, y) => x + ecart(x, y) * k;
   const paire = cle => [0, 1].map(i => m(a[cle][i], b[cle][i]));
   const res = {
     t: m(a.t, b.t), dos: m(a.dos || 0, b.dos || 0), tete: m(a.tete || 0, b.tete || 0),
@@ -143,7 +167,8 @@ export function dessiner(conteneur, def, couleur, { anime = true, teinte = true,
   const deFace = def.vue === 'face' || def.vue === 'dessus';
   const cible = creer('g', { class: 'cible', stroke: TEINTE, fill: TEINTE });
   const loin = creer('path', { class: deFace ? 'membre' : 'membre loin', stroke: couleur });
-  const corps = creer('path', { class: 'membre', stroke: couleur });
+  const corps = creer('path', { class: 'membre tronc', stroke: couleur });
+  const cou = creer('path', { class: 'membre', stroke: couleur });
   const pres = creer('path', { class: 'membre', stroke: couleur });
   const tete = creer('circle', { r: L.tete, fill: couleur });
   if (avecFleche) {
@@ -153,7 +178,7 @@ export function dessiner(conteneur, def, couleur, { anime = true, teinte = true,
       svg.append(fleche(t, [(A.hanche[0] + A.epaule[0]) / 2, (A.hanche[1] + A.epaule[1]) / 2], couleur));
     }
   }
-  svg.append(cible, loin, corps, tete, pres);
+  svg.append(cible, loin, cou, corps, tete, pres);
   conteneur.replaceChildren(svg);
 
   const peindre = pose => {
@@ -161,7 +186,8 @@ export function dessiner(conteneur, def, couleur, { anime = true, teinte = true,
     const traits = m => chemin([a.epaule, m.coude, m.main]) + ' ' + chemin([a.hanche, m.genou, m.cheville, m.orteils]);
     loin.setAttribute('d', traits(a.membres[1]));
     pres.setAttribute('d', traits(a.membres[0]));
-    corps.setAttribute('d', chemin([a.hanche, a.milieu, a.epaule]) + ' ' + chemin([a.epaule, a.centreTete]));
+    corps.setAttribute('d', chemin([a.hanche, a.milieu, a.epaule]));
+    cou.setAttribute('d', chemin([a.epaule, a.centreTete]));
     tete.setAttribute('cx', a.centreTete[0].toFixed(1));
     tete.setAttribute('cy', a.centreTete[1].toFixed(1));
     if (teinte && def.cible) {

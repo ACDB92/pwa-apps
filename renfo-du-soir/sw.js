@@ -1,5 +1,5 @@
 // Renfo du soir — service worker. Changer CACHE à chaque publication du code de l'app.
-const CACHE = 'renfo-du-soir-v1';
+const CACHE = 'renfo-du-soir-v2';
 const ASSETS = ['./', './index.html', './style.css', './app.js', './moteur.js', './exercices.js', './schema.js', './voix.js', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e =>

@@ -100,7 +100,7 @@ function rendreSoir() {
   const liste = el('ul', { class: 'circuit' }, CIRCUITS[zone].map(id => {
     const n = niveauDe(etat.niveaux, id);
     const mini = el('div', { class: 'mini' });
-    dessiner(mini, FAMILLES[id], ZONES[zone].couleur, { anime: false });
+    dessiner(mini, FAMILLES[id], ZONES[FAMILLES[id].zone].couleur, { anime: false });
     return el('li', {}, mini,
       el('div', {}, el('div', { class: 'nom' }, FAMILLES[id].nom), el('div', { class: 'var' }, FAMILLES[id].variantes[n.v]),
         el('div', { class: 'muscles-liste' }, FAMILLES[id].muscles)),
@@ -163,11 +163,13 @@ function entrerEtape() {
   run.dits = new Set();
   const seanceEl = $('seance');
   seanceEl.classList.toggle('effort', e.phase === 'effort');
-  const zone = run.seance.zone;
-  const couleur = e.phase === 'effort' ? '#FFFFFF' : ZONES[zone].couleur;
 
   // ce qu'on montre : l'exercice en cours, ou pendant un repos, celui qui vient
   const montre = e.phase === 'repos' || e.phase === 'pret' ? prochaineActive(run.i) : e;
+  // la couleur suit l'exercice : vert pour les abdos, la couleur du soir pour le reste
+  const zone = FAMILLES[montre.id]?.zone || run.seance.zone;
+  appliquerZone(seanceEl, zone);
+  const couleur = e.phase === 'effort' ? '#FFFFFF' : ZONES[zone].couleur;
   const def = defEtape(montre.id);
   const fixes = run.seance.etapes.filter(x => x.phase === e.phase);
   const etiquette = {
@@ -187,6 +189,7 @@ function entrerEtape() {
   const famille = FAMILLES[montre.id];
   $('muscles').textContent = famille ? famille.muscles : '';
   $('repere').textContent = !famille ? ''
+    : famille.repere ? famille.repere
     : famille.tenu ? 'Respire calmement · arrête-toi si la position casse'
       : 'Descends en 2-3 s · arrête-toi si la technique casse';
   $('erreur').textContent = famille?.erreur ? `À éviter : ${famille.erreur}` : '';
@@ -416,8 +419,8 @@ function rendreSuivi() {
 
   const cal = el('div', { class: 'cal' }, ['L', 'M', 'M', 'J', 'V', 'S', 'D'].map(j => el('div', { class: 'jsem' }, j)),
     calendrier(a, m, etat.seances, auj).flat().map(c => el('div', {
-      class: `case ${c.etat}`, style: c.etat === 'fait' ? { background: ZONES[c.zone].couleur } : null,
-      title: c.etat === 'joker' ? 'Joker de la semaine' : c.zone ? ZONES[c.zone].nom : '',
+      class: `case ${c.etat}`, style: c.etat === 'fait' ? { background: ZONES[c.zone]?.couleur || ZONES.abdos.couleur } : null,
+      title: c.etat === 'joker' ? 'Joker de la semaine' : ZONES[c.zone]?.nom || '',
     }, String(Number(c.jour.slice(8))))));
 
   const vueSuivi = $('vue-suivi');
@@ -435,9 +438,9 @@ function rendreSuivi() {
       el('div', { class: 'legende' }, CYCLE.map(z => el('span', {}, el('i', { style: { background: ZONES[z].couleur } }), ZONES[z].court)),
         el('span', {}, el('i', { style: { background: '#FFF1C9' } }), 'Joker'))),
     el('div', { class: 'carte courbe' }, el('h3', {}, 'Ta progression'), dessinerCourbe()),
-    el('div', { class: 'carte niveaux' }, el('h3', {}, 'Où tu en es'), CYCLE.map(z => [
-      el('h4', {}, el('span', { class: 'pastille', style: { background: ZONES[z].couleur, width: '10px', height: '10px', borderRadius: '50%', display: 'inline-block' } }), ZONES[z].nom),
-      CIRCUITS[z].map(id => ligneNiveau(id, z)),
+    el('div', { class: 'carte niveaux' }, el('h3', {}, 'Où tu en es'), [['haut', 'Haut du corps'], ['bas', 'Bas du corps'], ['abdos', 'Abdos']].map(([g, titre]) => [
+      el('h4', {}, el('span', { class: 'pastille', style: { background: ZONES[g].couleur, width: '10px', height: '10px', borderRadius: '50%', display: 'inline-block' } }), titre),
+      Object.keys(FAMILLES).filter(id => FAMILLES[id].zone === g).map(id => ligneNiveau(id, g)),
     ])),
   );
 }
