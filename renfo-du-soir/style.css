@@ -174,7 +174,6 @@ h1, h2, h3 { line-height: 1.15; margin: 0; }
 .cal .hors { background: none; color: transparent; }
 .cal .avant, .cal .futur { color: #C4B8AA; }
 .cal .fait { color: #fff; }
-.cal .joker { background: #FFF1C9; color: #9A6B00; }
 .cal .manque { background: #F6EEE6; color: #B8A99A; text-decoration: line-through; }
 .cal .ce-soir { outline: 2px dashed var(--doux); outline-offset: -2px; }
 .legende { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; font-size: 13px; color: var(--doux); }

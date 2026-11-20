@@ -79,7 +79,7 @@ document.querySelectorAll('.onglets button').forEach(b => b.addEventListener('cl
 function rendreSerie() {
   const s = serie(etat.seances.map(x => x.jour), aujourdhui());
   $('serie').replaceChildren(s.soirs
-    ? el('span', {}, `🔥 ${pluriel(s.soirs, 'soir')}`, s.jokers ? el('small', {}, ` · ${pluriel(s.jokers, 'joker')}`) : null)
+    ? el('span', {}, `🔥 ${pluriel(s.soirs, 'soir')}`)
     : el('span', {}, '🌙 Premier soir'));
 }
 
@@ -420,7 +420,7 @@ function rendreSuivi() {
   const cal = el('div', { class: 'cal' }, ['L', 'M', 'M', 'J', 'V', 'S', 'D'].map(j => el('div', { class: 'jsem' }, j)),
     calendrier(a, m, etat.seances, auj).flat().map(c => el('div', {
       class: `case ${c.etat}`, style: c.etat === 'fait' ? { background: ZONES[c.zone]?.couleur || ZONES.abdos.couleur } : null,
-      title: c.etat === 'joker' ? 'Joker de la semaine' : ZONES[c.zone]?.nom || '',
+      title: ZONES[c.zone]?.nom || '',
     }, String(Number(c.jour.slice(8))))));
 
   const vueSuivi = $('vue-suivi');
@@ -428,15 +428,14 @@ function rendreSuivi() {
     el('div', { class: 'carte' }, el('div', { class: 'chiffres' },
       el('div', {}, el('strong', {}, String(s.soirs)), el('span', {}, 'soirs d’affilée')),
       el('div', {}, el('strong', {}, String(etat.seances.length)), el('span', {}, 'séances en tout')),
-      el('div', {}, el('strong', {}, s.jokerDispo ? '1' : '0'), el('span', {}, 'joker cette semaine')))),
+      el('div', {}, el('strong', {}, String(s.record)), el('span', {}, 'meilleure série')))),
     el('div', { class: 'carte' },
       el('div', { class: 'mois-tete' },
         el('button', { type: 'button', 'aria-label': 'Mois précédent', disabled: cle <= premierMois, onclick: () => changerMois(-1) }, '‹'),
         el('h3', {}, titre[0].toUpperCase() + titre.slice(1)),
         el('button', { type: 'button', 'aria-label': 'Mois suivant', disabled: cle >= auj.slice(0, 7), onclick: () => changerMois(1) }, '›')),
       cal,
-      el('div', { class: 'legende' }, CYCLE.map(z => el('span', {}, el('i', { style: { background: ZONES[z].couleur } }), ZONES[z].court)),
-        el('span', {}, el('i', { style: { background: '#FFF1C9' } }), 'Joker'))),
+      el('div', { class: 'legende' }, CYCLE.map(z => el('span', {}, el('i', { style: { background: ZONES[z].couleur } }), ZONES[z].court)))),
     el('div', { class: 'carte courbe' }, el('h3', {}, 'Ta progression'), dessinerCourbe()),
     el('div', { class: 'carte niveaux' }, el('h3', {}, 'Où tu en es'), [['haut', 'Haut du corps'], ['bas', 'Bas du corps'], ['abdos', 'Abdos']].map(([g, titre]) => [
       el('h4', {}, el('span', { class: 'pastille', style: { background: ZONES[g].couleur, width: '10px', height: '10px', borderRadius: '50%', display: 'inline-block' } }), titre),

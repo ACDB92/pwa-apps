@@ -8,7 +8,7 @@
 // - la progression : un ressenti noté une fois, à la fin (facile / ok / dur), fait monter ou descendre
 //   les exercices de 5 s ; un exercice peut être noté à part. Passer à la variante plus dure se
 //   propose (`pret`) et ne se fait que sur un « oui » ; redescendre d'une variante reste automatique ;
-// - la série : un soir tenu = une séance d'au moins un tour ; un joker par semaine couvre un soir manqué.
+// - la série : un soir tenu = une séance d'au moins un tour ; un soir manqué remet la série à zéro.
 
 import { CYCLE, CIRCUITS, FAMILLES, ECHAUFFEMENT, RETOUR_AU_CALME, ETAPES_FIXES } from './exercices.js';
 
@@ -38,7 +38,7 @@ export function ajouterJours(jour, n) {
   return texteJour(d);
 }
 
-/** Le lundi de la semaine d'un jour : la clé du joker hebdomadaire. */
+/** Le lundi de la semaine d'un jour : le début d'une ligne du calendrier. */
 export function lundiDe(jour) {
   const d = versDate(jour);
   return ajouterJours(jour, -((d.getDay() + 6) % 7));
@@ -189,40 +189,27 @@ export function enregistrer(etat, { zone, format, tours, ressentis = {}, debut, 
 // ── La série de soirs ────────────────────────────────────────────────────────
 
 /**
- * Les soirs couverts par un joker : dans chaque semaine (lundi → dimanche), le premier soir manqué
- * entre la première séance et hier. Aujourd'hui n'est jamais manqué : la soirée n'est pas finie.
+ * La série en cours : soirs tenus d'affilée, jusqu'à ce soir (ou hier, tant que ce soir n'est pas fait :
+ * la soirée n'est pas finie). Pas de joker (retiré le 20/11) : un soir manqué remet la série à zéro.
  */
-export function jokers(jours, aujourdhui) {
-  const faits = new Set(jours);
-  const couverts = new Set();
-  if (!faits.size) return couverts;
-  const premier = [...faits].sort()[0];
-  const semainesPrises = new Set();
-  for (let j = premier; j < aujourdhui; j = ajouterJours(j, 1)) {
-    if (faits.has(j)) continue;
-    const semaine = lundiDe(j);
-    if (semainesPrises.has(semaine)) continue;
-    semainesPrises.add(semaine);
-    couverts.add(j);
-  }
-  return couverts;
-}
-
-/** La série en cours : soirs tenus d'affilée (les jokers ne cassent pas la série sans la grossir). */
 export function serie(jours, aujourdhui) {
   const faits = new Set(jours);
-  const couverts = jokers(jours, aujourdhui);
   const faitAujourdhui = faits.has(aujourdhui);
   let soirs = 0;
-  let jokersUtilises = 0;
-  for (let j = faitAujourdhui ? aujourdhui : ajouterJours(aujourdhui, -1); ; j = ajouterJours(j, -1)) {
-    if (faits.has(j)) soirs++;
-    else if (couverts.has(j)) jokersUtilises++;
-    else break;
-  }
-  const semaine = lundiDe(aujourdhui);
-  const jokerDispo = ![...couverts].some(j => lundiDe(j) === semaine);
-  return { soirs, jokers: jokersUtilises, faitAujourdhui, jokerDispo };
+  for (let j = faitAujourdhui ? aujourdhui : ajouterJours(aujourdhui, -1); faits.has(j); j = ajouterJours(j, -1)) soirs++;
+  return { soirs, faitAujourdhui, record: meilleureSerie(jours) };
+}
+
+/** La plus longue série de soirs d'affilée jamais tenue. */
+export function meilleureSerie(jours) {
+  const tries = [...new Set(jours)].sort();
+  let record = 0;
+  let courante = 0;
+  tries.forEach((j, i) => {
+    courante = i > 0 && ajouterJours(tries[i - 1], 1) === j ? courante + 1 : 1;
+    record = Math.max(record, courante);
+  });
+  return record;
 }
 
 // ── Le suivi ─────────────────────────────────────────────────────────────────
@@ -230,7 +217,6 @@ export function serie(jours, aujourdhui) {
 /** Le calendrier d'un mois : semaines de lundi à dimanche, chaque case { jour, etat, zone }. */
 export function calendrier(annee, mois, seances, aujourdhui) {
   const parJour = new Map(seances.map(s => [s.jour, s]));
-  const couverts = jokers([...parJour.keys()], aujourdhui);
   const debut = [...parJour.keys()].sort()[0] || aujourdhui;
   const premier = `${annee}-${deux(mois)}-01`;
   let j = lundiDe(premier);
@@ -240,7 +226,7 @@ export function calendrier(annee, mois, seances, aujourdhui) {
     for (let i = 0; i < 7; i++, j = ajouterJours(j, 1)) {
       const s = parJour.get(j);
       const etat = j.slice(0, 7) !== premier.slice(0, 7) ? 'hors'
-        : s ? 'fait' : couverts.has(j) ? 'joker' : j > aujourdhui ? 'futur' : j === aujourdhui ? 'ce-soir'
+        : s ? 'fait' : j > aujourdhui ? 'futur' : j === aujourdhui ? 'ce-soir'
           : j < debut ? 'avant' : 'manque';
       semaine.push({ jour: j, etat, zone: s?.zone || null });
     }
