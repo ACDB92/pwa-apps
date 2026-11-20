@@ -82,21 +82,23 @@ export const FAMILLES = {
     poses: [{ ...PLANCHE_COUDES }, { ...PLANCHE_HAUTE }],
   },
   superman: {
-    zone: 'haut', nom: 'Superman', muscles: 'dos, lombaires', cible: ['tronc'],
+    zone: 'haut', nom: 'Superman alterné', muscles: 'dos, lombaires, fessiers', cible: ['tronc'],
     depart: 0,
     variantes: [
-      'Superman alterné (bras et jambe opposés)',
-      'Superman, bras et jambes ensemble',
-      'Superman tenu 3 s en haut',
-      'Nageur (bras et jambes battent en l’air)',
+      'Superman alterné',
+      'Superman alterné, 2 s tenu en haut',
+      'Superman alterné lent (3 s pour monter)',
+      'Nageur (alternance rapide, bras et jambes décollés)',
     ],
-    consignes: ['Allongé sur le ventre, bras tendus devant', 'Décolle bras, poitrine et jambes en même temps', 'Le regard vers le sol'],
-    voix: 'Le regard vers le sol, la nuque longue.',
-    erreur: 'Lever la tête pour regarder devant : la nuque se casse.',
+    consignes: ['Allongé sur le ventre, bras tendus devant', 'Lève le bras droit et la jambe gauche, tendus, puis repose', 'Puis le bras gauche et la jambe droite, et ainsi de suite'],
+    voix: 'Bras et jambe opposés, le regard vers le sol.',
+    repere: 'Monte en 1 s, redescends lentement · arrête-toi si le bas du dos tire',
+    erreur: 'Lever la tête ou tourner le bassin pour monter plus haut.',
     ancre: 'hanche',
+    // bras proche + jambe éloignée levés, puis l'inverse
     poses: [
-      { ...SUR_LE_VENTRE },
-      { t: -10, dos: -12, tete: 5, b: [-14, -14], ab: [-14, -14], c: [-172, -172], tb: [-172, -172] },
+      { t: -2, tete: 3, b: [-24, 0], ab: [-24, 0], c: [180, -160], tb: [180, -160] },
+      { t: -2, tete: 3, b: [0, -24], ab: [0, -24], c: [-160, 180], tb: [-160, 180] },
     ],
   },
 
