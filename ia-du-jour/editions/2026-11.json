@@ -1,6 +1,138 @@
 {
  "editions": [
   {
+   "date": "2026-11-21",
+   "type": "jour",
+   "rien_de_notable": false,
+   "publie_le": "2026-11-21T06:34+00:00",
+   "sujets": [
+    {
+     "titre": "Un mathématicien d'Anthropic dit avoir prouvé l'hypothèse de Riemann avec Claude",
+     "pour": "Vous deux",
+     "usage": "general",
+     "fait": "Levent Alpöge, mathématicien salarié d'Anthropic, affirme avoir résolu avec Claude un problème ouvert depuis 167 ans sur la répartition des nombres premiers. Sa preuve n'a pas encore été vérifiée de façon indépendante.",
+     "concretement": "Par exemple, quand un collègue annonce avoir bouclé un dossier énorme, on attend qu'un second relecteur refasse les calculs avant de le citer. Ici aussi : à citer comme une annonce, pas comme un fait établi.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.numerama.com/tech/2380265-un-graal-des-maths-tombe-un-chercheur-danthropic-revendique-avoir-resolu-lhypothese-de-riemann-avec-lia-claude.html",
+     "source": "Numerama"
+    },
+    {
+     "titre": "Signal bloque les captures d'écran pour tenir les assistants IA à l'écart",
+     "pour": "Vous deux",
+     "usage": "quotidien",
+     "fait": "La messagerie Signal active par défaut de nouvelles protections sur Android et iOS 27. Elles empêchent les assistants IA du téléphone de lire vos conversations affichées à l'écran. On peut les désactiver dans les réglages.",
+     "concretement": "Les messages sont protégés pendant leur envoi, mais plus une fois affichés en clair à l'écran : c'est là qu'un assistant peut les lire.",
+     "origine_exemple": "article",
+     "lien": "https://www.frandroid.com/culture-tech/intelligence-artificielle/google-gemini/3333185_signal-bloque-les-captures-decran-pour-empecher-gemini-et-siri-ai-de-lire-vos-messages",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "La BCE place l'IA en tête des inquiétudes des banques, notamment pour la cybersécurité",
+     "pour": "Alix",
+     "usage": "banque",
+     "fait": "La Banque centrale européenne classe l'IA au premier rang des préoccupations immédiates du secteur financier. Sa présidente met en garde contre des cybermenaces amplifiées par l'IA, après l'attaque subie par une banque française.",
+     "concretement": "Par exemple, dans une mission de conseil auprès d'une banque, la question des pirates équipés d'IA et de la solidité des prestataires passe désormais en tête de la liste des risques à examiner.",
+     "origine_exemple": "illustration",
+     "lien": "https://news.google.com/rss/articles/CBMi9wFBVV95cUxOVTRJMmJSZF9WNWliSGkxbnJVRnNuMHczMU1md0hjTkMzeVVxbnFPWFl6akktLXZuc0x5VXBtcTlTR0RRSWVKVHgwVkFZUjVHYVNYNlNCNGJvcm1ZSHJ2MjBiNVBQM3FHejZDbTRtaTF4MWdaUUstRDZ6S2dQVkZyRzcwSi1qTFFkWjRZVVJYY25SeU02WklPMnhReXdVbVpOdlp0X0NoNW5Ua0ctNjk3Y01HM3BqM3ZjejhJSzlIMkt4ZkxxNGZVX2tnbVd6T3NkYkRRQ0FWdGFPY3NXVzN4ZmJSalY2UzdiWGZQUUN1cm0xeFVnQi1r0gH3AUFVX3lxTE5VNEkyYlJkX1Y1aWJIaTFuclVGc24wdzMxTWZ3SGNOQzN5VXFucU9YWXpqSS0tdm5zTHlVcG1xOVNHRFFJZUpUeDBWQVlSNUdhU1g2U0I0Ym9ybVlIcnYyMGI1UFAzcUd6NkNtNG1pMXgxZ1pRSy1ENnpLZ1BWRnJHNzBKLWpMUWRaNFlVUlhjblJ5TTZaSU8yeFF5d1VtWk52WnRfQ2g1blRrRy02OTdjTUczcGozdmN6OElLOUgyS3hmTHE0ZlVfa2dtV3pPc2RiRFFDQVZ0YU9jc1dXM3hmYlJqVjZTN2JYZlBRQ3VybTF4VWdCLWs?oc=5",
+     "source": "Boursorama"
+    },
+    {
+     "titre": "Une cyberattaque assistée par IA perturbe des outils internes de la Commission européenne",
+     "pour": "Vous deux",
+     "usage": "general",
+     "fait": "La Commission européenne a confirmé une cyberattaque assistée par l'IA. Pendant plus de dix jours, ses employés n'ont pas pu utiliser normalement plusieurs outils internes. Selon le FBI, l'outil de piratage visé peut passer d'un premier repérage à un accès d'administrateur en moins de trois heures.",
+     "concretement": "Les salaires sont tombés à l'heure, mais certains employés n'ont pas pu poser de congés ni remplir leurs feuilles de temps.",
+     "origine_exemple": "article",
+     "lien": "https://www.frandroid.com/culture-tech/3332053_paie-conges-soins-la-commission-europeenne-piratee-avec-un-outil-ia-en-acces-libre",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "L'IA excelle en code, mais reste en retrait sur les tâches de jugement",
+     "pour": "Côme",
+     "usage": "entretien",
+     "fait": "Un nouveau rapport de l'organisme METR indique que l'IA progresse vite, mais moins bien sur les tâches qui demandent du jugement que sur le code. Aucune des évaluations conçues par les IA n'a été jugée utile par les chercheurs.",
+     "concretement": "Par exemple, pour un entretien : l'IA peut écrire une requête de données, mais choisir quelle question mérite d'être posée aux chiffres reste ton travail.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.technologyreview.com/2026/11/20/1149399/the-most-misunderstood-graph-in-ai-just-got-a-major-update/",
+     "source": "MIT Technology Review"
+    }
+   ],
+   "autres": [
+    {
+     "titre": "Chez Meta, l'agent IA Muse inquiète des salariés pour la protection des données",
+     "lien": "https://siecledigital.fr/2026/11/20/chez-meta-muse-inquiete-les-salaries-apres-des-incidents-impliquant-des-donnees-confidentielles/",
+     "source": "Siècle Digital"
+    },
+    {
+     "titre": "Aux États-Unis, l'IA est soupçonnée dans une série de pannes informatiques",
+     "lien": "https://siecledigital.fr/2026/11/20/aux-etats-unis-lia-est-soupconnee-detre-a-lorigine-de-pannes-informatiques-en-serie/",
+     "source": "Siècle Digital"
+    },
+    {
+     "titre": "Les agents d'achat IA pourraient cacher le prix le plus bas aux Européens",
+     "lien": "https://news.google.com/rss/articles/CBMiggFBVV95cUxQeXBIR3FpMnNDSFFlNTVFQ3NpX2FId3p5eE9qMThsNXlZZTlTQmtpYzJlRllNaENSLTRwWGY2c0ZpeUhlZjhmUEdsQXZDd0ZjQmZIMC0tOGVKZTNPVnRHS2lZcFc4d3J1NVRXdmFwRzV4Qjk4Z0R5RFF2djlvSnFyVTRR?oc=5",
+     "source": "Quartz en Français"
+    },
+    {
+     "titre": "Wall Street perd des centaines de milliards de dollars sur fond de doutes sur l'IA",
+     "lien": "https://news.google.com/rss/articles/CBMixgFBVV95cUxQczZYZ19TMEt0Z0dpNm9McWE0NTNRSi16QWhuY2pCQmw0aG5kVG12b1ZPQlF3TEswTmdRMDdjQjlWSnIwWlp5MTlvcUlYS2xEY0hCMlVuRGVLeGlSTnVld3JoN1BkQzNjLWowcTRiUGVTN3pmNVBtS0pHU0hYZkhacy1Dbm5tWXp5d3paa3IzdVU5NjJITHJNX1ZIOTBNenhfeXZvM24zX0o5THFTUXdjLWlFUG0tSm5meVBlR2w3WTBPLXZGa1E?oc=5",
+     "source": "France 24"
+    },
+    {
+     "titre": "Donald Trump menace de taxer les centres de données d'IA installés hors des États-Unis",
+     "lien": "https://www.theverge.com/policy/1038892/trump-foreign-data-centers-tax",
+     "source": "The Verge"
+    },
+    {
+     "titre": "Donald Trump refuse toute réglementation mondiale de l'IA",
+     "lien": "https://siecledigital.fr/2026/11/20/donald-trump-refuse-toute-reglementation-mondiale-de-lintelligence-artificielle/",
+     "source": "Siècle Digital"
+    },
+    {
+     "titre": "Mistral installe à Singapour son siège pour l'Asie-Pacifique",
+     "lien": "https://www.actuia.com/actualite/mistral-fait-de-singapour-son-siege-asie-pacifique-et-un-pole-de-recherche/",
+     "source": "ActuIA"
+    },
+    {
+     "titre": "Washington a laissé partir vers la Chine une masse de puces d'IA",
+     "lien": "https://news.google.com/rss/articles/CBMiugFBVV95cUxQME5rd1BudWlsNmJZQjM1MVl1eVJIYzdaQzg0RmxMX1Z4M1RVVllaNDNJNnFmcTNsSDJienVkSzVZVUZlN0ZEYVh0U2txZzYyMWlMN2JCUVlfTHZxOUFhODlaMDA5M1A5MnZfcmVfRXVDM0tHbjZTTkxmQXhub1BNYUJpS1VjUXlyazZHbzdvRnY2UVJGVVBBQmY3M0JCWURmRm5RbE9TY0JMYzNScnpIU0t2cFZzX21wZnc?oc=5",
+     "source": "Le Revenu"
+    }
+   ],
+   "lexique": [
+    {
+     "terme": "Apprentissage par renforcement",
+     "theme": "ia",
+     "definition": "Méthode où une IA essaie une tâche, est récompensée quand elle réussit et corrigée quand elle échoue, et s'améliore ainsi par essais successifs.",
+     "exemple": "Un programme d'échecs qui joue contre lui-même et retient peu à peu les coups qui mènent à la victoire."
+    },
+    {
+     "terme": "Reproductibilité",
+     "theme": "data-bi",
+     "definition": "Qualité d'un résultat qu'une autre personne peut retrouver en refaisant la même démarche avec les mêmes données.",
+     "exemple": "Un chiffre de tableau de bord que deux analystes recalculent chacun de leur côté et obtiennent identique."
+    },
+    {
+     "terme": "Résilience opérationnelle",
+     "theme": "banque",
+     "definition": "Capacité d'une banque ou d'une assurance à continuer ses services essentiels malgré une panne, une cyberattaque ou la défaillance d'un prestataire.",
+     "exemple": "Une banque dont les paiements par carte restent possibles même quand son système principal est à l'arrêt."
+    },
+    {
+     "terme": "Rançongiciel",
+     "theme": "quotidien",
+     "definition": "Logiciel malveillant qui bloque les fichiers d'un ordinateur ou d'un réseau et réclame de l'argent pour les débloquer.",
+     "exemple": "Une mairie dont tous les documents deviennent illisibles jusqu'au paiement demandé par les pirates."
+    },
+    {
+     "terme": "Gouvernance des données",
+     "theme": "data-bi",
+     "definition": "Ensemble de règles qui disent qui peut consulter, modifier et partager quelles données dans une organisation.",
+     "exemple": "Seul le service des ressources humaines voit les salaires, et chaque consultation est enregistrée."
+    }
+   ]
+  },
+  {
    "date": "2026-11-20",
    "type": "jour",
    "rien_de_notable": false,
