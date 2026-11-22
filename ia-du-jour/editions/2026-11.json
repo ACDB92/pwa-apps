@@ -1,6 +1,101 @@
 {
  "editions": [
   {
+   "date": "2026-11-22",
+   "type": "semaine",
+   "rien_de_notable": false,
+   "publie_le": "2026-11-22T06:33+00:00",
+   "sujets": [
+    {
+     "titre": "Anthropic, créateur de Claude, réalise la plus grosse entrée en Bourse de l'histoire",
+     "pour": "Vous deux",
+     "usage": "general",
+     "fait": "L'entreprise a levé 81,3 milliards de dollars en vendant ses actions au public, à 83 dollars pièce. C'est la première entreprise spécialisée dans les grands modèles d'IA à entrer en Bourse, et le record dépasse celui de SpaceX.",
+     "concretement": "Par exemple, quand une telle entreprise est cotée, ses pertes et ses dépenses deviennent publiques : n'importe qui peut les lire dans ses comptes.",
+     "origine_exemple": "illustration",
+     "lien": "https://siecledigital.fr/2026/11/19/anthropic-realise-la-plus-grosse-introduction-en-bourse-de-lhistoire-et-pulverise-le-record-de-spacex/",
+     "source": "Siècle Digital",
+     "repris_du": "2026-11-20"
+    },
+    {
+     "titre": "Google lance Gemini Finance, une IA qui lit vos comptes bancaires",
+     "pour": "Alix",
+     "usage": "banque",
+     "fait": "Google lance Gemini Finance, une IA qui analyse vos comptes bancaires, dans le même esprit que ce que propose déjà ChatGPT.",
+     "concretement": "Par exemple, un client demande en une phrase où part son argent chaque mois, et l'assistant répond à sa place au lieu de lui faire fouiller ses relevés. Pour une banque, cela change la relation avec le client.",
+     "origine_exemple": "illustration",
+     "lien": "https://news.google.com/rss/articles/CBMiwwFBVV95cUxQVXZndWVaMHN3SXRGMzRZS0lMNzNMQjg1NFpFdWhVVTExZ0lJdHQ4SjdRU20xZy1IMzVjekQxQnlraFZkcjV2Sm1ORHZFVFRpTU1KVm5fVmpFUG4tVmlSTTcxb21zQURYeE1tY0VIODlvZUE5bXJrMFRtUVVldjFUVVhzZHVnMjRPYkpHMmsxUXhqZ3dwUEJ1dkNXVEhsVG1YTy1jNmV4WUltY0lhWmFEOXloaHB0ZXJIRmZhY1Jaazd5cUk?oc=5",
+     "source": "Clubic",
+     "repris_du": "2026-11-16"
+    },
+    {
+     "titre": "Un agent IA cherche seul pourquoi les données cassent et propose le correctif",
+     "pour": "Côme",
+     "usage": "data-bi",
+     "fait": "Databricks ouvre en test public Genie ZeroOps, un agent (une IA qui enchaîne les tâches seule) qui détecte les pannes des chaînes de traitement de données, cherche la cause et propose un correctif. Pendant les essais privés, il a observé plus de 80 000 incidents réels chez des clients.",
+     "concretement": "Par exemple, une table cesse de se mettre à jour la nuit et un tableau de bord affiche un mauvais chiffre : l'agent trouve l'étape fautive, mais ne change rien sans accord d'une personne.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.databricks.com/blog/genie-zeroops-now-public-beta-autonomous-agent-fixes-data-pipelines-lessons-80000-customer",
+     "source": "Databricks",
+     "repris_du": "2026-11-20"
+    },
+    {
+     "titre": "L'IA ne fait pas gagner de temps, selon une étude sur près de 9 000 salariés",
+     "pour": "Côme",
+     "usage": "entretien",
+     "fait": "Une étude de l'éditeur ActivTrak a suivi près de 9 000 salariés pendant 6 mois. Ceux qui utilisent l'IA ont des journées plus longues et des séances de concentration plus courtes, 37,8 minutes contre 48,2 minutes.",
+     "concretement": "En entretien, tu peux citer ce chiffre pour nuancer le discours habituel : l'IA accélère certaines tâches, mais elle peut aussi multiplier les interruptions et rallonger la journée.",
+     "origine_exemple": "article",
+     "lien": "https://siecledigital.fr/2026/11/16/lia-nous-fait-elle-vraiment-gagner-du-temps-les-resultats-dune-etude-sur-9-000-salaries-surprennent/",
+     "source": "Siècle Digital",
+     "repris_du": "2026-11-17"
+    },
+    {
+     "titre": "Google rend gratuit son assistant IA qui agit à votre place",
+     "pour": "Vous deux",
+     "usage": "outil",
+     "fait": "Google rend gratuit « Tasks », un agent, c'est-à-dire une IA qui enchaîne les tâches seule. Il prépare des plans de repas, gère l'agenda et cherche dans vos e-mails les dépenses récurrentes. Aux États-Unis, il peut aussi appeler des commerces et acheter avec Google Pay.",
+     "concretement": "Par exemple, vous lui demandez de retrouver les abonnements que vous payez sans les utiliser : il fouille vos messages et dresse la liste.",
+     "origine_exemple": "article",
+     "lien": "https://www.theverge.com/tech/1035756/google-spark-ai-tasks-free",
+     "source": "The Verge",
+     "repris_du": "2026-11-18"
+    }
+   ],
+   "lexique": [
+    {
+     "terme": "Réglage fin",
+     "theme": "ia",
+     "definition": "Entraînement complémentaire d'une IA déjà construite, sur des exemples propres à un métier, pour qu'elle réponde mieux dans ce domaine précis.",
+     "exemple": "Une équipe fait ajuster une IA généraliste avec ses propres comptes rendus pour qu'elle parle comme elle."
+    },
+    {
+     "terme": "Valeur manquante",
+     "theme": "data-bi",
+     "definition": "Case vide dans un tableau de données. Si on ne la traite pas, elle peut fausser une moyenne ou casser un tableau de bord.",
+     "exemple": "Un tableau de ventes où la région n'est pas renseignée pour certaines lignes : elles disparaissent du graphique par région."
+    },
+    {
+     "terme": "Taux directeur",
+     "theme": "banque",
+     "definition": "Taux fixé par la banque centrale, auquel les banques se refinancent. Il influence le coût des crédits et le rendement de l'épargne.",
+     "exemple": "Quand le taux directeur baisse, les crédits immobiliers deviennent en général moins chers."
+    },
+    {
+     "terme": "Agrégateur de comptes",
+     "theme": "banque",
+     "definition": "Service qui rassemble sur un seul écran les comptes ouverts dans plusieurs banques, avec l'accord du client.",
+     "exemple": "Une application qui montre d'un coup d'œil le compte courant et l'épargne détenus dans deux banques différentes."
+    },
+    {
+     "terme": "Sauvegarde",
+     "theme": "quotidien",
+     "definition": "Copie de vos fichiers conservée ailleurs que sur votre appareil, pour les retrouver en cas de perte, de panne ou de vol.",
+     "exemple": "Vos photos de vacances copiées chaque nuit sur un disque externe ou un espace en ligne."
+    }
+   ]
+  },
+  {
    "date": "2026-11-21",
    "type": "jour",
    "rien_de_notable": false,
