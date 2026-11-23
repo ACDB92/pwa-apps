@@ -1,6 +1,123 @@
 {
  "editions": [
   {
+   "date": "2026-11-23",
+   "type": "jour",
+   "rien_de_notable": false,
+   "publie_le": "2026-11-23T06:34+00:00",
+   "sujets": [
+    {
+     "titre": "Microsoft propose à 60 000 salariés de partir, à cause de l'IA",
+     "pour": "Vous deux",
+     "usage": "entretien",
+     "fait": "Le géant du logiciel a lancé un plan de départ volontaire pour 60 000 personnes, près d'un quart de ses effectifs. Son patron explique que l'IA change la façon de travailler, sans parler de simple remplacement des humains.",
+     "concretement": "Dans l'équipe qui a créé l'agent IA de l'entreprise (une IA qui enchaîne les tâches seule), 11 personnes seulement travaillaient l'an dernier. Un chiffre à citer en entretien.",
+     "origine_exemple": "article",
+     "lien": "https://www.presse-citron.net/salaries-microsoft-quitter-entreprise/",
+     "source": "Presse-citron"
+    },
+    {
+     "titre": "Google Assistant disparaîtra des enceintes Nest au profit de Gemini",
+     "pour": "Vous deux",
+     "usage": "quotidien",
+     "fait": "Google a annoncé que son ancien assistant vocal s'arrêtera sur les enceintes et écrans connectés le 2 août 2027, remplacé par Gemini. L'application Nest s'arrêtera dès le 25 janvier 2027 : il faudra passer par l'application Google Home.",
+     "concretement": "Si vous avez des clips enregistrés dans l'application Nest, pensez à les télécharger avant le 25 janvier : ils ne suivront pas.",
+     "origine_exemple": "article",
+     "lien": "https://www.frandroid.com/culture-tech/intelligence-artificielle/google-gemini/3333801_google-assistant-va-disparaitre-des-enceintes-google-nest-au-profit-de-gemini",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "Block offre à ses commerçants l'IA qu'il utilise pour lui-même",
+     "pour": "Alix",
+     "usage": "banque",
+     "fait": "Cette entreprise de paiement a passé plus d'un an à réorganiser et réduire ses équipes grâce à l'IA. Elle propose maintenant cette technologie aux commerçants qui encaissent avec ses outils, pour les aider à mieux gérer leur activité.",
+     "concretement": "Par exemple, une petite boutique pourrait demander à l'outil de l'aider à suivre ses ventes, sans embaucher personne pour cela.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.americanbanker.com/payments/news/how-block-is-pushing-its-ai-to-merchants",
+     "source": "American Banker"
+    },
+    {
+     "titre": "Tesla déploie une nouvelle version de sa conduite assistée par IA",
+     "pour": "Vous deux",
+     "usage": "quotidien",
+     "fait": "Tesla a commencé à diffuser la version 15 de sa conduite supervisée à ses premiers testeurs, avec un réseau neuronal (le cerveau de l'IA) dix fois plus gros. En France, le système reste interdit.",
+     "concretement": "Par exemple, une voiture qui lit mieux les panneaux et freine devant un trou dans la route, mais le conducteur doit rester attentif.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.frandroid.com/marques/tesla/3333971_tesla-lance-son-spectaculaire-fsd-v15-pourquoi-ces-nouveautes-vont-encore-retarder-son-arrivee-en-france",
+     "source": "Frandroid"
+    }
+   ],
+   "autres": [
+    {
+     "titre": "Wells Fargo met en place des règles pour encadrer ses agents IA",
+     "lien": "https://news.google.com/rss/articles/CBMif0FVX3lxTE00WVpuc0dvRlZ4RGF0NlZ1Z0hWT2hHckVxQjFJb0lZcUM4b0RSWlV0NUhIRFZWWXM0bmhBQW5yZWVMQlFxdC1MdldyMndkN3VkNkdKWjRCYU56WEV6THFwRk9vcUltdHZNVlRYNGQybmpTQWVRNVlQRzNDZS13ekk?oc=5",
+     "source": "Brief IA"
+    },
+    {
+     "titre": "Visa permet de vérifier la carte de paiement des agents IA",
+     "lien": "https://news.google.com/rss/articles/CBMilwFBVV95cUxPNDFNekRyX2ZoVUlEQVVGdHo2eWZGMDlaNkg4LVI3NWRJYy10RHpuSGY0WlMzdXdfazVMN0xJeE51MnUzckx6R1ZjUHZVS3FtNGJiUEFrU1VYaUxUSFkxcjNQS1lQcjlRWDFHSXREVTF5OUNtOGdTelZ6NVQ2c0I1WG5PYXRrVHNYUVRGbzlZd1dBNWhuU0lR?oc=5",
+     "source": "Unite.AI"
+    },
+    {
+     "titre": "Washington autorise Nvidia à vendre 879 000 puces d'IA à des géants chinois",
+     "lien": "https://news.google.com/rss/articles/CBMirgFBVV95cUxNT1U4c0RGdzlTc3F0bVhPS1llNnZsRkIyNUI1TDhFdWtMZnZtTjV2Q0RaWFhyVXBCMk82UkIyVUNocnBxUERDTGdJalh2Vk4tcGUySDZNU3F0czUtU2tXS1ZuZUc5Vk9CYWlKOWE4ZUxuSEVhVkRqNDlOcjZQOHM0WURuck5iVEtBRkYwVFF4azhOQld6d2xJaURheGxQdHM3QVk5cklQY216TXYzWXc?oc=5",
+     "source": "Korben"
+    },
+    {
+     "titre": "La fortune du fondateur de Nvidia a chuté de près de 30 % en deux semaines",
+     "lien": "https://news.google.com/rss/articles/CBMi0gFBVV95cUxPa1EyTEhqSVRJX2tLdHBNRHJsU2lEdFM1WWdBdkZ5WXdGUUVfeWlXRHF3bTJmVEw5c0h0SjMzTTFiUGtxckprQlB1eU1NQnZOOXJJYllLOWFVN3pjUzFDX0RZT2xDYkxiSzdNUWZoaV9HMVhRT2ExTEJzVUNUVlRPVU5henNJSHNTMUZ6WjAyQlpsbnhnOFdqcDJLdjliclR0cHZxNUtXdkV1ejNDU0J5LUdRTVJ5ODl3UXg2T2JNQjB3ZTFPbGJHaGNDUWN6UzhKNFE?oc=5",
+     "source": "Vietnam.vn"
+    },
+    {
+     "titre": "Le scientifique en chef d'OpenAI parle des moyens de limiter le développement de l'IA",
+     "lien": "https://techcrunch.com/2026/11/22/openais-chief-scientist-has-thoughts-on-how-to-limit-ai-development/",
+     "source": "TechCrunch"
+    },
+    {
+     "titre": "Pourquoi les centres de données sont au cœur de la colère contre les géants de la tech",
+     "lien": "https://techcrunch.com/2026/11/22/why-data-centers-are-at-the-center-of-the-big-tech-backlash/",
+     "source": "TechCrunch"
+    },
+    {
+     "titre": "Un jeu vidéo retire une musique faite par IA après des critiques de joueurs",
+     "lien": "https://www.theverge.com/games/1039770/binding-of-isaac-ai-music",
+     "source": "The Verge"
+    }
+   ],
+   "lexique": [
+    {
+     "terme": "Boîte noire",
+     "theme": "ia",
+     "definition": "Un système dont on voit ce qui entre et ce qui sort, mais dont on ne sait pas expliquer le raisonnement interne. C'est souvent le cas des IA récentes.",
+     "exemple": "Une IA refuse une demande de crédit sans que personne ne puisse dire précisément pourquoi."
+    },
+    {
+     "terme": "Tableau croisé dynamique",
+     "theme": "data-bi",
+     "definition": "Un tableau qui regroupe et additionne des données selon les critères choisis, et qu'on réorganise en quelques clics pour les voir sous un autre angle.",
+     "exemple": "On passe d'un total des ventes par mois à un total par région, sans refaire le calcul à la main."
+    },
+    {
+     "terme": "Connaissance du client",
+     "theme": "banque",
+     "definition": "L'obligation, pour une banque, de vérifier l'identité de ses clients et de comprendre l'origine de leur argent avant de travailler avec eux.",
+     "exemple": "À l'ouverture d'un compte professionnel, la banque demande des justificatifs d'identité et d'activité."
+    },
+    {
+     "terme": "Cookie publicitaire",
+     "theme": "quotidien",
+     "definition": "Un petit fichier déposé par un site dans votre navigateur pour vous reconnaître et suivre ce que vous consultez, surtout afin de vous montrer des publicités ciblées.",
+     "exemple": "Après avoir regardé des chaussures en ligne, vous en revoyez des publicités sur d'autres sites."
+    },
+    {
+     "terme": "Visualisation de données",
+     "theme": "data-bi",
+     "definition": "La mise en images de chiffres, sous forme de graphiques ou de cartes, pour qu'on comprenne d'un coup d'œil ce qu'ils racontent.",
+     "exemple": "Une courbe qui montre les ventes mois après mois se lit plus vite qu'un tableau de chiffres."
+    }
+   ]
+  },
+  {
    "date": "2026-11-22",
    "type": "semaine",
    "rien_de_notable": false,
