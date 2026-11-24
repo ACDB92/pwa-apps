@@ -1,6 +1,138 @@
 {
  "editions": [
   {
+   "date": "2026-11-24",
+   "type": "jour",
+   "rien_de_notable": false,
+   "publie_le": "2026-11-24T06:34+00:00",
+   "sujets": [
+    {
+     "titre": "Jensen Huang reprend la direction de Nvidia onze jours après son départ",
+     "pour": "Vous deux",
+     "usage": "general",
+     "fait": "Le conseil de Nvidia, le géant des puces qui font tourner l'IA, a voté à l'unanimité le retour de son cofondateur comme directeur général. Les enquêtes qui le visent, dont une du gendarme boursier américain, continuent.",
+     "concretement": "Par exemple, quand le patron d'un fournisseur dont tout le monde dépend part puis revient en quelques jours, ses clients se demandent s'ils peuvent compter sur lui, et gardent un plan B.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.frandroid.com/marques/nvidia/3335055_jensen-huang-revient-a-la-tete-de-nvidia-onze-jours-apres-sa-demission",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "Power BI de novembre : plus de façons de travailler avec l'assistant Copilot",
+     "pour": "Côme",
+     "usage": "data-bi",
+     "fait": "Microsoft publie les nouveautés de novembre de Power BI, son outil de tableaux de bord : davantage de façons d'utiliser Copilot, son assistant IA, et des changements pour partager les rapports. Les versions autonomes de Copilot dans Power BI sont retirées.",
+     "concretement": "Par exemple, tu demandes à l'assistant de tracer les ventes par région au lieu de construire le graphique pas à pas, puis tu vérifies qu'il a pris les bons chiffres.",
+     "origine_exemple": "illustration",
+     "lien": "https://community.fabric.microsoft.com/t5/Power-BI-Updates-Blog/Power-BI-November-2026-Feature-Summary/ba-p/5414287",
+     "source": "Power BI (mises à jour)"
+    },
+    {
+     "titre": "Google relie votre Wallet et vos documents à la recherche par IA",
+     "pour": "Vous deux",
+     "usage": "outil",
+     "fait": "Google propose, si vous le choisissez, de connecter Google Wallet (vos dépenses) puis Drive (vos documents) à son mode IA de recherche, déjà relié à Gmail, Agenda et Photos. Les réponses s'appuient alors sur vos données.",
+     "concretement": "Selon Google, vous pourrez suivre vos objectifs financiers ou reprendre la préparation d'un voyage sans tout répéter. Les connexions se coupent à tout moment dans les réglages de personnalisation.",
+     "origine_exemple": "article",
+     "lien": "https://blog.google/products-and-platforms/products/search/google-search-personal-intelligence-apps/",
+     "source": "Google"
+    },
+    {
+     "titre": "Près d'un site marchand sur deux cache ses prix aux robots d'IA",
+     "pour": "Vous deux",
+     "usage": "quotidien",
+     "fait": "Fasterize a testé 1 469 grands sites français. Chez près d'un marchand sur deux, prix ou stocks n'apparaissent qu'après l'exécution d'un code que la plupart des robots d'IA n'exécutent pas. Trois sites sur quatre ont des formulaires qu'un agent (une IA qui agit seule) ne sait pas remplir.",
+     "concretement": "Par exemple, si vous demandez à un assistant de comparer des prix avant le Black Friday, il peut passer à côté de boutiques dont le prix reste invisible pour lui.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.actuia.com/actualite/les-prix-de-pres-dun-marchand-sur-deux-echappent-aux-robots-dia/",
+     "source": "ActuIA"
+    },
+    {
+     "titre": "Des banques américaines serrent la vis sur leurs propres agents d'IA",
+     "pour": "Alix",
+     "usage": "banque",
+     "fait": "Certaines banques américaines renforcent les contrôles sur leurs agents d'IA, des IA qui enchaînent les tâches seules. Elles craignent que ces modèles contournent les garde-fous.",
+     "concretement": "Par exemple, un agent chargé de préparer un dossier client pourrait chercher un chemin détourné pour aller plus vite : la banque ajoute alors une vérification humaine à chaque étape sensible.",
+     "origine_exemple": "illustration",
+     "lien": "https://news.google.com/rss/articles/CBMi7wFBVV95cUxOMHRkRUlET2VMNzlvdnM0aThOdW16WHIyYzRCZ3lCOXpQVjduM0NKMnl6U0pKMDgxODc0eS1pODhKdHhTM2w4UUxrU3RGXzhWMzlmcEViNmdCakZZcElnNVY3c0NQX2VPVTF5NGFUMTY5ZTN6Y2x5RjVjbjVldGUxOXQ2VnpXMGFtZ3dVTmVYYmVxSG5DZ24wMnVrdlZNV1Z2RFVxMlJ1bl9VWXc3c0tpY2lWVW84RkMxX1B3ZFRUeDc2eDB6akhqbE9oLXpOQ2EwQlFRZmdfVjQ4dXVqUWZ4RTZkb21NekhvcUg1LUlpbw?oc=5",
+     "source": "Zonebourse Suisse"
+    }
+   ],
+   "autres": [
+    {
+     "titre": "Google retire le bouton « Recherche Google » de sa page d'accueil sur ordinateur",
+     "lien": "https://siecledigital.fr/2026/11/23/google-transforme-sa-page-daccueil-et-fait-toujours-plus-de-place-a-lintelligence-artificielle/",
+     "source": "Siècle Digital"
+    },
+    {
+     "titre": "TikTok lance un outil pour repérer les fausses vidéos de personnalités publiques",
+     "lien": "https://siecledigital.fr/2026/11/23/tiktok-lance-un-nouvel-outil-pour-detecter-les-deepfakes-utilisant-limage-de-personnalites-publiques/",
+     "source": "Siècle Digital"
+    },
+    {
+     "titre": "Microsoft arrêtera son application de listes de tâches To Do en 2027",
+     "lien": "https://siecledigital.fr/2026/11/23/microsoft-to-do-disparaitra-en-2027-et-aucune-alternative-nest-prevue/",
+     "source": "Siècle Digital"
+    },
+    {
+     "titre": "Une cour européenne écarte deux ans une avocate qui citait des affaires inventées par l'IA",
+     "lien": "https://www.actuia.com/actualite/la-cedh-ecarte-pour-deux-ans-une-avocate-qui-citait-une-jurisprudence-inventee-par-lia/",
+     "source": "ActuIA"
+    },
+    {
+     "titre": "Nothing prépare des écouteurs qui transcrivent vos conversations avec l'IA",
+     "lien": "https://www.theverge.com/gadgets/1040357/nothing-ear-note-earbuds-ai-recording",
+     "source": "The Verge"
+    },
+    {
+     "titre": "Apple cherche un responsable pour un assistant IA qui agirait seul sur vos appareils",
+     "lien": "https://www.frandroid.com/marques/apple/3334301_apple-prepare-une-ia-capable-de-prendre-le-controle-de-vos-appareils-et-freine-deja-la-concurrence",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "Anthropic en Bourse : l'action frôle son prix d'introduction à la deuxième séance",
+     "lien": "https://www.actuia.com/actualite/laction-anthropic-frole-son-prix-dintroduction-a-sa-deuxieme-seance/",
+     "source": "ActuIA"
+    },
+    {
+     "titre": "Google fermera l'application Nest : pensez à récupérer vos vidéos avant",
+     "lien": "https://www.frandroid.com/marques/google/3334081_google-va-fermer-lapplication-nest-ce-que-vous-devez-faire-avant-pour-ne-pas-perdre-vos-donnees",
+     "source": "Frandroid"
+    }
+   ],
+   "lexique": [
+    {
+     "terme": "Apprentissage non supervisé",
+     "theme": "ia",
+     "definition": "Une façon d'entraîner une IA sans lui donner de réponses toutes faites : elle cherche seule des ressemblances et des groupes dans les données.",
+     "exemple": "Une IA range des milliers de clients en groupes qui se ressemblent, sans qu'on lui ait dit lesquels."
+    },
+    {
+     "terme": "Jointure",
+     "theme": "data-bi",
+     "definition": "L'opération qui relie deux tableaux de données grâce à une colonne commune, pour les lire ensemble.",
+     "exemple": "On relie le tableau des commandes à celui des clients grâce au numéro de client."
+    },
+    {
+     "terme": "Risque de crédit",
+     "theme": "banque",
+     "definition": "Le risque qu'un emprunteur ne rembourse pas, ou pas en entier, ce qu'il doit à sa banque.",
+     "exemple": "Avant d'accorder un prêt, la banque évalue la chance que le client rembourse."
+    },
+    {
+     "terme": "Clé d'accès",
+     "theme": "quotidien",
+     "definition": "Un moyen de se connecter sans mot de passe, avec l'empreinte digitale, le visage ou le code du téléphone. Impossible à voler par un faux site.",
+     "exemple": "Pour ouvrir votre messagerie, vous validez avec votre doigt au lieu de taper un mot de passe."
+    },
+    {
+     "terme": "Rapprochement bancaire",
+     "theme": "banque",
+     "definition": "La vérification qui compare les écritures de l'entreprise avec celles du relevé de la banque pour repérer les écarts.",
+     "exemple": "Un paiement noté dans la comptabilité mais absent du relevé est signalé pour être vérifié."
+    }
+   ]
+  },
+  {
    "date": "2026-11-23",
    "type": "jour",
    "rien_de_notable": false,
