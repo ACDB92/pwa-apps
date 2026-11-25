@@ -1,6 +1,133 @@
 {
  "editions": [
   {
+   "date": "2026-11-25",
+   "type": "jour",
+   "rien_de_notable": false,
+   "publie_le": "2026-11-25T06:34+00:00",
+   "sujets": [
+    {
+     "titre": "Free traduit vos appels téléphoniques en direct dans 10 langues",
+     "pour": "Vous deux",
+     "usage": "outil",
+     "fait": "Free a lancé Traduction Live : pendant un appel, on dit « Ok Free, traduis en… » et la conversation est traduite en direct, sans application. Le service est inclus dans les forfaits Free Max et Free Pro Max. L'opérateur prévient que des contresens restent possibles.",
+     "concretement": "Par exemple, vous appelez un hôtel à l'étranger pour modifier une réservation, sans parler sa langue. Pour un montant ou une date, confirmez par écrit : la traduction peut se tromper.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.frandroid.com/marques/free/3335939_une-premiere-en-france-free-traduit-desormais-vos-appels-en-direct-dans-10-langues-sans-application-a-installer",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "Teams va repérer les arnaques par téléphone grâce à l'IA",
+     "pour": "Alix",
+     "usage": "quotidien",
+     "fait": "Microsoft prépare pour Teams une fonction qui analyse certains appels extérieurs pour repérer le « phishing vocal » : un escroc se fait passer par un organisme de confiance au téléphone pour soutirer des informations. Une préversion est attendue en décembre 2026.",
+     "concretement": "Par exemple, un faux conseiller bancaire appelle un collègue et lui réclame un code : l'outil pourrait alerter avant qu'il cède. Reste à savoir où l'appel est analysé et ce qui est conservé.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.frandroid.com/marques/microsoft/3336063_microsoft-teams-va-surveiller-vos-appels-avec-lia-pour-demasquer-les-arnaques",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "Les assistants IA ratent plus d'un tiers de leurs tâches du quotidien",
+     "pour": "Côme",
+     "usage": "entretien",
+     "fait": "Un nouveau test sur des tâches de la vie courante montre que même les meilleures IA d'OpenAI, Anthropic et Meta échouent plus d'une fois sur trois. Dans 15,7 % des essais, une règle de sécurité est enfreinte, et des paiements de facture en double ou erronés sont proposés dans 40,3 % des cas.",
+     "concretement": "Par exemple, en entretien, tu peux citer ce chiffre pour nuancer l'enthousiasme : un assistant qui prépare un tableau de bord doit toujours être relu par un humain.",
+     "origine_exemple": "illustration",
+     "lien": "https://techcrunch.com/2026/11/24/even-the-best-ai-agents-struggle-with-everyday-life/",
+     "source": "TechCrunch"
+    },
+    {
+     "titre": "37 % des Français ont déjà utilisé l'IA pour leurs placements",
+     "pour": "Alix",
+     "usage": "banque",
+     "fait": "Selon une étude Ipsos, 37 % des Français ont déjà utilisé l'IA pour leurs placements financiers.",
+     "concretement": "Par exemple, une cliente demande à un assistant s'il vaut mieux placer son épargne sur un livret ou une assurance-vie, avant de voir son conseiller. Les banques devront répondre à des clients déjà informés, parfois mal.",
+     "origine_exemple": "illustration",
+     "lien": "https://news.google.com/rss/articles/CBMiiAFBVV95cUxPdzJJSTFJb05hV3VyQ1dnWEV3T0VmMlczWnhNMVE4dTVJOWh3LWszNDhmYWljZDFtZ2xtWWNMeTRoM3FfSVA4OTRFUmNzZTJlWlRvdVdFTFlLM2RPUVRmLWdBYWZ2VFlnemQxYXZlUXo5Rk5FTjVpRlhzQWZ2cU5LN1Q5WnNHX3pv?oc=5",
+     "source": "Ipsos"
+    },
+    {
+     "titre": "Signal bloque les assistants IA d'Apple et de Google pour protéger vos messages",
+     "pour": "Vous deux",
+     "usage": "quotidien",
+     "fait": "Sur iOS 27 et certaines versions d'Android, la messagerie Signal empêche désormais les assistants IA de Siri et de Gemini de lire les conversations affichées à l'écran. Le chiffrement protège les messages en route, pas une fois affichés. Signal reconnaît que la protection reste incomplète.",
+     "concretement": "Par exemple, vous ouvrez une discussion privée pendant que l'assistant du téléphone est actif : sans blocage, il pourrait lire et garder ce qui s'affiche. Vérifiez les réglages de cet assistant.",
+     "origine_exemple": "illustration",
+     "lien": "https://siecledigital.fr/2026/11/24/signal-part-en-guerre-contre-les-agents-ia-dapple-et-de-google-pour-proteger-les-conversations-privees/",
+     "source": "Siècle Digital"
+    }
+   ],
+   "autres": [
+    {
+     "titre": "Une banque signe un accord pour déployer Claude dans toute son activité",
+     "lien": "https://news.google.com/rss/articles/CBMirAFBVV95cUxOenJXLXlraWxXSk4tT0tsUVJzcWFvZFBmWUVrZGIyQTE5ZUpZY2ZjZ2ZnLWljZWpNMERSWVBSMlUyMVV0UkQ2U2hBSjhqN3hiZElHUmpiRkxXSHdjWkRDRFpGejljdzFlbzVka19NMHFhLUIwWVRTWGUyRTRIR2FVeUtWUU8zbDFrb255T2F0TG83OWNRMVZfc0ZGVlJ1WWxrZ09FczdFNjFQNnBE?oc=5",
+     "source": "IndexBox"
+    },
+    {
+     "titre": "Walmart propose ses offres du Black Friday dans l'assistant IA de Meta",
+     "lien": "https://techcrunch.com/2026/11/24/walmart-teams-up-with-meta-to-bring-black-friday-deals-to-ai-agent-muse/",
+     "source": "TechCrunch"
+    },
+    {
+     "titre": "Le New York Times déconseille la dernière version de Photoshop à ses photographes",
+     "lien": "https://www.theverge.com/ai-artificial-intelligence/1041227/the-new-york-times-warns-photographers-not-to-update-photoshop-over-ai-features",
+     "source": "The Verge"
+    },
+    {
+     "titre": "Alexa+ arrive en France : plus intelligente, mais encore un peu lente",
+     "lien": "https://www.journaldunet.com/intelligence-artificielle/1558565-alexa-amazon-rattrape-enfin-chatgpt-et-gemini-a-un-detail-pres/",
+     "source": "Journal du Net"
+    },
+    {
+     "titre": "Tidal va supprimer des millions de morceaux créés par IA",
+     "lien": "https://techcrunch.com/2026/11/24/tidal-to-ban-and-remove-millions-of-ai-generated-tracks-as-ai-slop-inundates-music-streaming/",
+     "source": "TechCrunch"
+    },
+    {
+     "titre": "Le Royaume-Uni alerte : les cyberattaques par IA exploitent de vieilles failles",
+     "lien": "https://techcrunch.com/2026/11/24/uk-warns-ai-driven-cyberattacks-are-exposing-years-of-weak-security/",
+     "source": "TechCrunch"
+    },
+    {
+     "titre": "Meta intègre son assistant Muse aux messages privés d'Instagram",
+     "lien": "https://techcrunch.com/2026/11/24/meta-brings-its-muse-ai-assistant-directly-into-instagram-dms/",
+     "source": "TechCrunch"
+    }
+   ],
+   "lexique": [
+    {
+     "terme": "Modèle de langage",
+     "theme": "ia",
+     "definition": "Une IA entraînée sur d'énormes quantités de textes pour prédire la suite d'une phrase. C'est ce qui lui permet de rédiger, résumer ou répondre à des questions.",
+     "exemple": "L'assistant qui rédige un brouillon de courriel à partir de trois mots-clés."
+    },
+    {
+     "terme": "Tableau de bord",
+     "theme": "data-bi",
+     "definition": "Une page qui rassemble les indicateurs importants d'une activité sous forme de graphiques et de chiffres, pour suivre l'essentiel d'un coup d'œil.",
+     "exemple": "Une page qui montre chaque matin les ventes de la veille par région."
+    },
+    {
+     "terme": "Lutte contre la fraude",
+     "theme": "banque",
+     "definition": "L'ensemble des contrôles qu'une banque met en place pour repérer et bloquer les opérations suspectes avant qu'elles ne coûtent de l'argent à ses clients.",
+     "exemple": "Un virement inhabituel vers un pays étranger est mis en attente et le client est appelé pour confirmer."
+    },
+    {
+     "terme": "Ingénierie sociale",
+     "theme": "quotidien",
+     "definition": "Une technique d'escroc qui manipule les personnes plutôt que les machines : il joue sur la confiance ou l'urgence pour obtenir un code ou un virement.",
+     "exemple": "Un faux technicien appelle et demande un code reçu par message pour « sécuriser votre compte »."
+    },
+    {
+     "terme": "Donnée structurée",
+     "theme": "data-bi",
+     "definition": "Une information rangée en lignes et en colonnes bien définies, comme un tableur. Elle se compte et se compare facilement, contrairement à un texte libre.",
+     "exemple": "La liste des commandes avec la date, le client et le montant dans chaque colonne."
+    }
+   ]
+  },
+  {
    "date": "2026-11-24",
    "type": "jour",
    "rien_de_notable": false,
