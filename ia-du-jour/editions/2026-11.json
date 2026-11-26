@@ -1,6 +1,138 @@
 {
  "editions": [
   {
+   "date": "2026-11-26",
+   "type": "jour",
+   "rien_de_notable": false,
+   "publie_le": "2026-11-26T06:34+00:00",
+   "sujets": [
+    {
+     "titre": "Bruxelles dévoile le formulaire que banques et assureurs devront remplir pour leurs IA",
+     "pour": "Alix",
+     "usage": "banque",
+     "fait": "La Commission européenne a publié le modèle d'analyse d'impact exigé par l'AI Act, la loi européenne sur l'IA. Il concerne notamment les IA qui notent la solvabilité d'un client ou fixent des tarifs d'assurance vie et santé. Il sera obligatoire à partir du 2 décembre 2027 ; le texte est ouvert aux commentaires jusqu'au 15 janvier 2027.",
+     "concretement": "Par exemple, un établissement qui utilise une IA pour accorder des crédits devra décrire qui peut être lésé, comment un humain contrôle la décision, puis faire signer le tout par un responsable.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.journaldunet.com/intelligence-artificielle/1559091-ia-a-haut-risque-le-formulaire-que-banques-assureurs-et-services-publics-devront-signer-est-sur-la-table/",
+     "source": "Journal du Net"
+    },
+    {
+     "titre": "Claude permet d'installer vos applications créées sur Mac et Windows",
+     "pour": "Côme",
+     "usage": "outil",
+     "fait": "Anthropic permet désormais de transformer une application créée avec Claude, appelée « artefact », en vrai logiciel pour Mac ou Windows. Il suffit de cliquer sur un bouton d'installation. La nouveauté est gratuite, y compris dans la version sans abonnement.",
+     "concretement": "Tu peux décrire à Claude un tableau de bord adapté à ton travail, puis l'installer comme n'importe quelle application. Attention : une telle application peut demander l'accès complet aux fichiers de l'ordinateur.",
+     "origine_exemple": "article",
+     "lien": "https://www.presse-citron.net/ia-creer-apps-windows-mac-gratuitement/",
+     "source": "Presse-citron"
+    },
+    {
+     "titre": "Tidal supprime la musique entièrement créée par IA de son catalogue",
+     "pour": "Vous deux",
+     "usage": "quotidien",
+     "fait": "Le service de streaming musical Tidal va retirer tous les titres entièrement générés par IA, à partir du 9 décembre. Selon lui, 43 % des nouveaux titres reçus ces 90 derniers jours étaient de ce type, et 96 % des titres déjà présents n'avaient pas été écoutés. Les artistes qui se servent de l'IA comme aide restent autorisés.",
+     "concretement": "Par exemple, votre playlist du matin ne devrait plus contenir de morceaux fabriqués par une machine sans artiste derrière.",
+     "origine_exemple": "illustration",
+     "lien": "https://siecledigital.fr/2026/11/25/la-plateforme-de-streaming-musical-tidal-va-supprimer-des-millions-de-titres-generes-par-ia/",
+     "source": "Siècle Digital"
+    },
+    {
+     "titre": "Amazon discuterait d'ouvrir son site à l'assistant d'achat de Meta",
+     "pour": "Vous deux",
+     "usage": "quotidien",
+     "fait": "Selon le magazine Fortune, Amazon négocie avec Meta pour lever son blocage de Muse, un agent, c'est-à-dire une IA qui achète à votre place. Amazon craint de perdre des revenus de publicité, qui supposent que des humains voient les annonces. Walmart, Best Buy, Gap et Sephora ont déjà laissé entrer ce type d'assistant.",
+     "concretement": "Par exemple, si l'accord se fait, vous pourriez demander à l'assistant de commander un cadeau sans ouvrir vous-même le site.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.theverge.com/tech/1042071/meta-amazon-muse-ai-shopping-discussions",
+     "source": "The Verge"
+    },
+    {
+     "titre": "Le fabricant du Doliprane fait contrôler son marketing par 14 IA",
+     "pour": "Côme",
+     "usage": "entretien",
+     "fait": "Opella, ancienne branche grand public de Sanofi, a conçu Lumen : 14 agents (des programmes d'IA qui exécutent seuls une tâche) vérifient que chaque contenu marketing respecte les règles scientifiques et légales. Un humain valide ensuite. L'outil est en service depuis octobre dans trois pays.",
+     "concretement": "Chaque agent contrôle un point précis, par exemple comparer une affirmation à la liste de celles qui sont autorisées. Un exemple à citer en entretien : l'IA fait le tri, l'humain garde la décision.",
+     "origine_exemple": "article",
+     "lien": "https://www.journaldunet.com/intelligence-artificielle/1559115-comment-le-fabricant-du-doliprane-automatise-son-marketing-grace-a-l-ia/",
+     "source": "Journal du Net"
+    }
+   ],
+   "autres": [
+    {
+     "titre": "Pinterest laisse les parents limiter les images créées par IA que voient leurs ados",
+     "lien": "https://siecledigital.fr/2026/11/25/pinterest-va-permettre-aux-parents-de-limiter-les-contenus-generes-par-ia-auxquels-leurs-adolescents-sont-exposes/",
+     "source": "Siècle Digital"
+    },
+    {
+     "titre": "Meta ajoute son assistant Muse aux messages privés d'Instagram",
+     "lien": "https://siecledigital.fr/2026/11/25/meta-poursuit-le-deploiement-de-muse-en-integrant-son-agent-ia-aux-messages-prives-dinstagram/",
+     "source": "Siècle Digital"
+    },
+    {
+     "titre": "Le système d'analyse de la CIA piraté, sans doute avec le même outil IA que la Commission",
+     "lien": "https://www.numerama.com/cyberguerre/2384431-la-menace-setend-le-systeme-osint-de-la-cia-pirate-probablement-par-le-meme-outil-ia-que-la-commission-europeenne.html",
+     "source": "Numerama"
+    },
+    {
+     "titre": "Google ajoute trois nouveautés aux fiches de révision de Gemini Notebook",
+     "lien": "https://www.frandroid.com/marques/google/3337817_google-muscle-les-fiches-de-revision-de-gemini-notebook-avec-trois-nouveautes",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "Un outil de programmation par IA accusé de pister des comptes sans accord",
+     "lien": "https://www.frandroid.com/culture-tech/intelligence-artificielle/3337433_comment-une-blague-sur-x-a-declenche-une-guerre-ouverte-autour-dun-des-outils-ia-les-plus-populaires-du-moment",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "Un pirate utilise DeepSeek pour attaquer des banques françaises",
+     "lien": "https://news.google.com/rss/articles/CBMi1AFBVV95cUxNRkdkYmFjSmE2V0x3LV9DdHNYc2JSbmdDUUktN2h0ZzZqeFkwRmVzUTVteV95YmNFTGttTTZLMDVPN2VhSWs3NENvT09zM1QxbFlWckdMRFhJSWNYeUZvT0M4MnBab0hzMlhOd2ZvWmZ5dUdFTmtKaGY1Zm1RTWxNanA1eWdXVFZxajBTMXc4MTNzckxqOVRMdGo5UXhVeHZlU3RaWUxGMDFfZG5tUGxDamQyUDcwXzRjNndLa2xWcmNOLWwxa3NxNnpaVkF3Yko5Q3JLTg?oc=5",
+     "source": "Cyberattaque.org"
+    },
+    {
+     "titre": "OpenAI prévient que les gros utilisateurs de ChatGPT atteindront leurs limites plus vite",
+     "lien": "https://techcrunch.com/2026/11/25/openai-says-heavy-chatgpt-users-may-hit-limits-sooner-as-it-merges-chat-and-work/",
+     "source": "TechCrunch"
+    },
+    {
+     "titre": "Jensen Huang s'excuse devant les équipes de Nvidia",
+     "lien": "https://www.frandroid.com/marques/nvidia/3337329_la-reunion-la-plus-dure-de-ma-vie-jensen-huang-sexcuse-devant-les-equipes-de-nvidia-elon-musk-lui-rend-visite",
+     "source": "Frandroid"
+    }
+   ],
+   "lexique": [
+    {
+     "terme": "Traitement du langage naturel",
+     "theme": "ia",
+     "definition": "Ensemble des méthodes qui permettent à un ordinateur de lire, comprendre et écrire du texte comme le ferait une personne.",
+     "exemple": "Un assistant qui résume un long courriel en trois lignes s'appuie sur le traitement du langage naturel."
+    },
+    {
+     "terme": "Nettoyage des données",
+     "theme": "data-bi",
+     "definition": "Étape qui consiste à corriger ou retirer les erreurs, les doublons et les cases vides d'un jeu de données avant de l'analyser.",
+     "exemple": "Avant de faire un tableau de bord, on harmonise les villes écrites de trois façons différentes dans la même colonne."
+    },
+    {
+     "terme": "Banque ouverte",
+     "theme": "banque",
+     "definition": "Principe selon lequel un client peut autoriser une application tierce à consulter ses comptes bancaires, de façon encadrée et sécurisée.",
+     "exemple": "Une application de budget qui regroupe les comptes de plusieurs banques fonctionne grâce à la banque ouverte."
+    },
+    {
+     "terme": "Reconnaissance faciale",
+     "theme": "quotidien",
+     "definition": "Technique qui identifie une personne à partir des traits de son visage, comme pour déverrouiller un téléphone.",
+     "exemple": "Votre téléphone se déverrouille quand il reconnaît votre visage, et refuse celui d'un inconnu."
+    },
+    {
+     "terme": "Analyse d'impact",
+     "theme": "banque",
+     "definition": "Document qui décrit à l'avance les risques d'un projet ou d'un outil pour les personnes concernées, et les mesures prévues pour les limiter.",
+     "exemple": "Avant d'utiliser une IA pour noter les demandes de prêt, une banque décrit qui peut être lésé et comment elle l'évitera."
+    }
+   ]
+  },
+  {
    "date": "2026-11-25",
    "type": "jour",
    "rien_de_notable": false,
