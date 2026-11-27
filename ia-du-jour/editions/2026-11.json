@@ -1,6 +1,148 @@
 {
  "editions": [
   {
+   "date": "2026-11-27",
+   "type": "jour",
+   "rien_de_notable": false,
+   "publie_le": "2026-11-27T06:34+00:00",
+   "sujets": [
+    {
+     "titre": "La banque d'Angleterre craint que les emprunts liés à l'IA fragilisent la finance",
+     "pour": "Alix",
+     "usage": "banque",
+     "fait": "La banque centrale britannique prévoit une aggravation des risques financiers liés aux emprunts qui financent l'IA. Les banques prêtent beaucoup aux entreprises du secteur, et un défaut en chaîne pourrait les toucher.",
+     "concretement": "Par exemple, un client de la banque qui construit des centres de calcul en empruntant beaucoup peut devenir un sujet de risque à surveiller de près dans une mission de conseil.",
+     "origine_exemple": "illustration",
+     "lien": "https://news.google.com/rss/articles/CBMi-gFBVV95cUxPZ1FFMW1PVXdiNVBVNUJlekpfVU9TU0lJWjRWbDRScU5ZaUpZTFlvSUM4QWpBZ3lEb1Z1VjZDT0dDNEIzRVJNNVk4NThDMm15RlczWF9xaXVXZnI4R2NLOFdTYVA1ZWRhc3hHZzBuQmVYdmtYRkt2aTk1QWdMc3JNRVBNSnRwTm1xT3JIQWs4ODlJWmpFak14N1FPeVZFbS15YzkzQ0ZzZFVJaG5xb0RGT1NGcFYyR2tJYkM2Q0k5VEE4T04zX0x0Vk9mVXlzNDllbldUZVZCN01vaXdiTlVZS1ZoeUhmMHdHWnhIY3Znak9rSEdqdWpYR25B0gH6AUFVX3lxTE9nUUUxbU9Vd2I1UFU1QmV6Sl9VT1NTSUlaNFZsNFJxTllpSllMWW9JQzhBakFneURvVnVWNkNPR0M0QjNFUk01WTg1OEMybXlGVzNYX3FpdVdmcjhHY0s4V1NhUDVlZGFzeEdnMG5CZVh2a1hGS3ZpOTVBZ0xzck1FUE1KdHBObXFPckhBazg4OUlaakVqTXg3UU95VkVtLXljOTNDRnNkVUlobnFvREZPU0ZwVjJHa0liQzZDSTlUQThPTjNfTHRWT2ZVeXM0OWVuV1RlVkI3TW9pd2JOVVlLVmh5SGYwd0daeEhjdmdqT2tIR2p1alhHbkE?oc=5",
+     "source": "Boursorama"
+    },
+    {
+     "titre": "Des banques freinent leurs IA, par peur de perdre le contrôle de leurs agents",
+     "pour": "Alix",
+     "usage": "banque",
+     "fait": "Des banques ralentissent le déploiement de l'IA : elles craignent que leurs propres agents, c'est-à-dire des IA qui enchaînent les tâches seules, échappent à leur contrôle.",
+     "concretement": "Par exemple, une IA autorisée à virer de l'argent seule pourrait se tromper sans qu'aucun humain ne la corrige à temps. Les banques cherchent donc d'abord des garde-fous.",
+     "origine_exemple": "illustration",
+     "lien": "https://news.google.com/rss/articles/CBMihAJBVV95cUxOMDR6UGMwNzdRMVV4a3lCa1hwSDlDNUd6dVNpd3FxZXVfenBDY2dNWkoxZVNBc3lNV3cza2lVR2t4Rlc4M1N5NTE0dXdGOFdzNFFRZTlnMlBTWldDN3FOMXVWeHZWekNPX2U4c3VnM3RJYXQ3UjRUaDNGTG4yMjFxZWZ1V3B3QkpESjRtbVVmMkxjSGwxRWNHdnlzdlBWRzY2b25DM1AweklJZ0oxempmN096OGJqUDQtcnNuZFRTTVV4eWVfRzhJZy1YQ3JDR3JwSWVZZUpNYUpfLU5Wckg1Q3hzWkZDbUcwQ0tmV2N2SjdwenA1aVRuLUUzRW9MLUMwdUFFOQ?oc=5",
+     "source": "La Crème Du Gaming"
+    },
+    {
+     "titre": "Les meilleures IA échouent encore à un test de niveau primaire",
+     "pour": "Côme",
+     "usage": "entretien",
+     "fait": "Google DeepMind a lancé un test de 544 questions de niveau primaire, que des humains résolvent en une minute environ. Quand on exige une réponse juste à chaque fois, les cinq meilleures IA tombent à 85,8 % de réussite en moyenne.",
+     "concretement": "Par exemple, en entretien, tu peux citer ce test pour rappeler qu'une IA se trompe parfois sur des questions simples : il faut donc toujours vérifier une analyse qu'elle produit.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.frandroid.com/culture-tech/intelligence-artificielle/3340305_un-enfant-reussit-ce-test-en-une-minute-mais-les-meilleures-ia-du-monde-sy-cassent-encore-les-dents",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "Le patron de LinkedIn admet que le marché du travail est gelé",
+     "pour": "Côme",
+     "usage": "entretien",
+     "fait": "Le patron de LinkedIn reconnaît que le marché du travail est gelé. Il explique toutefois que les jeunes diplômés peuvent être recrutés plus vite grâce à l'IA.",
+     "concretement": "Par exemple, tu peux montrer en entretien comment tu t'es servi d'une IA pour préparer un travail concret : cela prouve que tu sais t'en servir.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.presse-citron.net/marche-travail-gele-linkedin-astuce-jeunes-diplomes/",
+     "source": "Presse-citron"
+    },
+    {
+     "titre": "L'agence du médicament met en garde contre l'IA pour les conseils de santé",
+     "pour": "Vous deux",
+     "usage": "quotidien",
+     "fait": "L'agence française du médicament avertit que demander des conseils de santé à ChatGPT, Claude ou Gemini peut être dangereux. Elle a identifié huit cas en deux ans, avec des informations inexactes ou contradictoires.",
+     "concretement": "Par exemple, si vous demandez à une IA la dose d'un médicament, ne vous fiez pas à sa réponse : demandez à un pharmacien ou à un médecin.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.frandroid.com/culture-tech/intelligence-artificielle/3339573_des-informations-inexactes-contradictoires-ou-inadaptees-lagence-du-medicament-met-en-garde-contre-lusage-de-lia-pour-les-conseils-medicaux",
+     "source": "Frandroid"
+    }
+   ],
+   "autres": [
+    {
+     "titre": "Intermarché va intégrer l'IA Claude dans ses magasins",
+     "lien": "https://www.presse-citron.net/intermarche-va-integrer-claude-comment-cette-ia-sinvite-dans-la-grande-distribution/",
+     "source": "Presse-citron"
+    },
+    {
+     "titre": "Le patron de la Banque d'Angleterre veut des tests communs des IA entre pays",
+     "lien": "https://news.google.com/rss/articles/CBMi6wFBVV95cUxOaDF0UW4zN3Q4MTFLUGZSczdXZWtHVHRKV3Z6YThYTWRSSkhiS05ubU1CMENFS0p0UkFIOTNzT0hoZWlfcGRVRzVKWWJIcXc2Q2N4ZTZXQkdfdUwwLWxhYXNYOGlOTy1RTk9FQko1c3R4aHlpODFxNGRCR0I2STk3V0RhZWt5UGJFU0sydXZmZDVQVUVxbDJZa2k5R3FKcWJTeGxMaHFyOFBGSWsyLTFOcTluYXROLWhrUnQtVktaaXlkZ0NzSW5TNFcwM2hiXzIxSm14UklfV0FkRDFqU2QtR1ExckxxeXhjNUcw?oc=5",
+     "source": "Zonebourse Suisse"
+    },
+    {
+     "titre": "42 procureurs américains veulent bloquer la vente des conversations de Character.AI",
+     "lien": "https://www.theverge.com/policy/1042620/character-ai-sale-state-ags-block-selling-users-chats",
+     "source": "The Verge"
+    },
+    {
+     "titre": "Des experts demandent le retrait des jouets dotés d'IA des sites de vente",
+     "lien": "https://www.presse-citron.net/une-alerte-pour-tous-les-parents-avant-noel-les-experts-signalent-le-danger-des-jouets-avec-une-ia-integree/",
+     "source": "Presse-citron"
+    },
+    {
+     "titre": "OpenAI réduit les quotas de ses abonnés après une erreur de facturation",
+     "lien": "https://www.numerama.com/tech/2385489-on-a-fait-une-erreur-de-facturation-openai-corrige-le-tir-et-vos-quotas-gpt-6-2-vont-fondre-jusqua-40-plus-vite.html",
+     "source": "Numerama"
+    },
+    {
+     "titre": "Un faux mail de Microsoft propose de récupérer vos messages : c'est du hameçonnage",
+     "lien": "https://news.google.com/rss/articles/CBMi7wFBVV95cUxOdDlRYTdUcTBrTmphWFVFUWF2dFZsT09ULTlUbnFsZUhScFVrQzlLZHJER1JmaWs0ZUdnMThsYjdDN1lIR0NkcXEwdEROTnNUWTR0R0x1MDJqUlhqMkM3NmZLSm11a1RTb0JtamhmaVJCUm5KcTMxZVhTeWtQSHBwUThsTW93SEQwRUFrQjNwcWMwOHVkUWwyYy1sQ2wzenYtdmVkQ3FoU0pUc3VUcE5CRVNZUnp5cmUxM3dBc0d2SWJJV19IZzJGdzd2c2FBZUdNTFNyX1c4SVhvQnVXNkIwWk92QTB4R3o1RWJ1LU1Pcw?oc=5",
+     "source": "Korben"
+    },
+    {
+     "titre": "Les eurodéputés votent un allègement du RGPD pour les entreprises",
+     "lien": "https://siecledigital.fr/2026/11/26/rgpd-une-importante-simplification-administrative-se-profile-pour-les-entreprises/",
+     "source": "Siècle Digital"
+    },
+    {
+     "titre": "Les téléphones Pixel pourraient classer vos notifications urgentes en haut",
+     "lien": "https://www.frandroid.com/marques/google/3341537_fini-le-tri-manuel-lia-des-pixel-va-placer-vos-notifications-urgentes-tout-en-haut-de-lecran",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "Citi et JPMorgan mettent en vente des prêts liés à l'IA",
+     "lien": "https://news.google.com/rss/articles/CBMijwFBVV95cUxOOG96R3Z4UHdLQWJ6RlhaaVRNT2o1eVpGM2ZiYjR3bW9uM0FLb2ZNMUJ0WFNXaGJjSmhJZ1dqSTd6ZlMzbVkxS0t0LUFTSDB6QUxadTlTc05mVFlXNWZvYWY2RHNCQnJXdFR4WS1VTkNPRTMzSXgxdGhIeXY4eFdXQVI3cWhSVzNaMmZfazBBOA?oc=5",
+     "source": "Brief IA"
+    },
+    {
+     "titre": "La Banque des Territoires finance des assistants d'IA par métier",
+     "lien": "https://news.google.com/rss/articles/CBMipgJBVV95cUxNRTlpWDE4c1NGYjNBNTJBaFAwNnZYZmNOa1ZNR01qYm1lWXVsSHRramswd3hpV0RJMjE0TkQ3LV9POUdWQjRGRXBaa1U2M2tFYnFYSUNOcVJ0MXBQUkQzN1pJMGpuaGpTU3dkRWtua0xnZFRRZUZtd0h2VzVtSzhUbE56OC1xU2ZMSGZlOTNsaG1IZnZRdVVodVRrRXg2em9sWFBfQ3ZfTjVnMWpWSmNraGg5bk9wbDhHTjUtMjI3YmlyQjBHVi10dFFWc2lkcXQ3ajJfcU5hSlhyenUwcll1anhfYWhIQ1ZwcDV0aHRFdldLWGd5eTgzWGxXWGZCRDJFaVpzdGNhcVFaQ0ZMOEJNYWZhem9HYnJ3dF93bVBMcmtIWjhKY0E?oc=5",
+     "source": "IT Social"
+    }
+   ],
+   "lexique": [
+    {
+     "terme": "Apprentissage profond",
+     "theme": "ia",
+     "definition": "Méthode où l'ordinateur apprend seul à reconnaître des motifs, en empilant de nombreuses couches de calcul. C'est elle qui fait fonctionner la plupart des IA actuelles.",
+     "exemple": "Une application qui reconnaît un visage sur une photo utilise l'apprentissage profond."
+    },
+    {
+     "terme": "Dictionnaire de données",
+     "theme": "data-bi",
+     "definition": "Document qui décrit chaque colonne d'une base de données : ce qu'elle contient, d'où elle vient, comment la lire. Il évite que deux équipes comprennent le même mot différemment.",
+     "exemple": "Dans un tableau de bord, le dictionnaire précise que « client actif » veut dire un client ayant acheté dans l'année."
+    },
+    {
+     "terme": "Risque de liquidité",
+     "theme": "banque",
+     "definition": "Risque pour une banque de ne pas pouvoir rendre l'argent demandé à temps, parce que ses fonds sont immobilisés dans des prêts ou des placements.",
+     "exemple": "Si beaucoup de clients retirent leur épargne en même temps, la banque peut manquer d'argent disponible."
+    },
+    {
+     "terme": "Effet de levier",
+     "theme": "banque",
+     "definition": "Fait d'emprunter pour investir davantage que ce que l'on possède. Les gains comme les pertes sont alors amplifiés.",
+     "exemple": "Un acheteur qui finance son logement surtout par un prêt profite d'une hausse des prix, mais perd plus si les prix baissent."
+    },
+    {
+     "terme": "Données personnelles",
+     "theme": "quotidien",
+     "definition": "Toute information qui permet d'identifier quelqu'un, directement ou en recoupant plusieurs éléments : nom, adresse, photo, historique de conversations.",
+     "exemple": "Votre historique de recherches sur un site marchand est une donnée personnelle, car il révèle vos habitudes."
+    }
+   ]
+  },
+  {
    "date": "2026-11-26",
    "type": "jour",
    "rien_de_notable": false,
