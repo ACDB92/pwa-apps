@@ -1,6 +1,128 @@
 {
  "editions": [
   {
+   "date": "2026-11-28",
+   "type": "jour",
+   "rien_de_notable": false,
+   "publie_le": "2026-11-28T06:34+00:00",
+   "sujets": [
+    {
+     "titre": "SAP envisagerait de supprimer près de 10 000 postes pour passer à l'IA",
+     "pour": "Côme",
+     "usage": "entretien",
+     "fait": "Selon la presse, non confirmé par l'entreprise, l'éditeur de logiciels SAP étudie la suppression de près de 10 000 postes, environ 9 % de ses effectifs, pour miser davantage sur l'IA. Il vise plus de 2 milliards d'euros de gains d'efficacité d'ici fin 2028.",
+     "concretement": "Pour ton entretien : tu peux citer ce cas pour montrer que tu suis les effets de l'IA sur l'emploi, y compris dans les métiers des logiciels et de la vente.",
+     "origine_exemple": "article",
+     "lien": "https://siecledigital.fr/2026/11/27/le-geant-des-logiciels-sap-pourrait-supprimer-10-000-postes-pour-accelerer-son-virage-vers-lia/",
+     "source": "Siècle Digital"
+    },
+    {
+     "titre": "Berlin veut faire payer les IA qui concurrencent des œuvres humaines",
+     "pour": "Vous deux",
+     "usage": "general",
+     "fait": "Le gouvernement allemand propose que les fournisseurs d'IA alimentent une caisse commune quand leurs contenus générés concurrencent des œuvres humaines. 14 États membres, dont la France, réclament déjà une rémunération équitable des créateurs.",
+     "concretement": "Par exemple, un auteur dont le style est imité par une IA toucherait une part de cette caisse, comme un musicien payé quand ses morceaux passent en diffusion en ligne.",
+     "origine_exemple": "illustration",
+     "lien": "https://www.frandroid.com/culture-tech/intelligence-artificielle/3343677_sacem-de-lia-berlin-veut-faire-payer-chatgpt-et-gemini-la-france-soutient-la-mesure",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "Les conseils des IA submergent les centres antipoison",
+     "pour": "Vous deux",
+     "usage": "quotidien",
+     "fait": "Selon un reportage de France Télévisions, les centres antipoison reçoivent de plus en plus d'appels pour des cas bénins, depuis que des assistants IA inquiètent les gens. Ces appels sont aussi plus longs, car les médecins doivent rassurer puis expliquer.",
+     "concretement": "Pour un produit périmé ou un biberon mal dosé, la pharmacie la plus proche peut aussi vous conseiller, sans passer par l'IA ni par le centre antipoison.",
+     "origine_exemple": "article",
+     "lien": "https://www.presse-citron.net/on-est-debordes-les-centres-antipoison-submerges-a-cause-des-conseils-des-ia/",
+     "source": "Presse-citron"
+    },
+    {
+     "titre": "Microsoft supprime trois applications Copilot installées d'office sur Windows 11",
+     "pour": "Alix",
+     "usage": "outil",
+     "fait": "Le 16 décembre 2026, Microsoft arrête People, Files et Calendar, trois petites applications Copilot installées d'office sur des PC Windows 11 d'entreprise. Elles consommaient beaucoup de mémoire et ne recevront plus de correctif, même de sécurité.",
+     "concretement": "Si ton PC est géré par ton entreprise, c'est au service informatique de les retirer. Sinon, ouvre Paramètres, puis Applications installées, et désinstalle les compagnons Microsoft 365. Tes fichiers et rendez-vous ne bougent pas.",
+     "origine_exemple": "article",
+     "lien": "https://www.frandroid.com/os/windows/3343145_windows-11-microsoft-tue-trois-applications-copilot-qui-devoraient-la-memoire-vive",
+     "source": "Frandroid"
+    }
+   ],
+   "autres": [
+    {
+     "titre": "Papa John's teste un agent IA qui règle la commande sans carte bancaire",
+     "lien": "https://news.google.com/rss/articles/CBMilAFBVV95cUxNU1pTbDg4WmRmY25Rd0x1bE1nZFNabGUwd0hFUllEdTkyY0Qwb0hzRi10VlMwX19oQ3VDa2JMTWJ2YVAwalg5Yk5wdnJYOG1CQjNoZEhaaGVyRU9STkFSZzdDa2V5Q2ZfcG9MdkswTnRtRlN6UENRWU1IX0pMMnBHNzB4MDExNTZsa1FRUk5VSEIzQTVV?oc=5",
+     "source": "Brief IA"
+    },
+    {
+     "titre": "OpenAI prépare ChatGPT pour piloter appels et SMS sur Android",
+     "lien": "https://www.frandroid.com/culture-tech/intelligence-artificielle/openai-chatgpt/3343649_openai-prepare-chatgpt-a-piloter-android-dont-les-appels-les-sms-et-la-lecture-decran",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "La Banque d'Angleterre alerte sur le chiffrement des données bancaires",
+     "lien": "https://news.google.com/rss/articles/CBMi9gFBVV95cUxNeHJla0hHUFl5V2QxWUNMMVRkTG43YzkxY1NBZER3XzcybVVGUFE3czBMNWFlWlhaVGxocjVvVnpkVWtwRVFyeGN3UGt1QTB0UVZYN0dSMDN5Um5HMnZPNzByV01jVWZIazZPTEVpZjBHaE1JOFhtN29sTVlZem00UnIxbkl2bGhVRFY0WDRFYkFDUUktMkdZajF1THNsZzB1S3JnQkhnTUlQZV8tM3BYMHpyMVM2Y2NDOHF5TGpEcGlJMmhGcXhMUVU3LU03LUxWaVlZbk9MRGd0emd6aVJ4c0xORENiUHFWV1RtaGpxQUNjUHQ2TVE?oc=5",
+     "source": "Les Echos"
+    },
+    {
+     "titre": "Samsung laisserait Gemini répondre à vos SMS à votre place",
+     "lien": "https://www.frandroid.com/marques/samsung/3341935_samsung-pourrait-laisser-gemini-fouiller-dans-vos-sms-pour-y-repondre-a-votre-place",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "Samsung préparerait un service d'IA privée pour protéger vos données",
+     "lien": "https://www.frandroid.com/marques/samsung/3342087_samsung-developpe-son-propre-private-cloud-a-la-apple-pour-proteger-vos-donnees-personnelles",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "Claude transforme la France en carte de jeu avec des données publiques",
+     "lien": "https://www.frandroid.com/culture-tech/intelligence-artificielle/anthropic-claude-ai/3342317_civilization-en-vrai-cest-fascinant-claude-a-transforme-la-france-en-carte-de-jeu-avec-des-donnees-publiques",
+     "source": "Frandroid"
+    },
+    {
+     "titre": "Quand l'IA pousse les salariés à changer de métier",
+     "lien": "https://news.google.com/rss/articles/CBMi4AFBVV95cUxNSk5TY2l5OFdKSFNSR0xxWGk0SlVzX3R5U0xyUE9uMVMwUGRDZDcybGhlU2t6ZXFITGRNaWw1c21lOE1OQnFHSWI1bkxlaVkzak51MWFjaWZzbHNZZXJVWWhHd0pVOUNaOF9ZeDkwaFlZVzBuSzh5djlWRFFlN01EdHRXbG4tVF93V29GVVRSaE5GalkyMmFuQ0lXT1M3Rm9NNHBMZ3BweTJjRzBCd0FNT0VybmM1VWdTZTJUU0pUSjJwOXhvUkRXU055RDhFREY5V21GODRweXJzN0NkOW1Mdw?oc=5",
+     "source": "MoneyVox"
+    },
+    {
+     "titre": "La reconnaissance faciale pourrait être testée dans les transports parisiens",
+     "lien": "https://siecledigital.fr/2026/11/27/la-reconnaissance-faciale-pourrait-bientot-etre-testee-dans-les-transports-parisiens/",
+     "source": "Siècle Digital"
+    }
+   ],
+   "lexique": [
+    {
+     "terme": "Apprentissage par transfert",
+     "theme": "ia",
+     "definition": "Méthode qui réutilise ce qu'une IA a déjà appris sur une tâche pour l'aider à en apprendre une autre plus vite, avec moins d'exemples.",
+     "exemple": "Une IA qui sait déjà reconnaître des objets sur des photos sert de point de départ pour repérer des défauts sur des pièces d'usine."
+    },
+    {
+     "terme": "Mégadonnées",
+     "theme": "data-bi",
+     "definition": "Ensembles de données si volumineux ou si variés qu'un tableur ordinaire ne peut plus les traiter : il faut des outils conçus pour cela.",
+     "exemple": "Les achats de tous les clients d'une chaîne de magasins pendant des années forment des mégadonnées."
+    },
+    {
+     "terme": "Marge d'intérêt",
+     "theme": "banque",
+     "definition": "Différence entre ce que la banque gagne sur les crédits qu'elle accorde et ce qu'elle verse à ses épargnants. C'est sa source de revenus principale.",
+     "exemple": "Si une banque prête à un taux plus élevé que celui qu'elle donne sur un livret, l'écart est sa marge d'intérêt."
+    },
+    {
+     "terme": "Paiement sans contact",
+     "theme": "quotidien",
+     "definition": "Règlement en approchant sa carte ou son téléphone du terminal, sans taper de code, jusqu'à un plafond fixé par la banque.",
+     "exemple": "On passe son téléphone devant la caisse du boulanger, et le paiement est fait en une seconde."
+    },
+    {
+     "terme": "Segmentation",
+     "theme": "data-bi",
+     "definition": "Découpage d'un ensemble de clients ou de données en groupes qui se ressemblent, pour mieux les analyser ou leur parler.",
+     "exemple": "Une enseigne sépare ses clients en jeunes urbains, familles et retraités pour adapter ses offres."
+    }
+   ]
+  },
+  {
    "date": "2026-11-27",
    "type": "jour",
    "rien_de_notable": false,
